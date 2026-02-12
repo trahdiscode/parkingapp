@@ -41,18 +41,14 @@ if not st.session_state.appointments:
     st.info("No appointments added yet")
 else:
     df = pd.DataFrame(st.session_state.appointments)
+
+    # Sort BEFORE formatting
     df = df.sort_values(by=["Date", "Time"]).reset_index(drop=True)
 
     # Format date as DD/MM/YYYY
     df["Date"] = df["Date"].apply(lambda d: d.strftime("%d/%m/%Y"))
 
-    # Add numbering starting from 1
-    df.insert(0, "No", range(1, len(df) + 1))
+    # Add numbering and FORCE it to string (left aligned)
+    df.insert(0, "No", [str(i) for i in range(1, len(df) + 1)])
 
-    # Style: left-align the "No" column
-    styled_df = df.style.set_properties(
-        subset=["No"],
-        **{"text-align": "left"}
-    )
-
-    st.dataframe(styled_df, hide_index=True)
+    st.dataframe(df, hide_index=True)
