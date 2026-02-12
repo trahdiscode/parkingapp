@@ -5,7 +5,7 @@ from datetime import date
 # ---------- Page configuration ----------
 st.set_page_config(page_title="Appointment Manager", layout="centered")
 
-st.title("📅 Simple Appointment Manager")
+st.title("📅 Appointmento App")
 
 # ---------- Session state initialization ----------
 if "appointments" not in st.session_state:
