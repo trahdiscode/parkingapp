@@ -41,5 +41,9 @@ if not st.session_state.appointments:
     st.info("No appointments added yet")
 else:
     df = pd.DataFrame(st.session_state.appointments)
-    df = df.sort_values(by=["Date", "Time"])
+    df = df.sort_values(by=["Date", "Time"]).reset_index(drop=True)
+
+    # Add proper numbering starting from 1
+    df.insert(0, "No", range(1, len(df) + 1))
+
     st.dataframe(df, hide_index=True)
