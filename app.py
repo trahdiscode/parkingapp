@@ -7,51 +7,70 @@ from datetime import date
 # ---------- PAGE CONFIG ----------
 st.set_page_config(page_title="Appointment Manager", layout="centered")
 
-# ---------- CUSTOM CSS ----------
+# ---------- CARTOON BLACK & WHITE CSS ----------
 st.markdown("""
 <style>
-/* Main background */
+/* App background */
 .stApp {
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    color: #ffffff;
+    background-color: #ffffff;
+    color: #000000;
+    font-family: "Comic Sans MS", "Trebuchet MS", sans-serif;
 }
 
 /* Headings */
 h1, h2, h3 {
-    color: #ffffff;
+    color: #000000;
+    font-weight: 800;
 }
 
-/* Cards / containers */
+/* Card style (comic panels) */
 div[data-testid="stVerticalBlock"] > div {
-    background-color: rgba(255, 255, 255, 0.06);
+    background-color: #ffffff;
+    border: 3px solid #000000;
+    border-radius: 18px;
     padding: 20px;
-    border-radius: 12px;
     margin-bottom: 20px;
+    box-shadow: 6px 6px 0px #000000;
 }
 
 /* Inputs */
 input, textarea {
-    background-color: #111 !important;
-    color: white !important;
-    border-radius: 8px !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: 2px solid #000000 !important;
+    border-radius: 10px !important;
 }
 
 /* Buttons */
-button[kind="primary"] {
-    background-color: #1abc9c !important;
-    color: black !important;
-    border-radius: 8px !important;
+button {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: 3px solid #000000 !important;
+    border-radius: 12px !important;
+    font-weight: bold !important;
+    box-shadow: 4px 4px 0px #000000;
+}
+
+button:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px #000000;
+}
+
+/* Tabs */
+button[data-baseweb="tab"] {
     font-weight: bold;
+    border: 2px solid black;
 }
 
 /* Dataframe */
 .stDataFrame {
-    background-color: rgba(0, 0, 0, 0.4);
+    border: 3px solid black;
+    border-radius: 12px;
 }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📅 Appointment Manager")
+st.title("🗓️ Appointment Manager")
 
 # ---------- DATABASE ----------
 conn = sqlite3.connect("app_v2.db", check_same_thread=False)
