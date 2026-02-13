@@ -180,10 +180,23 @@ grid += "</div>"
 st.markdown(grid, unsafe_allow_html=True)
 
 # ---------- BOOK SLOT ----------
+st.subheader("📅 Book Parking Slot")
+
 with st.form("booking"):
     booking_date = st.date_input("Date", min_value=date.today())
     entry_time = st.time_input("Entry Time", value=datetime.now().time())
     exit_time = st.time_input("Exit Time")
+
+    # placeholder for live warning
+    warn_box = st.empty()
+
+    # LIVE check (runs every rerun)
+    if exit_time <= entry_time:
+        warn_box.warning(
+            "Exit time is earlier than entry time. Booking will extend to next day."
+        )
+    else:
+        warn_box.empty()
 
     submit = st.form_submit_button("Confirm Booking")
 
@@ -224,6 +237,6 @@ with st.form("booking"):
         conn.commit()
 
         if overnight:
-            st.warning("Exit time was earlier than entry time. Booking extended to next day.")
+            st.warning("Booking confirmed as overnight (exit next day).")
 
         st.success("Slot booked successfully")
