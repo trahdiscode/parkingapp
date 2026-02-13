@@ -9,82 +9,43 @@ import hashlib
 import pandas as pd
 from datetime import datetime, date, timedelta
 
-# ---------- AUTO REFRESH (REAL TIME) ----------
+# ---------- AUTO REFRESH ----------
 st_autorefresh(interval=5000, key="refresh")
 
 st.title("🅿️ College Parking Slot Booking System")
 
-# ---------- DARK MODE + BACKGROUND ANIMATION CSS ----------
+# ---------- DARK MODE CSS ----------
 st.markdown("""
 <style>
-/* Base UI */
 .stApp {
     background-color: #0f1117;
     color: #e6e6e6;
     font-family: "Segoe UI", sans-serif;
-    position: relative;
-    z-index: 1;
 }
-
 section[data-testid="stVerticalBlock"] > div {
     background-color: #161b22;
     padding: 18px;
     border-radius: 10px;
     margin-bottom: 16px;
-    position: relative;
-    z-index: 2;
 }
-
-/* Slot grid */
 .slot-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 12px;
     max-width: 600px;
 }
-
 .slot-box {
     text-align: center;
     padding: 14px 0;
     border-radius: 6px;
     font-weight: 700;
 }
-
 .free { background-color: #238636; }
 .busy { background-color: #da3633; }
-
-/* ---- Background car animation ---- */
-.car {
-    position: fixed;
-    bottom: 40px;
-    left: -60px;
-    font-size: 40px;
-    opacity: 0.08;
-    animation: drive 30s linear infinite;
-    z-index: 0;
-    pointer-events: none;
-}
-
-.car.car2 {
-    bottom: 120px;
-    font-size: 32px;
-    animation-duration: 40s;
-}
-
-@keyframes drive {
-    from { left: -60px; }
-    to   { left: 110%; }
-}
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- BACKGROUND ANIMATION ELEMENTS ----------
-st.markdown("""
-<div class="car">🚗</div>
-<div class="car car2">🚙</div>
-""", unsafe_allow_html=True)
-
-# ---------- DATABASE ----------
+# ---------- DATABASE (NEW VERSION) ----------
 conn = sqlite3.connect("parking_v4.db", check_same_thread=False)
 cur = conn.cursor()
 
@@ -151,7 +112,7 @@ if st.session_state.user_id is None:
                 st.session_state.vehicle_number = user[1]
                 st.rerun()
             else:
-                st.error("Invalid username or password")
+                st.error("Invalid credentials")
 
     with tab2:
         u = st.text_input("New Username")
@@ -198,13 +159,13 @@ WHERE ? BETWEEN start_datetime AND end_datetime
 
 occupied = {r[0] for r in cur.fetchall()}
 
-grid_html = "<div class='slot-grid'>"
+grid = "<div class='slot-grid'>"
 for s in slots:
     cls = "busy" if s in occupied else "free"
-    grid_html += f"<div class='slot-box {cls}'>{s}</div>"
-grid_html += "</div>"
+    grid += f"<div class='slot-box {cls}'>{s}</div>"
+grid += "</div>"
 
-st.markdown(grid_html, unsafe_allow_html=True)
+st.markdown(grid, unsafe_allow_html=True)
 
 # ---------- BOOK SLOT ----------
 st.subheader("Book Parking Slot")
@@ -254,21 +215,3 @@ with st.form("book"):
                 st.warning("Exit time is earlier than entry time. Exit date shifted to next day.")
 
             st.success("Slot booked successfully")
-
-# ---------- MY BOOKINGS ----------
-st.subheader("My Bookings")
-
-cur.execute("""
-SELECT slot_number, start_datetime, end_datetime
-FROM bookings
-WHERE user_id=?
-ORDER BY start_datetime DESC
-""", (st.session_state.user_id,))
-
-rows = cur.fetchall()
-
-if rows:
-    df = pd.DataFrame(rows, columns=["Slot", "Start", "End"])
-    st.dataframe(df, hide_index=True)
-else:
-    st.info("No bookings yet")
