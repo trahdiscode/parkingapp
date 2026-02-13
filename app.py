@@ -7,46 +7,46 @@ from datetime import date
 # ---------- PAGE CONFIG ----------
 st.set_page_config(page_title="Appointment Manager", layout="centered")
 
-# ---------- CARTOON BLACK & WHITE CSS ----------
+# ---------- DARK CARTOON CSS ----------
 st.markdown("""
 <style>
 /* App background */
 .stApp {
-    background-color: #ffffff;
-    color: #000000;
+    background-color: #0e0e0e;
+    color: #ffffff;
     font-family: "Comic Sans MS", "Trebuchet MS", sans-serif;
 }
 
 /* Headings */
 h1, h2, h3 {
-    color: #000000;
-    font-weight: 800;
+    color: #ffffff;
+    font-weight: 900;
 }
 
-/* Card style (comic panels) */
+/* Comic panels / cards */
 div[data-testid="stVerticalBlock"] > div {
-    background-color: #ffffff;
-    border: 3px solid #000000;
+    background-color: #121212;
+    border: 3px solid #ffffff;
     border-radius: 18px;
     padding: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
     box-shadow: 6px 6px 0px #000000;
 }
 
 /* Inputs */
 input, textarea {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-    border: 2px solid #000000 !important;
+    background-color: #0e0e0e !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
     border-radius: 10px !important;
 }
 
 /* Buttons */
 button {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-    border: 3px solid #000000 !important;
-    border-radius: 12px !important;
+    background-color: #0e0e0e !important;
+    color: #ffffff !important;
+    border: 3px solid #ffffff !important;
+    border-radius: 14px !important;
     font-weight: bold !important;
     box-shadow: 4px 4px 0px #000000;
 }
@@ -58,14 +58,22 @@ button:hover {
 
 /* Tabs */
 button[data-baseweb="tab"] {
+    background-color: #0e0e0e !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
     font-weight: bold;
-    border: 2px solid black;
 }
 
 /* Dataframe */
 .stDataFrame {
-    border: 3px solid black;
-    border-radius: 12px;
+    background-color: #121212;
+    border: 3px solid #ffffff;
+    border-radius: 14px;
+}
+
+/* Success / error text */
+.stAlert {
+    border: 2px solid white;
 }
 </style>
 """, unsafe_allow_html=True)
