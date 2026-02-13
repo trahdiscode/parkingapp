@@ -4,25 +4,32 @@ import hashlib
 import pandas as pd
 from datetime import date
 
+# ---------- Page configuration ----------
+st.set_page_config(page_title="Appointment Manager", layout="centered")
+
+st.title("📅 Appointment Manager")
+
 # ---------- Database setup ----------
 conn = sqlite3.connect("app.db", check_same_thread=False)
 cur = conn.cursor()
 
+# Users table (USERNAME based)
 cur.execute("""
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
+    username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL
 )
 """)
 
+# Appointments table
 cur.execute("""
 CREATE TABLE IF NOT EXISTS appointments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    title TEXT,
-    date TEXT,
-    time TEXT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    date TEXT NOT NULL,
+    time TEXT NOT NULL,
     description TEXT,
     FOREIGN KEY (user_id) REFERENCES users(id)
 )
@@ -30,35 +37,31 @@ CREATE TABLE IF NOT EXISTS appointments (
 
 conn.commit()
 
-# ---------- Helpers ----------
-def hash_password(password):
+# ---------- Helper functions ----------
+def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
-def get_user(email, password):
+def get_user(username, password):
     cur.execute(
-        "SELECT id FROM users WHERE email=? AND password_hash=?",
-        (email, hash_password(password))
+        "SELECT id FROM users WHERE username=? AND password_hash=?",
+        (username, hash_password(password))
     )
     return cur.fetchone()
 
-def create_user(email, password):
+def create_user(username, password):
     try:
         cur.execute(
-            "INSERT INTO users (email, password_hash) VALUES (?, ?)",
-            (email, hash_password(password))
+            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+            (username, hash_password(password))
         )
         conn.commit()
         return True
     except sqlite3.IntegrityError:
         return False
 
-# ---------- Session ----------
+# ---------- Session state ----------
 if "user_id" not in st.session_state:
     st.session_state.user_id = None
-
-st.set_page_config(page_title="Appointment Manager")
-
-st.title("📅 Appointment Manager")
 
 # ---------- Authentication ----------
 if st.session_state.user_id is None:
@@ -66,27 +69,29 @@ if st.session_state.user_id is None:
 
     with tab1:
         st.subheader("Login")
-        email = st.text_input("Email", key="login_email")
-        password = st.text_input("Password", type="password", key="login_pass")
+        username = st.text_input("Username", key="login_username")
+        password = st.text_input("Password", type="password", key="login_password")
 
         if st.button("Login"):
-            user = get_user(email, password)
+            user = get_user(username, password)
             if user:
                 st.session_state.user_id = user[0]
                 st.experimental_rerun()
             else:
-                st.error("Invalid email or password")
+                st.error("Invalid username or password")
 
     with tab2:
         st.subheader("Register")
-        email = st.text_input("Email", key="reg_email")
-        password = st.text_input("Password", type="password", key="reg_pass")
+        username = st.text_input("Username", key="reg_username")
+        password = st.text_input("Password", type="password", key="reg_password")
 
         if st.button("Register"):
-            if create_user(email, password):
+            if username.strip() == "" or password.strip() == "":
+                st.error("Username and password cannot be empty")
+            elif create_user(username, password):
                 st.success("Account created. You can log in now.")
             else:
-                st.error("Email already exists")
+                st.error("Username already exists")
 
     st.stop()
 
@@ -103,14 +108,18 @@ with st.form("appointment_form", clear_on_submit=True):
     app_date = st.date_input("Date", min_value=date.today())
     app_time = st.time_input("Time")
     description = st.text_area("Description")
-    submit = st.form_submit_button("Add")
+
+    submit = st.form_submit_button("Add Appointment")
 
     if submit:
         if title.strip() == "":
             st.error("Title cannot be empty")
         else:
             cur.execute(
-                "INSERT INTO appointments (user_id, title, date, time, description) VALUES (?, ?, ?, ?, ?)",
+                """
+                INSERT INTO appointments (user_id, title, date, time, description)
+                VALUES (?, ?, ?, ?, ?)
+                """,
                 (
                     st.session_state.user_id,
                     title,
@@ -120,19 +129,25 @@ with st.form("appointment_form", clear_on_submit=True):
                 )
             )
             conn.commit()
-            st.success("Appointment added")
+            st.success("Appointment added successfully")
 
 # ---------- Display Appointments ----------
 st.subheader("Your Appointments")
 
 cur.execute(
-    "SELECT title, date, time, description FROM appointments WHERE user_id=?",
+    """
+    SELECT title, date, time, description
+    FROM appointments
+    WHERE user_id=?
+    ORDER BY date, time
+    """,
     (st.session_state.user_id,)
 )
+
 rows = cur.fetchall()
 
 if not rows:
-    st.info("No appointments yet")
+    st.info("No appointments added yet")
 else:
     df = pd.DataFrame(rows, columns=["Title", "Date", "Time", "Description"])
     df.insert(0, "No", [str(i) for i in range(1, len(df) + 1)])
