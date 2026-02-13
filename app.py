@@ -28,7 +28,7 @@ section[data-testid="stVerticalBlock"] > div {
     margin-bottom: 18px;
 }
 
-input, textarea {
+input, textarea, select {
     background-color: #0f1117 !important;
     color: #e6e6e6 !important;
     border: 1px solid #30363d !important;
@@ -47,11 +47,6 @@ button:hover {
     background-color: #2ea043 !important;
 }
 
-button[data-baseweb="tab"] {
-    background-color: transparent !important;
-    color: #e6e6e6 !important;
-}
-
 .stDataFrame {
     background-color: #0f1117;
     border-radius: 8px;
@@ -59,7 +54,7 @@ button[data-baseweb="tab"] {
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🅿️ Parking Slot Booking System")
+st.title("🅿️ College Parking Slot Booking")
 
 # ---------- DATABASE ----------
 conn = sqlite3.connect("parking.db", check_same_thread=False)
@@ -150,6 +145,12 @@ if st.button("Logout"):
     st.session_state.user_id = None
     st.rerun()
 
+# ---------- PREDEFINED PARKING SLOTS ----------
+slots = (
+    [f"A{i}" for i in range(1, 11)] +
+    [f"B{i}" for i in range(1, 11)]
+)
+
 # ---------- ADD BOOKING ----------
 st.subheader("Book a Parking Slot")
 
@@ -157,13 +158,13 @@ with st.form("booking_form", clear_on_submit=True):
     vehicle_number = st.text_input("Vehicle Number (e.g. TN01AB1234)")
     parking_date = st.date_input("Parking Date", min_value=date.today())
     entry_time = st.time_input("Entry Time")
-    slot_number = st.text_input("Slot Number")
+    slot_number = st.selectbox("Select Parking Slot", slots)
 
     submit = st.form_submit_button("Book Slot")
 
     if submit:
-        if vehicle_number.strip() == "" or slot_number.strip() == "":
-            st.error("Vehicle number and slot number are required")
+        if vehicle_number.strip() == "":
+            st.error("Vehicle number is required")
         else:
             cur.execute(
                 """
@@ -175,11 +176,11 @@ with st.form("booking_form", clear_on_submit=True):
                     vehicle_number.upper(),
                     parking_date.strftime("%d/%m/%Y"),
                     entry_time.strftime("%H:%M"),
-                    slot_number.upper()
+                    slot_number
                 )
             )
             conn.commit()
-            st.success("Parking slot booked successfully")
+            st.success(f"Slot {slot_number} booked successfully")
 
 # ---------- SHOW BOOKINGS ----------
 st.subheader("My Parking Bookings")
