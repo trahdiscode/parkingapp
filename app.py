@@ -8,7 +8,7 @@ from datetime import date
 st.set_page_config(page_title="Appointment Manager", layout="centered")
 st.title("📅 Appointment Manager")
 
-# ---------- Database connection (FRESH DB) ----------
+# ---------- Database connection ----------
 conn = sqlite3.connect("app_v2.db", check_same_thread=False)
 cur = conn.cursor()
 
@@ -74,7 +74,7 @@ if st.session_state.user_id is None:
             user = get_user(username, password)
             if user:
                 st.session_state.user_id = user[0]
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Invalid username or password")
 
@@ -96,7 +96,7 @@ if st.session_state.user_id is None:
 # ---------- Logout ----------
 if st.button("Logout"):
     st.session_state.user_id = None
-    st.experimental_rerun()
+    st.rerun()
 
 # ---------- Add Appointment ----------
 st.subheader("Add Appointment")
