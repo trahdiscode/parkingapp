@@ -88,9 +88,11 @@ def create_user(username, password):
     except sqlite3.IntegrityError:
         return False
 
-# ---------- SESSION ----------
+# ---------- SESSION STATE (SAFE INITIALIZATION) ----------
 if "user_id" not in st.session_state:
     st.session_state.user_id = None
+
+if "vehicle_number" not in st.session_state:
     st.session_state.vehicle_number = None
 
 # ---------- AUTH ----------
@@ -133,7 +135,7 @@ if st.button("Logout"):
     st.rerun()
 
 # ---------- SET VEHICLE NUMBER (ONCE) ----------
-if not st.session_state.vehicle_number:
+if st.session_state.vehicle_number is None:
     st.subheader("Enter Vehicle Number (One Time)")
     vehicle_input = st.text_input("Vehicle Number (e.g. TN01AB1234)")
 
