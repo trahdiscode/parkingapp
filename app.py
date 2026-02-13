@@ -7,7 +7,7 @@ from streamlit_autorefresh import st_autorefresh
 import sqlite3
 import hashlib
 import pandas as pd
-from datetime import date, datetime
+from datetime import datetime, date, timedelta
 
 # ---------- AUTO REFRESH ----------
 st_autorefresh(interval=5000, key="refresh")
@@ -46,7 +46,7 @@ section[data-testid="stVerticalBlock"] > div {
 """, unsafe_allow_html=True)
 
 # ---------- DATABASE (NEW VERSION) ----------
-conn = sqlite3.connect("parking_v3.db", check_same_thread=False)
+conn = sqlite3.connect("parking_v4.db", check_same_thread=False)
 cur = conn.cursor()
 
 cur.execute("""
@@ -62,10 +62,9 @@ cur.execute("""
 CREATE TABLE IF NOT EXISTS bookings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    parking_date TEXT NOT NULL,
-    entry_time TEXT NOT NULL,
-    exit_time TEXT NOT NULL,
     slot_number TEXT NOT NULL,
+    start_datetime TEXT NOT NULL,
+    end_datetime TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 )
 """)
@@ -95,7 +94,7 @@ def create_user(u, p):
         return False
 
 # ---------- SESSION STATE ----------
-for key in ["user_id", "vehicle_number"]:
+for key in ("user_id", "vehicle_number"):
     if key not in st.session_state:
         st.session_state[key] = None
 
@@ -145,21 +144,18 @@ if st.session_state.vehicle_number is None:
         st.rerun()
     st.stop()
 
-# ---------- SLOTS ----------
+# ---------- PARKING SLOTS ----------
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
 # ---------- REAL-TIME AVAILABILITY ----------
 st.subheader("📊 Live Slot Availability (Now)")
 
-now = datetime.now()
-today = now.strftime("%d/%m/%Y")
-current_time = now.strftime("%H:%M")
+now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
 cur.execute("""
 SELECT slot_number FROM bookings
-WHERE parking_date=?
-AND ? BETWEEN entry_time AND exit_time
-""", (today, current_time))
+WHERE ? BETWEEN start_datetime AND end_datetime
+""", (now,))
 
 occupied = {r[0] for r in cur.fetchall()}
 
@@ -176,40 +172,46 @@ st.subheader("Book Parking Slot")
 
 with st.form("book"):
     st.text_input("Vehicle Number", value=st.session_state.vehicle_number, disabled=True)
-    d = st.date_input("Date", min_value=date.today())
-    entry = st.time_input("Entry Time", value=datetime.now().time())
-    exit_ = st.time_input("Exit Time")
-    s = st.selectbox("Slot", slots)
+    booking_date = st.date_input("Entry Date", min_value=date.today())
+    entry_time = st.time_input("Entry Time", value=datetime.now().time())
+    exit_time = st.time_input("Exit Time")
+    slot = st.selectbox("Slot", slots)
     ok = st.form_submit_button("Book")
 
     if ok:
-        if exit_ <= entry:
-            st.error("Exit time must be after entry time")
+        start_dt = datetime.combine(booking_date, entry_time)
+        end_dt = datetime.combine(booking_date, exit_time)
+
+        shifted = False
+        if exit_time <= entry_time:
+            end_dt += timedelta(days=1)
+            shifted = True
+
+        cur.execute("""
+        SELECT 1 FROM bookings
+        WHERE slot_number=?
+        AND NOT (end_datetime <= ? OR start_datetime >= ?)
+        """, (
+            slot,
+            start_dt.strftime("%Y-%m-%d %H:%M"),
+            end_dt.strftime("%Y-%m-%d %H:%M")
+        ))
+
+        if cur.fetchone():
+            st.error("Slot is occupied during this time range")
         else:
             cur.execute("""
-            SELECT 1 FROM bookings
-            WHERE parking_date=?
-            AND slot_number=?
-            AND NOT (exit_time <= ? OR entry_time >= ?)
+            INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime)
+            VALUES (?, ?, ?, ?)
             """, (
-                d.strftime("%d/%m/%Y"),
-                s,
-                entry.strftime("%H:%M"),
-                exit_.strftime("%H:%M")
+                st.session_state.user_id,
+                slot,
+                start_dt.strftime("%Y-%m-%d %H:%M"),
+                end_dt.strftime("%Y-%m-%d %H:%M")
             ))
+            conn.commit()
 
-            if cur.fetchone():
-                st.error("Slot is occupied during this time range")
-            else:
-                cur.execute("""
-                INSERT INTO bookings (user_id, parking_date, entry_time, exit_time, slot_number)
-                VALUES (?, ?, ?, ?, ?)
-                """, (
-                    st.session_state.user_id,
-                    d.strftime("%d/%m/%Y"),
-                    entry.strftime("%H:%M"),
-                    exit_.strftime("%H:%M"),
-                    s
-                ))
-                conn.commit()
-                st.success("Slot booked successfully")
+            if shifted:
+                st.warning("Exit time is earlier than entry time. Exit date shifted to next day.")
+
+            st.success("Slot booked successfully")
