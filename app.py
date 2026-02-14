@@ -208,10 +208,18 @@ with col1:
         st.info("🟢 No active parking session")
 
 with col2:
-    cur.execute("SELECT COUNT(*) FROM bookings")
-    total = cur.fetchone()[0]
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    st.metric("Total Bookings", total)
+    cur.execute("""
+    SELECT slot_number FROM bookings
+    WHERE ? BETWEEN start_datetime AND end_datetime
+    """, (now,))
+
+    occupied = {r[0] for r in cur.fetchall()}
+
+    available_count = len(slots) - len(occupied)
+
+    st.metric("Available Slots", available_count)
     
 # ---------- LIVE AVAILABILITY ----------
 st.divider()
