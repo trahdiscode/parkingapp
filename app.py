@@ -9,7 +9,7 @@ import hashlib
 from datetime import datetime, date, timedelta
 
 # ---------- AUTO REFRESH ----------
-st_autorefresh(interval=5000, key="refresh")
+st_autorefresh(interval=1000, key="refresh")
 
 # ---------- DARK MODE CSS ----------
 st.markdown("""
