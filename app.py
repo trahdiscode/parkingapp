@@ -183,9 +183,16 @@ st.markdown(grid, unsafe_allow_html=True)
 st.subheader("📅 Book Parking Slot")
 
 with st.form("booking"):
+
     booking_date = st.date_input("Date", min_value=date.today())
-    entry_time = st.time_input("Entry Time", value=datetime.now().time())
+    entry_time = st.time_input("Entry Time", value=datetime.now().replace(second=0, microsecond=0).time())
     exit_time = st.time_input("Exit Time")
+
+    # LIVE WARNING (runs every render)
+    next_day = False
+    if exit_time <= entry_time:
+        next_day = True
+        st.warning("Exit time is earlier than entry time. Booking will extend to next day.")
 
     submit = st.form_submit_button("Confirm Booking")
 
@@ -194,11 +201,10 @@ with st.form("booking"):
         start_dt = datetime.combine(booking_date, entry_time)
         end_dt = datetime.combine(booking_date, exit_time)
 
-        if exit_time <= entry_time:
+        if next_day:
             end_dt += timedelta(days=1)
-            st.warning("Exit time is earlier than entry time. Booking will extend to next day.")
 
-        # Check if slot is blocked
+        # Get blocked slots
         cur.execute("""
         SELECT slot_number FROM bookings
         WHERE NOT (end_datetime <= ? OR start_datetime >= ?)
@@ -206,6 +212,7 @@ with st.form("booking"):
             start_dt.strftime("%Y-%m-%d %H:%M"),
             end_dt.strftime("%Y-%m-%d %H:%M")
         ))
+
         blocked = {r[0] for r in cur.fetchall()}
         available = [s for s in slots if s not in blocked]
 
@@ -213,9 +220,7 @@ with st.form("booking"):
             st.error("No slots available for selected time")
             st.stop()
 
-        slot = available[0]
-
-        # STRICT RULE: Only one active booking per user
+        # Check user overlapping booking
         cur.execute("""
         SELECT id FROM bookings
         WHERE user_id=?
@@ -231,6 +236,8 @@ with st.form("booking"):
         if existing:
             st.error("You already have a booking during this time. Only one car allowed.")
         else:
+            slot = available[0]
+
             cur.execute("""
             INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime)
             VALUES (?, ?, ?, ?)
@@ -240,6 +247,7 @@ with st.form("booking"):
                 start_dt.strftime("%Y-%m-%d %H:%M"),
                 end_dt.strftime("%Y-%m-%d %H:%M")
             ))
+
             conn.commit()
             st.success(f"Slot {slot} booked successfully")
             st.rerun()
