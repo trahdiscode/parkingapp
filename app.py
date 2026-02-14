@@ -1,10 +1,15 @@
 import streamlit as st
+
+# ---------- PAGE CONFIG ----------
+st.set_page_config(page_title="Parking Slot Booking", layout="wide")
+
+from streamlit_autorefresh import st_autorefresh
 import sqlite3
 import hashlib
 from datetime import datetime, date, timedelta
 
-# ---------- PAGE CONFIG ----------
-st.set_page_config(page_title="Parking Slot Booking", layout="wide")
+# ---------- AUTO REFRESH ----------
+st_autorefresh(interval=5000, key="refresh")
 
 # ---------- DARK MODE CSS ----------
 st.markdown("""
@@ -82,23 +87,19 @@ def create_user(u, p):
         return False
 
 # ---------- SESSION ----------
-if "user_id" not in st.session_state:
-    st.session_state.user_id = None
-
-if "vehicle_number" not in st.session_state:
-    st.session_state.vehicle_number = None
+for k in ("user_id", "vehicle_number"):
+    if k not in st.session_state:
+        st.session_state[k] = None
 
 # ---------- AUTH ----------
 if st.session_state.user_id is None:
-
     st.markdown("## 🅿️ Parking Slot Booking")
 
     tab1, tab2 = st.tabs(["Login", "Register"])
 
     with tab1:
-        u = st.text_input("Username")
-        p = st.text_input("Password", type="password")
-
+        u = st.text_input("Username", key="login_user")
+        p = st.text_input("Password", type="password", key="login_pass")
         if st.button("Login", use_container_width=True):
             user = get_user(u, p)
             if user:
@@ -109,9 +110,8 @@ if st.session_state.user_id is None:
                 st.error("Invalid credentials")
 
     with tab2:
-        u = st.text_input("New Username")
-        p = st.text_input("New Password", type="password")
-
+        u = st.text_input("New Username", key="reg_user")
+        p = st.text_input("New Password", type="password", key="reg_pass")
         if st.button("Register", use_container_width=True):
             if create_user(u, p):
                 st.success("Account created. Login now.")
@@ -122,13 +122,10 @@ if st.session_state.user_id is None:
 
 # ---------- HEADER ----------
 col1, col2, col3 = st.columns([6, 3, 1])
-
 with col1:
     st.markdown("## 🅿️ Parking Slot Booking")
-
 with col2:
     st.caption(f"Vehicle: **{st.session_state.vehicle_number or 'Not set'}**")
-
 with col3:
     if st.button("Logout", use_container_width=True):
         st.session_state.user_id = None
@@ -148,7 +145,7 @@ if st.session_state.vehicle_number is None:
         st.rerun()
     st.stop()
 
-# ---------- SLOT LIST ----------
+# ---------- SLOTS ----------
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
 # ---------- LIVE AVAILABILITY ----------
@@ -169,7 +166,6 @@ WHERE user_id=? AND ? BETWEEN start_datetime AND end_datetime
 mine = {r[0] for r in cur.fetchall()}
 
 grid = "<div class='slot-grid'>"
-
 for s in slots:
     if s in mine:
         cls, label = "mine", "YOURS"
@@ -179,53 +175,25 @@ for s in slots:
         cls, label = "free", "FREE"
 
     grid += f"<div class='slot {cls}'>{s}<br><small>{label}</small></div>"
-
 grid += "</div>"
 
 st.markdown(grid, unsafe_allow_html=True)
 
 # ---------- BOOK SLOT ----------
-# ---------- BOOK SLOT ----------
 st.subheader("📅 Book Parking Slot")
 
-if "default_entry_time" not in st.session_state:
-    st.session_state.default_entry_time = datetime.now().replace(second=0, microsecond=0).time()
-
-if "default_exit_time" not in st.session_state:
-    st.session_state.default_exit_time = (
-        datetime.now() + timedelta(hours=1)
-    ).replace(second=0, microsecond=0).time()
-
 with st.form("booking"):
-
     booking_date = st.date_input("Date", min_value=date.today())
+    entry_time = st.time_input("Entry Time", value=datetime.now().time())
+    exit_time = st.time_input("Exit Time")
 
-    entry_time = st.time_input(
-        "Entry Time",
-        value=st.session_state.default_entry_time,
-        key="entry_time"
-    )
-
-    exit_time = st.time_input(
-        "Exit Time",
-        value=st.session_state.default_exit_time,
-        key="exit_time"
-    )
-
-    # Create datetime objects
     start_dt = datetime.combine(booking_date, entry_time)
     end_dt = datetime.combine(booking_date, exit_time)
 
-    # SHIFT LOGIC
-    shifted = False
     if exit_time <= entry_time:
         end_dt += timedelta(days=1)
-        shifted = True
+        st.warning("Exit time is earlier than entry time. Booking will extend to next day.")
 
-    if shifted:
-        st.warning("Exit time is earlier than entry time. Booking extends to next day.")
-
-    # Check overlapping bookings
     cur.execute("""
     SELECT slot_number FROM bookings
     WHERE NOT (end_datetime <= ? OR start_datetime >= ?)
@@ -233,37 +201,42 @@ with st.form("booking"):
         start_dt.strftime("%Y-%m-%d %H:%M"),
         end_dt.strftime("%Y-%m-%d %H:%M")
     ))
-
     blocked = {r[0] for r in cur.fetchall()}
     available = [s for s in slots if s not in blocked]
 
-    if available:
-        slot = st.selectbox("Available Slots", available)
-    else:
-        slot = None
-        st.error("No slots available for selected time")
-
+    slot = st.selectbox("Available Slots", available)
     submit = st.form_submit_button("Confirm Booking")
 
-    if submit and slot:
-        cur.execute("""
-        INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime)
-        VALUES (?, ?, ?, ?)
-        """, (
-            st.session_state.user_id,
-            slot,
-            start_dt.strftime("%Y-%m-%d %H:%M"),
-            end_dt.strftime("%Y-%m-%d %H:%M")
-        ))
-        conn.commit()
+    if submit:
+        if not available:
+            st.error("No slots available for selected time")
 
-        st.success("Slot booked successfully")
+        else:
+            # STRICT RULE: Only one active booking per user
+            cur.execute("""
+            SELECT id FROM bookings
+            WHERE user_id=?
+            AND NOT (end_datetime <= ? OR start_datetime >= ?)
+            """, (
+                st.session_state.user_id,
+                start_dt.strftime("%Y-%m-%d %H:%M"),
+                end_dt.strftime("%Y-%m-%d %H:%M")
+            ))
 
-        # Reset times after booking
-        st.session_state.default_entry_time = datetime.now().replace(second=0, microsecond=0).time()
-        st.session_state.default_exit_time = (
-            datetime.now() + timedelta(hours=1)
-        ).replace(second=0, microsecond=0).time()
+            existing = cur.fetchone()
 
-        st.rerun()
-        st.rerun()
+            if existing:
+                st.error("You already have a booking during this time. Only one car allowed.")
+            else:
+                cur.execute("""
+                INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime)
+                VALUES (?, ?, ?, ?)
+                """, (
+                    st.session_state.user_id,
+                    slot,
+                    start_dt.strftime("%Y-%m-%d %H:%M"),
+                    end_dt.strftime("%Y-%m-%d %H:%M")
+                ))
+                conn.commit()
+                st.success("Slot booked successfully")
+                st.rerun()
