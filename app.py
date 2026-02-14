@@ -188,7 +188,9 @@ with col2:
     st.metric("Total Bookings", total)
     
 # ---------- LIVE AVAILABILITY ----------
-st.subheader("📊 Live Slot Availability (Now)")
+st.divider()
+st.markdown("### 📊 Live Slot Overview")
+st.caption("Real-time availability")
 
 now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
