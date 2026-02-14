@@ -182,72 +182,75 @@ st.markdown(grid, unsafe_allow_html=True)
 # ---------- BOOK SLOT ----------
 st.subheader("📅 Book Parking Slot")
 
-with st.form("booking"):
+booking_date = st.date_input("Date", min_value=date.today())
 
-    booking_date = st.date_input("Date", min_value=date.today())
-    entry_time = st.time_input("Entry Time", value=datetime.now().replace(second=0, microsecond=0).time())
-    exit_time = st.time_input("Exit Time")
+entry_time = st.time_input(
+    "Entry Time",
+    value=datetime.now().replace(second=0, microsecond=0).time()
+)
 
-    # LIVE WARNING (runs every render)
-    next_day = False
-    if exit_time <= entry_time:
-        next_day = True
-        st.warning("Exit time is earlier than entry time. Booking will extend to next day.")
+exit_time = st.time_input("Exit Time")
 
-    submit = st.form_submit_button("Confirm Booking")
+start_dt = datetime.combine(booking_date, entry_time)
+end_dt = datetime.combine(booking_date, exit_time)
 
-    if submit:
+next_day = False
+if exit_time <= entry_time:
+    next_day = True
+    st.warning("Exit time is earlier than entry time. Booking will extend to next day.")
 
-        start_dt = datetime.combine(booking_date, entry_time)
-        end_dt = datetime.combine(booking_date, exit_time)
+if next_day:
+    end_dt += timedelta(days=1)
 
-        if next_day:
-            end_dt += timedelta(days=1)
+# Check blocked slots dynamically
+cur.execute("""
+SELECT slot_number FROM bookings
+WHERE NOT (end_datetime <= ? OR start_datetime >= ?)
+""", (
+    start_dt.strftime("%Y-%m-%d %H:%M"),
+    end_dt.strftime("%Y-%m-%d %H:%M")
+))
 
-        # Get blocked slots
+blocked = {r[0] for r in cur.fetchall()}
+available = [s for s in slots if s not in blocked]
+
+if available:
+    slot = st.selectbox("Available Slots", available)
+else:
+    st.error("No slots available for selected time")
+    slot = None
+
+if st.button("Confirm Booking"):
+
+    if slot is None:
+        st.error("No slot selected")
+        st.stop()
+
+    # Check overlapping booking for user
+    cur.execute("""
+    SELECT id FROM bookings
+    WHERE user_id=?
+    AND NOT (end_datetime <= ? OR start_datetime >= ?)
+    """, (
+        st.session_state.user_id,
+        start_dt.strftime("%Y-%m-%d %H:%M"),
+        end_dt.strftime("%Y-%m-%d %H:%M")
+    ))
+
+    existing = cur.fetchone()
+
+    if existing:
+        st.error("You already have a booking during this time. Only one car allowed.")
+    else:
         cur.execute("""
-        SELECT slot_number FROM bookings
-        WHERE NOT (end_datetime <= ? OR start_datetime >= ?)
-        """, (
-            start_dt.strftime("%Y-%m-%d %H:%M"),
-            end_dt.strftime("%Y-%m-%d %H:%M")
-        ))
-
-        blocked = {r[0] for r in cur.fetchall()}
-        available = [s for s in slots if s not in blocked]
-
-        if not available:
-            st.error("No slots available for selected time")
-            st.stop()
-
-        # Check user overlapping booking
-        cur.execute("""
-        SELECT id FROM bookings
-        WHERE user_id=?
-        AND NOT (end_datetime <= ? OR start_datetime >= ?)
+        INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime)
+        VALUES (?, ?, ?, ?)
         """, (
             st.session_state.user_id,
+            slot,
             start_dt.strftime("%Y-%m-%d %H:%M"),
             end_dt.strftime("%Y-%m-%d %H:%M")
         ))
-
-        existing = cur.fetchone()
-
-        if existing:
-            st.error("You already have a booking during this time. Only one car allowed.")
-        else:
-            slot = available[0]
-
-            cur.execute("""
-            INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime)
-            VALUES (?, ?, ?, ?)
-            """, (
-                st.session_state.user_id,
-                slot,
-                start_dt.strftime("%Y-%m-%d %H:%M"),
-                end_dt.strftime("%Y-%m-%d %H:%M")
-            ))
-
-            conn.commit()
-            st.success(f"Slot {slot} booked successfully")
-            st.rerun()
+        conn.commit()
+        st.success(f"Slot {slot} booked successfully")
+        st.rerun()
