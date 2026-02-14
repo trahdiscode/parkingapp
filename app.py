@@ -98,7 +98,7 @@ if st.session_state.user_id is None:
 st.markdown("## Parking Dashboard")
 st.divider()
 
-# Show persistent error (7 seconds)
+# ---------- ERROR DISPLAY (7 seconds) ----------
 if st.session_state.error_message:
     elapsed = time.time() - st.session_state.error_time
     if elapsed < 7:
@@ -113,7 +113,7 @@ slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 now_dt = datetime.now()
 now_str = now_dt.strftime("%Y-%m-%d %H:%M")
 
-# ---------- ACTIVE BOOKING QUERY ----------
+# ---------- ACTIVE BOOKING ----------
 cur.execute("""
 SELECT slot_number, start_datetime, end_datetime
 FROM bookings
@@ -127,14 +127,12 @@ cur.execute("""
 SELECT slot_number FROM bookings
 WHERE ? BETWEEN start_datetime AND end_datetime
 """, (now_str,))
-
 occupied = {r[0] for r in cur.fetchall()}
 available_count = len(slots) - len(occupied)
 
 # ---------- DASHBOARD COLUMNS ----------
 col1, col2 = st.columns([2, 1])
 
-# Left Column (Active Booking)
 with col1:
     if active:
         slot, start, end = active
@@ -165,26 +163,32 @@ with col1:
     else:
         st.info("🟢 No active parking session")
 
-# Right Column (Metric)
 with col2:
     st.metric("Available Slots", available_count)
 
 st.divider()
 
-# ---------- LIVE GRID ----------
+# ---------- LIVE SLOT GRID ----------
 st.subheader("Live Slot Overview")
 
-grid = "<div style='display:grid;grid-template-columns:repeat(10,1fr);gap:10px;'>"
+grid = "<div style='display:grid;grid-template-columns:repeat(10,1fr);gap:8px;'>"
 for s in slots:
     if s in occupied:
         color = "#ef4444"
         label = "BUSY"
+    elif active and s == active[0]:
+        color = "#3b82f6"
+        label = "YOURS"
     else:
         color = "#22c55e"
         label = "FREE"
 
-    grid += f"<div style='padding:12px;text-align:center;background:{color};border-radius:6px;color:white;font-weight:600;'>{s}<br><small>{label}</small></div>"
-
+    grid += f"""
+    <div style='padding:10px;text-align:center;background:{color};
+    border-radius:6px;color:white;font-weight:600;'>
+    {s}<br><small>{label}</small>
+    </div>
+    """
 grid += "</div>"
 st.markdown(grid, unsafe_allow_html=True)
 
@@ -204,6 +208,7 @@ if exit_time <= entry_time:
     end_dt += timedelta(days=1)
     st.caption("Overnight booking")
 
+# Blocked slots
 cur.execute("""
 SELECT slot_number FROM bookings
 WHERE NOT (end_datetime <= ? OR start_datetime >= ?)
@@ -211,7 +216,6 @@ WHERE NOT (end_datetime <= ? OR start_datetime >= ?)
     start_dt.strftime("%Y-%m-%d %H:%M"),
     end_dt.strftime("%Y-%m-%d %H:%M")
 ))
-
 blocked = {r[0] for r in cur.fetchall()}
 available = [s for s in slots if s not in blocked]
 
