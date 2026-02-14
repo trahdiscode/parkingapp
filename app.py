@@ -148,6 +148,45 @@ if st.session_state.vehicle_number is None:
 # ---------- SLOTS ----------
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
+st.markdown("## 🅿️ Parking Dashboard")
+
+st.divider()
+
+# ---------- ACTIVE BOOKING STATUS ----------
+now_dt = datetime.now()
+
+cur.execute("""
+SELECT slot_number, start_datetime, end_datetime
+FROM bookings
+WHERE user_id=? AND ? BETWEEN start_datetime AND end_datetime
+""", (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M")))
+
+active = cur.fetchone()
+
+col1, col2 = st.columns([2, 1])
+
+with col1:
+    if active:
+        slot, start, end = active
+        end_time = datetime.strptime(end, "%Y-%m-%d %H:%M")
+        remaining = end_time - now_dt
+
+        st.success(f"""
+        🚗 **Currently Parked**
+
+        **Slot:** {slot}  
+        **Until:** {end_time.strftime("%H:%M")}  
+        **Time Remaining:** {str(remaining).split('.')[0]}
+        """)
+    else:
+        st.info("🟢 No active parking session")
+
+with col2:
+    cur.execute("SELECT COUNT(*) FROM bookings")
+    total = cur.fetchone()[0]
+
+    st.metric("Total Bookings", total)
+    
 # ---------- LIVE AVAILABILITY ----------
 st.subheader("📊 Live Slot Availability (Now)")
 
