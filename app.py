@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit_shadcn_ui as ui # Import the new component library
 import sqlite3
 import hashlib
 from datetime import datetime, date, timedelta
@@ -11,7 +10,7 @@ st.set_page_config(page_title="Parking Slot Booking", layout="wide")
 # ---------- AUTO REFRESH (1 SECOND) ----------
 st_autorefresh(interval=1000, key="refresh")
 
-# ---------- "15 YEARS OF EXPERIENCE" UI STYLESHEET (Adapted for ShadCN UI) ----------
+# ---------- "15 YEARS OF EXPERIENCE" UI STYLESHEET ----------
 st.markdown("""
 <style>
 /* Import Google Font: Inter */
@@ -72,42 +71,44 @@ div[data-testid="stMetric"], div[data-testid="stAlert"] {
 div[data-testid="stAlert"][data-baseweb="alert-success"] { background-color: rgba(34, 129, 74, 0.1); border-color: rgba(34, 129, 74, 0.3); }
 div[data-testid="stAlert"][data-baseweb="alert-info"] { background-color: rgba(74, 144, 226, 0.1); border-color: rgba(74, 144, 226, 0.3); }
 
-/* --- Styling for ShadCN UI Buttons as Slots --- */
-button[data-testid^="st_shadcn_button_slot_"] {
+/* --- Styling for st.button used as slots --- */
+div[data-testid="stHorizontalBlock"] {
+    gap: 0.75rem;
+}
+.stButton button {
     width: 100%;
     height: 80px;
+    padding: 0;
+    margin: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    background-color: #242424;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    transition: border-color 0.2s ease;
+}
+.stButton button div[data-testid="stMarkdownContainer"] p {
+    font-family: var(--font-family);
     font-size: 1rem;
     font-weight: 500;
     color: var(--color-text-primary);
-    background-color: #242424;
-    border: 1px solid var(--color-border);
-    transition: border-color 0.2s ease;
+    margin: 0;
+    padding: 0;
+    line-height: 1.2;
 }
-button[data-testid^="st_shadcn_button_slot_"]:hover {
-    border-color: var(--color-text-secondary);
+.stButton button small {
+    font-weight: 400;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
 }
-button[data-testid^="st_shadcn_button_slot_"]:disabled {
-    background-color: #1A1A1A;
-    border-color: #242424;
-    cursor: not-allowed;
-}
-
-/* Slot status text colors */
-.free_slot { color: #50A86E; }
-.busy_slot { color: #B9535A; }
-.yours_slot { color: #A0A0A0; }
-
-small { font-weight: 400; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
-
-/* Style for the SELECTED slot */
-.selected_slot {
-    border: 2px solid var(--color-accent)!important;
-    background-color: rgba(74, 144, 226, 0.1)!important;
-}
+.stButton button.free:hover { border-color: var(--color-text-secondary); }
+.stButton button.busy { color: #B9535A; border-left: 3px solid #B9535A; background-color: #1A1A1A; }
+.stButton button.yours { color: #A0A0A0; border-left: 3px solid #A0A0A0; }
+.stButton button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -191,10 +192,11 @@ if exit_time <= entry_time:
     end_dt += timedelta(days=1)
     st.warning("Exit time is before entry. Booking will extend to the next day.", icon="⚠️")
 
-# --- CLICKABLE LIVE AVAILABILITY GRID (Using ShadCN UI) ---
+# --- CLICKABLE LIVE AVAILABILITY GRID (Using Native st.button) ---
 st.markdown("<p style='color: var(--color-text-secondary);'>Step 2: Click an available slot below.</p>", unsafe_allow_html=True)
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 blocked_for_selection = {r[0] for r in cur.execute("SELECT slot_number FROM bookings WHERE NOT (end_datetime <=? OR start_datetime >=?)", (start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()}
+my_active_slot = next((s[0] for s in cur.execute("SELECT slot_number FROM bookings WHERE user_id=? AND? BETWEEN start_datetime AND end_datetime", (st.session_state.user_id, datetime.now().strftime("%Y-%m-%d %H:%M")))), None)
 
 # Function to handle slot selection
 def handle_slot_click(slot_name):
@@ -202,6 +204,17 @@ def handle_slot_click(slot_name):
         st.session_state.selected_slot = None
     else:
         st.session_state.selected_slot = slot_name
+
+# Inject CSS for the selected button
+if st.session_state.selected_slot:
+    st.markdown(f"""
+        <style>
+           .stButton button[data-testid*="st.button"] p:contains("{st.session_state.selected_slot}") {{
+                parent.parent.parent.border: 2px solid var(--color-accent);
+                background-color: rgba(74, 144, 226, 0.1);
+            }}
+        </style>
+    """, unsafe_allow_html=True)
 
 # Display the grid
 num_columns = 10
@@ -211,19 +224,25 @@ for row in rows:
     for i, s in enumerate(row):
         with cols[i]:
             is_blocked = s in blocked_for_selection
+            is_mine_now = s == my_active_slot
             is_selected = s == st.session_state.selected_slot
             
-            # Build the content of the button using HTML
-            if is_blocked:
-                label = f"{s}<br><small class='busy_slot'>BUSY</small>"
+            if is_mine_now:
+                label = f"{s}<br><small>YOURS</small>"
+                disabled_status = True
+            elif is_blocked:
+                label = f"{s}<br><small>BUSY</small>"
+                disabled_status = True
             else:
-                label = f"{s}<br><small class='free_slot'>FREE</small>"
-            
-            # The key change: Use ui.button
-            ui.button(label, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_blocked, className="selected_slot" if is_selected else "")
+                label = f"{s}<br><small>FREE</small>"
+                disabled_status = False
+
+            # Use st.button and pass the HTML-like label to it
+            st.button(label, on_click=handle_slot_click, args=(s,), disabled=disabled_status, key=f"slot_{s}", use_container_width=True)
 
 # --- CONFIRMATION SECTION ---
 if st.session_state.selected_slot:
+    # Double-check availability in case of race condition
     if st.session_state.selected_slot in blocked_for_selection:
         st.error(f"Slot {st.session_state.selected_slot} is no longer available.", icon="🚫")
         st.session_state.selected_slot = None
@@ -231,6 +250,7 @@ if st.session_state.selected_slot:
     else:
         st.info(f"You have selected slot **{st.session_state.selected_slot}**. Please confirm your booking.", icon="🅿️")
         if st.button("Confirm Booking", type="primary", use_container_width=True):
+            # Final check for user's own overlapping bookings
             if cur.execute("SELECT id FROM bookings WHERE user_id=? AND NOT (end_datetime <=? OR start_datetime >=?)", (st.session_state.user_id, start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))).fetchone():
                 st.error("You already have an overlapping booking.", icon="🚫")
             else:
