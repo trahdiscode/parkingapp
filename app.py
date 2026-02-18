@@ -797,7 +797,7 @@ else:
     st.markdown("""
     <div class="info-empty">
         <div style="font-size:1.2rem;margin-bottom:0.4rem;">🔒</div>
-        You have an active or upcoming booking.<br>
+        You have an active booking.<br>
         <span style="font-size:0.78rem;">Manage your existing sessions above to make a new booking.</span>
     </div>
     """, unsafe_allow_html=True)
