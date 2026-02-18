@@ -9,119 +9,101 @@ import hashlib
 from datetime import datetime, date, timedelta
 
 # ---------- AUTO REFRESH ----------
-# st_autorefresh(interval=5000, key="refresh") # Commenting out for cleaner testing, uncomment if needed
+# st_autorefresh(interval=5000, key="refresh")
 
-# ---------- HIGHLY PROFESSIONAL UI STYLESHEET ----------
+# ---------- PROFESSIONAL UI STYLESHEET (V3 - RELIABLE TARGETING) ----------
 st.markdown("""
 <style>
-/* Import Google Font: Inter - A clean, professional font */
+/* Import Google Font: Inter - Clean & Professional */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* --- Root Variables for a Cohesive Design System --- */
 :root {
-    --color-bg: #111317;
-    --color-bg-secondary: #1A1D23;
-    --color-text-primary: #E0E6F1;
-    --color-text-secondary: #A0AEC0;
-    --color-border: #2A2F3B;
-    --color-accent: #367BFA; /* Professional Blue */
-    --color-accent-hover: #2F6AD5;
-    --color-green: #28a745;
-    --color-red: #dc3545;
-    
-    --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --border-radius: 8px;
+    --font-family: 'Inter', sans-serif;
+    --color-bg: #0E1117;
+    --color-bg-secondary: #1C2028;
+    --color-text-primary: #FAFAFA;
+    --color-text-secondary: #AFB8C1;
+    --color-border: #303742;
+    --color-accent: #3A77E0;
+    --border-radius: 0.5rem;
 }
 
 /* --- Base App Styling --- */
 .stApp {
     background-color: var(--color-bg);
-    color: var(--color-text-primary);
-    font-family: var(--font-family-sans);
+    font-family: var(--font-family);
 }
 
-/* --- Custom Title and Header Classes --- */
-.main-title {
-    font-family: var(--font-family-sans);
-    font-weight: 700;
-    font-size: 2.5rem; /* Large, but not comical */
+/* --- Typography & Headings (Directly targeting Streamlit's output) --- */
+h1 {
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 1.8rem;
     color: var(--color-text-primary);
-    padding-bottom: 1rem;
-    margin-bottom: 2rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
     border-bottom: 1px solid var(--color-border);
 }
 
-.dashboard-title {
-    font-family: var(--font-family-sans);
+h2 {
+    font-family: var(--font-family);
     font-weight: 600;
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     color: var(--color-text-secondary);
-    margin-top: 3rem;
-    margin-bottom: 1.5rem;
-}
-
-/* Override default Streamlit subheader */
-h3 {
-    font-family: var(--font-family-sans);
-    font-weight: 600;
-    font-size: 1.25rem;
-    color: var(--color-text-primary);
     margin-top: 2.5rem;
     margin-bottom: 1rem;
+}
+
+h3 {
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: var(--color-text-primary);
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
 }
 
 /* --- UI Elements: Inputs, Buttons, Selects --- */
 .stTextInput > div > div > input,
 .stDateInput > div > div > input,
-.stTimeInput > div > div > input {
-    background-color: var(--color-bg-secondary);
+.stTimeInput > div > div > input,
+.stSelectbox > div > div > button {
+    background-color: var(--color-bg);
     color: var(--color-text-primary);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius);
-    padding: 12px 14px;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 .stTextInput > div > div > input:focus,
 .stDateInput > div > div > input:focus,
-.stTimeInput > div > div > input:focus {
+.stTimeInput > div > div > input:focus,
+.stSelectbox > div > div > button:focus {
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 2px rgba(54, 123, 250, 0.3);
+    box-shadow: 0 0 0 2px rgba(58, 119, 224, 0.3);
     outline: none;
 }
 
 .stButton > button {
-    font-family: var(--font-family-sans);
-    font-weight: 600;
+    font-weight: 500;
     background-color: var(--color-bg-secondary);
-    color: var(--color-text-primary);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius);
-    padding: 12px 24px;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition: background-color 0.2s;
 }
 .stButton > button:hover {
-    background-color: #2A2F3B;
-    border-color: var(--color-text-secondary);
-}
-.stButton > button:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(54, 123, 250, 0.3);
-    border-color: var(--color-accent);
+    background-color: #262B34;
 }
 
-/* Primary Button Style */
-.stButton > button.primary {
+.stButton > button.primary { /* Primary "Confirm" button */
     background-color: var(--color-accent);
     border-color: var(--color-accent);
     color: white;
 }
-.stButton > button.primary:hover {
-    background-color: var(--color-accent-hover);
-    border-color: var(--color-accent-hover);
-}
 
-/* --- Modern Card Design --- */
-.card {
+/* --- Card Styling for Metric & Status (Fixing the broken layout) --- */
+div[data-testid="stMetric"],
+div[data-testid="stAlert"] {
     background-color: var(--color-bg-secondary);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius);
@@ -129,50 +111,48 @@ h3 {
     height: 100%;
 }
 
-/* --- Slot Grid Display --- */
+/* Style for the "Currently Parked" success alert */
+div[data-testid="stAlert"] {
+    background-color: #112B1E; /* Dark Green background */
+    border-color: #255B39;
+}
+
+/* --- Slot Grid --- */
 .slot-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 0.75rem;
     margin-top: 1rem;
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
 }
 .slot {
     padding: 1rem 0;
     text-align: center;
     border-radius: var(--border-radius);
-    font-weight: 700;
+    font-weight: 600;
     color: white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s;
+    background-color: #333; /* Base color */
 }
-.slot:hover {
-    transform: translateY(-3px);
-}
-.free { background: linear-gradient(145deg, #2ecc71, #28a745); }
-.busy { background: linear-gradient(145deg, #e74c3c, #c0392b); }
-.mine { background: linear-gradient(145deg, #3498db, #2980b9); }
+.free { background-color: #255B39; }
+.busy { background-color: #6E2A31; }
+.mine { background-color: #2A4A8A; }
 small {
     font-weight: 500;
-    opacity: 0.85;
     font-size: 0.75rem;
-    display: block;
-    margin-top: 4px;
+    opacity: 0.8;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
+# (Database and Helper function code remains the same, it is correct)
 # ---------- DATABASE ----------
-# (Database code remains the same)
 conn = sqlite3.connect("parking_v4.db", check_same_thread=False)
 cur = conn.cursor()
 cur.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, vehicle_number TEXT)")
 cur.execute("CREATE TABLE IF NOT EXISTS bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, slot_number TEXT NOT NULL, start_datetime TEXT NOT NULL, end_datetime TEXT NOT NULL)")
 conn.commit()
-
 # ---------- HELPERS ----------
-# (Helper functions remain the same)
 def hash_password(p): return hashlib.sha256(p.encode()).hexdigest()
 def get_user(u, p):
     cur.execute("SELECT id, vehicle_number FROM users WHERE username=? AND password_hash=?", (u, hash_password(p)))
@@ -183,15 +163,13 @@ def create_user(u, p):
         conn.commit()
         return True
     except sqlite3.IntegrityError: return False
-
 # ---------- SESSION ----------
-# (Session state remains the same)
 for k in ("user_id", "vehicle_number"):
     if k not in st.session_state: st.session_state[k] = None
 
 # ---------- AUTH PAGE ----------
 if st.session_state.user_id is None:
-    st.markdown("<h1 class='main-title'>🅿️ Parking Slot Booking System</h1>", unsafe_allow_html=True)
+    st.title("🅿️ Parking Slot Booking System")
     tab1, tab2 = st.tabs(["Login", "Register"])
     with tab1:
         u = st.text_input("Username", key="login_user")
@@ -213,19 +191,15 @@ if st.session_state.user_id is None:
 # ---------- MAIN APP LAYOUT ----------
 
 # --- HEADER ---
-col1, col2, col3 = st.columns([7, 2, 1])
+col1, col2 = st.columns([8, 1])
 with col1:
-    st.markdown("<h1 class='main-title' style='margin-bottom: 0; border: none; font-size: 2rem;'>🅿️ Parking Slot Booking</h1>", unsafe_allow_html=True)
+    st.title("🅿️ Parking Slot Booking")
 with col2:
-    st.caption(f"Vehicle: **{st.session_state.vehicle_number or 'Not set'}**")
-with col3:
-    if st.button("Logout", use_container_width=True):
+    if st.button("Logout"):
         st.session_state.user_id, st.session_state.vehicle_number = None, None
         st.rerun()
 
-st.divider()
-
-# --- VEHICLE NUMBER INPUT ---
+# --- VEHICLE NUMBER ---
 if st.session_state.vehicle_number is None:
     v = st.text_input("Enter Vehicle Number (one time requirement)")
     if st.button("Save Vehicle Number", type="primary"):
@@ -236,40 +210,35 @@ if st.session_state.vehicle_number is None:
     st.stop()
 
 # --- DASHBOARD SECTION ---
-st.markdown("<h2 class='dashboard-title'>Dashboard Overview</h2>", unsafe_allow_html=True)
+st.header("Dashboard Overview")
 
-# --- STATUS CARDS ---
+# --- STATUS CARDS (This will now render correctly) ---
 col1, col2 = st.columns(2)
 with col1:
     now_dt = datetime.now()
     cur.execute("SELECT slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? AND? BETWEEN start_datetime AND end_datetime", (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M")))
     active = cur.fetchone()
     
-    st.markdown('<div class="card">', unsafe_allow_html=True)
     if active:
-        slot, start, end = active
+        slot, _, end = active
         end_time = datetime.strptime(end, "%Y-%m-%d %H:%M")
         remaining = end_time - now_dt
         st.success(f"""
-        🚗 **Currently Parked**\n
+        **Currently Parked**\n
         **Slot:** {slot}\n
         **Until:** {end_time.strftime("%I:%M %p")}\n
         **Time Remaining:** {str(remaining).split('.')[0]}
         """)
     else:
-        st.info("🟢 No active parking session.")
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.info("No active parking session.")
 
 with col2:
     cur.execute("SELECT COUNT(*) FROM bookings")
     total = cur.fetchone()[0]
-    
-    st.markdown('<div class="card">', unsafe_allow_html=True)
     st.metric("Total Lifetime Bookings", total)
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- LIVE AVAILABILITY SECTION ---
-st.subheader("Live Slot Availability")
+st.header("Live Slot Availability")
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 now = datetime.now().strftime("%Y-%m-%d %H:%M")
 cur.execute("SELECT slot_number FROM bookings WHERE? BETWEEN start_datetime AND end_datetime", (now,))
@@ -285,38 +254,33 @@ grid += "</div>"
 st.markdown(grid, unsafe_allow_html=True)
 
 # --- BOOKING SECTION ---
-st.subheader("Book a New Parking Slot")
-booking_date = st.date_input("Date", min_value=date.today())
+st.header("Book a New Parking Slot")
+booking_date = st.date_input("Select Date", min_value=date.today())
 col1, col2 = st.columns(2)
 with col1:
-    entry_time = st.time_input("Entry Time", value=datetime.now().replace(second=0, microsecond=0).time())
+    entry_time = st.time_input("Select Entry Time", value=datetime.now().replace(second=0, microsecond=0).time())
 with col2:
-    exit_time = st.time_input("Exit Time")
+    exit_time = st.time_input("Select Exit Time")
 
 start_dt, end_dt = datetime.combine(booking_date, entry_time), datetime.combine(booking_date, exit_time)
 if exit_time <= entry_time:
     end_dt += timedelta(days=1)
-    st.warning("Exit time is before or same as entry time. Booking will automatically extend to the next day.")
+    st.warning("Exit time is before entry. Booking will extend to the next day.", icon="⚠️")
 
 cur.execute("SELECT slot_number FROM bookings WHERE NOT (end_datetime <=? OR start_datetime >=?)", (start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M")))
 blocked = {r[0] for r in cur.fetchall()}
 available = [s for s in slots if s not in blocked]
 
 if available:
-    slot = st.selectbox("Available Slots for Selected Time", available)
-else:
-    st.error("No slots available for the selected time frame.")
-    slot = None
-
-if st.button("Confirm Booking", type="primary", use_container_width=True):
-    if slot:
+    slot = st.selectbox("Available Slots", available)
+    if st.button("Confirm Booking", type="primary", use_container_width=True):
         cur.execute("SELECT id FROM bookings WHERE user_id=? AND NOT (end_datetime <=? OR start_datetime >=?)", (st.session_state.user_id, start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M")))
         if cur.fetchone():
-            st.error("You already have an overlapping booking. Only one car is allowed per user at a time.")
+            st.error("You already have an overlapping booking.", icon="🚫")
         else:
             cur.execute("INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime) VALUES (?,?,?,?)", (st.session_state.user_id, slot, start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M")))
             conn.commit()
-            st.success(f"Slot {slot} booked successfully from {start_dt.strftime('%I:%M %p')} to {end_dt.strftime('%I:%M %p')}.")
+            st.success(f"Slot {slot} booked successfully!", icon="✅")
             st.rerun()
-    else:
-        st.error("No slot selected or available to book.")
+else:
+    st.error("No slots available for the selected time frame.", icon="🚫")
