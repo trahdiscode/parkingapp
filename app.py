@@ -492,7 +492,6 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
     <div style="max-width:420px;margin:3rem auto;">
         <div style="margin-bottom:2rem;">
             <div style="font-size:1.8rem;font-weight:700;letter-spacing:-0.05em;color:var(--text-1);">ParkOS</div>
-            <div style="font-size:0.8rem;color:var(--text-3);margin-top:2px;">Intelligent Parking Management</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
