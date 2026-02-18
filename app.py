@@ -159,11 +159,12 @@ div[data-testid="stMetric"] label { /* Metric label */
     color: var(--color-text-secondary);
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
-    white-space: normal; /* Allow text to wrap if it's too long */
-    overflow: visible; /* Ensure text is not hidden */
-    text-overflow: unset; /* Prevent ellipsis */
-    width: 100%; /* Take full width of its container */
-    display: block; /* Ensure it behaves as a block element for width/wrapping */
+    /* --- FIX FOR TRUNCATED METRIC LABEL --- */
+    white-space: normal!important; /* Force text wrapping */
+    overflow: visible!important; /* Ensure content is not clipped */
+    text-overflow: unset!important; /* Remove ellipsis */
+    width: 100%!important; /* Take full available width */
+    display: block!important; /* Ensure it's a block element for proper layout */
 }
 div[data-testid="stMetric"] div[data-testid="stMarkdownContainer"] p { /* Metric value */
     color: var(--color-text-primary);
@@ -391,14 +392,14 @@ hr {
         width: 100%;
         text-align: left;
     }
- .header-container { /* Ensure header container also adapts */
+.header-container { /* Ensure header container also adapts */
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
         padding-bottom: 0.75rem;
         margin-bottom: 1rem;
     }
- .header-title {
+.header-title {
         width: 100%; /* Make title take full width */
         font-size: 1.8rem;
     }
@@ -421,10 +422,10 @@ hr {
 .stHorizontalBlock > div:nth-child(2n) { /* Adjust for last item in row */
         margin-right: 0;
     }
- .header-title {
+.header-title {
         font-size: 1.5rem;
     }
- .header-title.emoji {
+.header-title.emoji {
         font-size: 1.5rem;
     }
 }
