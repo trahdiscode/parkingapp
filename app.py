@@ -1,14 +1,4 @@
-You've caught an excellent bug! My apologies. That is a clear `SyntaxError` on my part.
 
-The error message `SyntaxError: cannot assign to function call here` is spot on. I tried to combine setting your session state and calling `st.rerun()` into a single line, which is not valid Python. You cannot assign a value *to* a function call like `st.rerun()`.
-
-Thank you for providing the screenshot; it makes the problem and location perfectly clear. I will fix this immediately by separating the assignments and the `st.rerun()` call onto their own lines. I've also identified and fixed this same mistake in the "Logout" logic.
-
-Here is the corrected and fully functional code:
-
-### The Corrected `app.py`:
-
-```python
 import streamlit as st
 
 # ---------- PAGE CONFIG ----------
@@ -307,4 +297,3 @@ if st.session_state.selected_slot:
                 st.rerun()
 else:
     st.warning("No slot selected. Please choose a time and click an available slot.", icon="👆")
-```
