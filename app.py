@@ -36,6 +36,21 @@ st.markdown("""
 .busy { background-color: #da3633; }
 .mine { background-color: #1f6feb; }
 small { font-weight: 400; opacity: 0.9; }
+
+/* Custom styles for headings */
+.main-title {
+    font-size: 2.8em; /* A bit larger */
+    color: #6495ED; /* Cornflower Blue - a distinct color */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5); /* Subtle shadow */
+    margin-bottom: 20px; /* Space below title */
+}
+.dashboard-title {
+    font-size: 2em; /* Smaller than main title */
+    color: #3CB371; /* Medium Sea Green - another distinct color */
+    border-bottom: 2px solid #3CB371; /* Underline */
+    padding-bottom: 8px; /* Padding for the underline */
+    margin-bottom: 25px; /* Space below title */
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -78,7 +93,7 @@ def get_user(u, p):
 def create_user(u, p):
     try:
         cur.execute(
-            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+            "INSERT INTO users (username, password_hash) VALUES (?,?)",
             (u, hash_password(p))
         )
         conn.commit()
@@ -93,7 +108,8 @@ for k in ("user_id", "vehicle_number"):
 
 # ---------- AUTH ----------
 if st.session_state.user_id is None:
-    st.markdown("## 🅿️ Parking Slot Booking")
+    # Changed heading to use custom class for distinct styling
+    st.markdown("<h1 class='main-title'>🅿️ Parking Slot Booking</h1>", unsafe_allow_html=True)
 
     tab1, tab2 = st.tabs(["Login", "Register"])
 
@@ -123,7 +139,8 @@ if st.session_state.user_id is None:
 # ---------- HEADER ----------
 col1, col2, col3 = st.columns([6, 3, 1])
 with col1:
-    st.markdown("## 🅿️ Parking Slot Booking")
+    # Changed heading to use custom class for distinct styling
+    st.markdown("<h1 class='main-title'>🅿️ Parking Slot Booking</h1>", unsafe_allow_html=True)
 with col2:
     st.caption(f"Vehicle: **{st.session_state.vehicle_number or 'Not set'}**")
 with col3:
@@ -148,7 +165,8 @@ if st.session_state.vehicle_number is None:
 # ---------- SLOTS ----------
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
-st.markdown("## 🅿️ Parking Dashboard")
+# Changed heading to use custom class for distinct styling
+st.markdown("<h3 class='dashboard-title'>🅿️ Parking Dashboard</h3>", unsafe_allow_html=True)
 
 st.divider()
 
@@ -158,7 +176,7 @@ now_dt = datetime.now()
 cur.execute("""
 SELECT slot_number, start_datetime, end_datetime
 FROM bookings
-WHERE user_id=? AND ? BETWEEN start_datetime AND end_datetime
+WHERE user_id=? AND? BETWEEN start_datetime AND end_datetime
 """, (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M")))
 
 active = cur.fetchone()
@@ -174,8 +192,8 @@ with col1:
         st.success(f"""
         🚗 **Currently Parked**
 
-        **Slot:** {slot}  
-        **Until:** {end_time.strftime("%H:%M")}  
+        **Slot:** {slot} 
+        **Until:** {end_time.strftime("%H:%M")} 
         **Time Remaining:** {str(remaining).split('.')[0]}
         """)
     else:
@@ -194,13 +212,13 @@ now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
 cur.execute("""
 SELECT slot_number FROM bookings
-WHERE ? BETWEEN start_datetime AND end_datetime
+WHERE? BETWEEN start_datetime AND end_datetime
 """, (now,))
 occupied = {r[0] for r in cur.fetchall()}
 
 cur.execute("""
 SELECT slot_number FROM bookings
-WHERE user_id=? AND ? BETWEEN start_datetime AND end_datetime
+WHERE user_id=? AND? BETWEEN start_datetime AND end_datetime
 """, (st.session_state.user_id, now))
 mine = {r[0] for r in cur.fetchall()}
 
@@ -244,7 +262,7 @@ if next_day:
 # Check blocked slots dynamically
 cur.execute("""
 SELECT slot_number FROM bookings
-WHERE NOT (end_datetime <= ? OR start_datetime >= ?)
+WHERE NOT (end_datetime <=? OR start_datetime >=?)
 """, (
     start_dt.strftime("%Y-%m-%d %H:%M"),
     end_dt.strftime("%Y-%m-%d %H:%M")
@@ -269,7 +287,7 @@ if st.button("Confirm Booking"):
     cur.execute("""
     SELECT id FROM bookings
     WHERE user_id=?
-    AND NOT (end_datetime <= ? OR start_datetime >= ?)
+    AND NOT (end_datetime <=? OR start_datetime >=?)
     """, (
         st.session_state.user_id,
         start_dt.strftime("%Y-%m-%d %H:%M"),
@@ -283,7 +301,7 @@ if st.button("Confirm Booking"):
     else:
         cur.execute("""
         INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime)
-        VALUES (?, ?, ?, ?)
+        VALUES (?,?,?,?)
         """, (
             st.session_state.user_id,
             slot,
