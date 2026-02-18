@@ -159,13 +159,14 @@ div[data-testid="stMetric"] label { /* Metric label */
     color: var(--color-text-secondary);
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
-    /* --- CRITICAL FIX FOR TRUNCATED METRIC LABEL --- */
+    /* --- CRITICAL FIX FOR TRUNCATED METRIC LABEL - MORE ROBUST --- */
     white-space: normal!important; /* Force text to wrap */
     overflow: visible!important; /* Ensure no content is clipped */
     text-overflow: unset!important; /* Remove ellipsis if present */
     display: block!important; /* Make sure it behaves as a block for full width */
-    width: 100%!important; /* Take up all available width */
-    max-width: 100%!important; /* Ensure it doesn't get limited by a smaller max-width */
+    width: auto!important; /* Allow width to be determined by content */
+    max-width: 100%!important; /* Ensure it doesn't overflow its own container */
+    word-break: break-word!important; /* Break long words if necessary */
 }
 div[data-testid="stMetric"] div[data-testid="stMarkdownContainer"] p { /* Metric value */
     color: var(--color-text-primary);
@@ -501,7 +502,8 @@ if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number i
     st.stop()
 
 st.subheader("Dashboard Overview") # Changed to subheader for consistent hierarchy
-col1, col2 = st.columns(2)
+# Adjusted column ratio to give st.metric a bit more breathing room
+col1, col2 = st.columns([0.6, 0.4]) 
 now_dt = datetime.now()
 user_has_active_or_future_booking = False
 # Query for current and future bookings
