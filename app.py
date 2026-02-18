@@ -1,17 +1,17 @@
 import streamlit as st
+import streamlit_shadcn_ui as ui # Import the new component library
+import sqlite3
+import hashlib
+from datetime import datetime, date, timedelta
+from streamlit_autorefresh import st_autorefresh
 
 # ---------- PAGE CONFIG ----------
 st.set_page_config(page_title="Parking Slot Booking", layout="wide")
 
-from streamlit_autorefresh import st_autorefresh
-import sqlite3
-import hashlib
-from datetime import datetime, date, timedelta
-
 # ---------- AUTO REFRESH (1 SECOND) ----------
 st_autorefresh(interval=1000, key="refresh")
 
-# ---------- "15 YEARS OF EXPERIENCE" UI STYLESHEET (with clickable styles) ----------
+# ---------- "15 YEARS OF EXPERIENCE" UI STYLESHEET (Adapted for ShadCN UI) ----------
 st.markdown("""
 <style>
 /* Import Google Font: Inter */
@@ -41,7 +41,7 @@ h1 { font-weight: 600; font-size: 1.75rem; padding-bottom: 0.5rem; margin-bottom
 h2 { font-weight: 500; font-size: 1.25rem; color: var(--color-text-secondary); margin-top: 2.5rem; margin-bottom: 1rem; }
 h3 { font-weight: 500; font-size: 1.1rem; margin-top: 2rem; margin-bottom: 0.5rem; }
 
-/* --- UI Elements: Inputs, Buttons --- */
+/* --- Standard UI Elements --- */
 .stTextInput > div > div > input,
 .stDateInput > div > div > input,
 .stTimeInput > div > div > input {
@@ -58,14 +58,6 @@ h3 { font-weight: 500; font-size: 1.1rem; margin-top: 2rem; margin-bottom: 0.5re
     box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
     outline: none;
 }
-.stButton > button {
-    font-weight: 500;
-    background-color: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    transition: background-color 0.15s ease-in-out;
-}
-.stButton > button:hover { background-color: #242424; }
 .stButton > button.primary { background-color: var(--color-accent); border-color: var(--color-accent); color: #FFFFFF; }
 .stButton > button.primary:hover { background-color: #5A9EE8; border-color: #5A9EE8; }
 
@@ -80,29 +72,42 @@ div[data-testid="stMetric"], div[data-testid="stAlert"] {
 div[data-testid="stAlert"][data-baseweb="alert-success"] { background-color: rgba(34, 129, 74, 0.1); border-color: rgba(34, 129, 74, 0.3); }
 div[data-testid="stAlert"][data-baseweb="alert-info"] { background-color: rgba(74, 144, 226, 0.1); border-color: rgba(74, 144, 226, 0.3); }
 
-/* --- Clickable Slot Grid Styling --- */
-.slot-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 0.75rem; margin-top: 1rem; margin-bottom: 2rem; }
-.slot-link { text-decoration: none; } /* Remove underline from links */
-.slot {
-    padding: 1rem 0;
-    text-align: center;
-    border-radius: var(--border-radius);
+/* --- Styling for ShadCN UI Buttons as Slots --- */
+button[data-testid^="st_shadcn_button_slot_"] {
+    width: 100%;
+    height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 1rem;
     font-weight: 500;
     color: var(--color-text-primary);
     background-color: #242424;
     border: 1px solid var(--color-border);
     transition: border-color 0.2s ease;
 }
-.slot.clickable:hover { border-color: var(--color-text-secondary); cursor: pointer; }
-.slot.free { color: #50A86E; border-left: 3px solid #50A86E; }
-.slot.busy { color: #B9535A; border-left: 3px solid #B9535A; background-color: #1A1A1A; }
-.slot.yours { color: #A0A0A0; border-left: 3px solid #A0A0A0; }
-/* This class will be added to the selected slot */
-.slot.selected {
-    border: 2px solid var(--color-accent);
-    background-color: rgba(74, 144, 226, 0.1);
+button[data-testid^="st_shadcn_button_slot_"]:hover {
+    border-color: var(--color-text-secondary);
 }
-.slot small { font-weight: 400; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-secondary); }
+button[data-testid^="st_shadcn_button_slot_"]:disabled {
+    background-color: #1A1A1A;
+    border-color: #242424;
+    cursor: not-allowed;
+}
+
+/* Slot status text colors */
+.free_slot { color: #50A86E; }
+.busy_slot { color: #B9535A; }
+.yours_slot { color: #A0A0A0; }
+
+small { font-weight: 400; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Style for the SELECTED slot */
+.selected_slot {
+    border: 2px solid var(--color-accent)!important;
+    background-color: rgba(74, 144, 226, 0.1)!important;
+}
 
 </style>
 """, unsafe_allow_html=True)
@@ -127,39 +132,27 @@ def create_user(u, p):
     except sqlite3.IntegrityError: return False
 
 # ---------- SESSION STATE INITIALIZATION ----------
-for k in ("user_id", "vehicle_number"):
-    if k not in st.session_state: st.session_state[k] = None
-
 if 'selected_slot' not in st.session_state:
     st.session_state.selected_slot = None
 
-# Check for a slot selection from the URL query parameters
-if "slot" in st.query_params:
-    selected = st.query_params["slot"]
-    if st.session_state.selected_slot == selected:
-        st.session_state.selected_slot = None
-    else:
-        st.session_state.selected_slot = selected
-    st.query_params.clear()
-
 # ---------- AUTH PAGE ----------
-if st.session_state.user_id is None:
+if 'user_id' not in st.session_state or st.session_state.user_id is None:
     st.title("🅿️ Parking Slot Booking System")
-    tab1, tab2 = st.tabs(["Login", "Register"])
-    with tab1:
-        u, p = st.text_input("Username", key="login_user"), st.text_input("Password", type="password", key="login_pass")
-        if st.button("Login", use_container_width=True):
-            user = get_user(u, p)
-            if user:
-                st.session_state.user_id = user[0]
-                st.session_state.vehicle_number = user[1]
-                st.rerun()
-            else: st.error("Invalid credentials")
-    with tab2:
-        u, p = st.text_input("New Username", key="reg_user"), st.text_input("New Password", type="password", key="reg_pass")
-        if st.button("Register", use_container_width=True):
-            if create_user(u, p): st.success("Account created. Login now.")
-            else: st.error("Username already exists")
+    with st.tabs(["Login", "Register"]) as tabs:
+        with tabs[0]:
+            u, p = st.text_input("Username", key="login_user"), st.text_input("Password", type="password", key="login_pass")
+            if st.button("Login", use_container_width=True):
+                user = get_user(u, p)
+                if user:
+                    st.session_state.user_id = user[0]
+                    st.session_state.vehicle_number = user[1]
+                    st.rerun()
+                else: st.error("Invalid credentials")
+        with tabs[1]:
+            u, p = st.text_input("New Username", key="reg_user"), st.text_input("New Password", type="password", key="reg_pass")
+            if st.button("Register", use_container_width=True):
+                if create_user(u, p): st.success("Account created. Login now.")
+                else: st.error("Username already exists")
     st.stop()
 
 # ---------- MAIN APP LAYOUT ----------
@@ -167,11 +160,9 @@ col1, col2 = st.columns([8, 1])
 with col1: st.title("🅿️ Parking Slot Booking")
 with col2:
     if st.button("Logout"):
-        st.session_state.user_id = None
-        st.session_state.vehicle_number = None
-        st.session_state.selected_slot = None
+        for key in list(st.session_state.keys()): del st.session_state[key]
         st.rerun()
-if st.session_state.vehicle_number is None:
+if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
     v = st.text_input("Enter Vehicle Number (one time requirement)")
     if st.button("Save Vehicle Number", type="primary"):
         cur.execute("UPDATE users SET vehicle_number=? WHERE id=?", (v.upper(), st.session_state.user_id)); conn.commit(); st.session_state.vehicle_number = v.upper(); st.rerun()
@@ -200,45 +191,44 @@ if exit_time <= entry_time:
     end_dt += timedelta(days=1)
     st.warning("Exit time is before entry. Booking will extend to the next day.", icon="⚠️")
 
+# --- CLICKABLE LIVE AVAILABILITY GRID (Using ShadCN UI) ---
 st.markdown("<p style='color: var(--color-text-secondary);'>Step 2: Click an available slot below.</p>", unsafe_allow_html=True)
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 blocked_for_selection = {r[0] for r in cur.execute("SELECT slot_number FROM bookings WHERE NOT (end_datetime <=? OR start_datetime >=?)", (start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()}
-my_active_slot = next((s[0] for s in cur.execute("SELECT slot_number FROM bookings WHERE user_id=? AND? BETWEEN start_datetime AND end_datetime", (st.session_state.user_id, datetime.now().strftime("%Y-%m-%d %H:%M")))), None)
 
-grid_html = "<div class='slot-grid'>"
-for s in slots:
-    is_blocked = s in blocked_for_selection
-    is_selected = s == st.session_state.selected_slot
-    is_mine_now = s == my_active_slot
-
-    if is_mine_now:
-        label, status_class = "YOURS", "yours"
-    elif is_blocked:
-        label, status_class = "BUSY", "busy"
+# Function to handle slot selection
+def handle_slot_click(slot_name):
+    if st.session_state.selected_slot == slot_name:
+        st.session_state.selected_slot = None
     else:
-        label, status_class = "FREE", "free clickable"
+        st.session_state.selected_slot = slot_name
 
-    if is_selected and not is_blocked:
-        status_class += " selected"
-
-    slot_div = f"<div class='slot {status_class}'>{s}<br><small>{label}</small></div>"
-    
-    if not is_blocked:
-        grid_html += f"<a href='?slot={s}' class='slot-link'>{slot_div}</a>"
-    else:
-        grid_html += slot_div
-
-grid_html += "</div>"
-st.markdown(grid_html, unsafe_allow_html=True)
+# Display the grid
+num_columns = 10
+rows = [slots[i:i + num_columns] for i in range(0, len(slots), num_columns)]
+for row in rows:
+    cols = st.columns(num_columns)
+    for i, s in enumerate(row):
+        with cols[i]:
+            is_blocked = s in blocked_for_selection
+            is_selected = s == st.session_state.selected_slot
+            
+            # Build the content of the button using HTML
+            if is_blocked:
+                label = f"{s}<br><small class='busy_slot'>BUSY</small>"
+            else:
+                label = f"{s}<br><small class='free_slot'>FREE</small>"
+            
+            # The key change: Use ui.button
+            ui.button(label, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_blocked, className="selected_slot" if is_selected else "")
 
 # --- CONFIRMATION SECTION ---
 if st.session_state.selected_slot:
     if st.session_state.selected_slot in blocked_for_selection:
-        st.error(f"Slot {st.session_state.selected_slot} is no longer available. The grid has updated.", icon="🚫")
+        st.error(f"Slot {st.session_state.selected_slot} is no longer available.", icon="🚫")
         st.session_state.selected_slot = None
         st.rerun()
     else:
-        # --- THIS IS THE FIX ---
         st.info(f"You have selected slot **{st.session_state.selected_slot}**. Please confirm your booking.", icon="🅿️")
         if st.button("Confirm Booking", type="primary", use_container_width=True):
             if cur.execute("SELECT id FROM bookings WHERE user_id=? AND NOT (end_datetime <=? OR start_datetime >=?)", (st.session_state.user_id, start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))).fetchone():
