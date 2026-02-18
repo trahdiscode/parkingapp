@@ -8,8 +8,8 @@ import sqlite3
 import hashlib
 from datetime import datetime, date, timedelta
 
-# ---------- AUTO REFRESH ----------
-# st_autorefresh(interval=5000, key="refresh")
+# ---------- AUTO REFRESH (CHANGED TO 1 SECOND) ----------
+st_autorefresh(interval=1000, key="refresh")
 
 # ---------- "15 YEARS OF EXPERIENCE" UI STYLESHEET ----------
 st.markdown("""
