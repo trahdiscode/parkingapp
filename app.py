@@ -86,7 +86,7 @@ h3 { font-size: 0.95rem; font-weight: 500; color: var(--text-2); margin: 1.25rem
     gap: 0.5rem;
 }
 .app-brand-name {
-    font-size: 1.8rem;
+    font-size: 3rem;
     font-weight: 600;
     color: var(--text-1);
     letter-spacing: -0.04em;
