@@ -488,9 +488,6 @@ if st.button("Logout", type="secondary"):
     st.rerun()
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Moved the horizontal line from st.title to the custom header
-# and removed the st.title which has the default line
-
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
     st.info("Please enter your vehicle number to proceed. This is a one-time requirement.", icon="🚗")
     v = st.text_input("Enter Vehicle Number", placeholder="e.g., TN01 AB1234") # Added placeholder
