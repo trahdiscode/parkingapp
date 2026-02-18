@@ -10,7 +10,7 @@ st.set_page_config(page_title="Parking Slot Booking", layout="wide")
 # ---------- AUTO REFRESH (1 SECOND) ----------
 st_autorefresh(interval=1000, key="refresh")
 
-# ---------- "15 YEARS OF EXPERIENCE" UI STYLESHEET ----------
+# ---------- "15 YEARS OF EXPERIENCE" UI STYLESHEET (Simplified and Corrected) ----------
 st.markdown("""
 <style>
 /* Import Google Font: Inter */
@@ -24,7 +24,9 @@ st.markdown("""
     --color-text-primary: #EAEAEA;
     --color-text-secondary: #A0A0A0;
     --color-border: #2A2A2A;
-    --color-accent: #4A90E2;
+    --color-accent: #4A90E2; /* Blue for selection */
+    --color-free: #50A86E; /* Green for free */
+    --color-busy: #B9535A; /* Red for busy */
     --border-radius: 6px;
 }
 
@@ -77,43 +79,21 @@ div[data-testid="stHorizontalBlock"] {
 }
 .stButton button {
     width: 100%;
-    height: 80px;
-    padding: 1rem 0;
+    height: 60px; /* Adjusted height */
+    padding: 0;
     margin: 0;
-    text-align: center;
+    font-size: 1.1rem; /* Larger slot number */
+    font-weight: 600;
+    background-color: var(--color-bg-secondary);
     border-radius: var(--border-radius);
-    font-weight: 500;
-    color: var(--color-text-primary);
-    background-color: #242424;
-    border: 1px solid var(--color-border);
     transition: all 0.2s ease;
 }
 .stButton button:hover:not(:disabled) {
     border-color: var(--color-text-secondary);
 }
 .stButton button:disabled {
-    opacity: 0.6;
+    opacity: 0.7;
     cursor: not-allowed;
-    background-color: #1A1A1A;
-    border-color: var(--color-border);
-}
-
-/* This targets the markdown content inside the button */
-.stButton button div[data-testid="stMarkdownContainer"] p {
-    font-family: var(--font-family);
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--color-text-primary);
-    margin: 0;
-    padding: 0;
-    line-height: 1.2;
-}
-.stButton button small {
-    font-weight: 400;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-text-secondary);
 }
 
 </style>
@@ -155,16 +135,13 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
                 st.session_state.user_id = user[0]
                 st.session_state.vehicle_number = user[1]
                 st.rerun()
-            else:
-                st.error("Invalid credentials")
+            else: st.error("Invalid credentials")
     with tab2:
         u = st.text_input("New Username", key="reg_user")
         p = st.text_input("New Password", type="password", key="reg_pass")
         if st.button("Register", use_container_width=True):
-            if create_user(u, p):
-                st.success("Account created. Login now.")
-            else:
-                st.error("Username already exists")
+            if create_user(u, p): st.success("Account created. Login now.")
+            else: st.error("Username already exists")
     st.stop()
 
 # ---------- MAIN APP LAYOUT ----------
@@ -207,25 +184,28 @@ if exit_time <= entry_time:
 st.markdown("<p style='color: var(--color-text-secondary);'>Step 2: Click an available slot below.</p>", unsafe_allow_html=True)
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 blocked_for_selection = {r[0] for r in cur.execute("SELECT slot_number FROM bookings WHERE NOT (end_datetime <=? OR start_datetime >=?)", (start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()}
-my_active_slot = next((s[0] for s in cur.execute("SELECT slot_number FROM bookings WHERE user_id=? AND? BETWEEN start_datetime AND end_datetime", (st.session_state.user_id, datetime.now().strftime("%Y-%m-%d %H:%M")))), None)
 
-# Function to handle slot selection
 def handle_slot_click(slot_name):
-    if st.session_state.selected_slot == slot_name:
-        st.session_state.selected_slot = None
-    else:
-        st.session_state.selected_slot = slot_name
+    if st.session_state.selected_slot == slot_name: st.session_state.selected_slot = None
+    else: st.session_state.selected_slot = slot_name
 
-# Inject CSS for the selected button
-if st.session_state.selected_slot:
-    st.markdown(f"""
-        <style>
-           .stButton button:has(div[data-testid="stMarkdownContainer"] p:focus-within:has(span:contains("{st.session_state.selected_slot}"))) {{
-                border: 2px solid var(--color-accent);
-                background-color: rgba(74, 144, 226, 0.1);
-            }}
-        </style>
-    """, unsafe_allow_html=True)
+# --- Inject CSS for slot colors dynamically ---
+slot_styles = ""
+for s in slots:
+    is_blocked = s in blocked_for_selection
+    is_selected = s == st.session_state.selected_slot
+    
+    # Base selector for this specific button
+    selector = f'button[data-testid*="st.button"][data-testid$="slot_{s}"]'
+
+    if is_selected:
+        slot_styles += f"{selector} {{ border: 2px solid var(--color-accent); background-color: rgba(74, 144, 226, 0.1); color: white!important; }}\n"
+    elif is_blocked:
+        slot_styles += f"{selector} {{ border-left: 3px solid var(--color-busy); color: var(--color-text-secondary); }}\n"
+    else: # Free
+        slot_styles += f"{selector} {{ border-left: 3px solid var(--color-free); color: var(--color-free); }}\n"
+
+st.markdown(f"<style>{slot_styles}</style>", unsafe_allow_html=True)
 
 # Display the grid
 num_columns = 10
@@ -235,19 +215,7 @@ for row in rows:
     for i, s in enumerate(row):
         with cols[i]:
             is_blocked = s in blocked_for_selection
-            is_mine_now = s == my_active_slot
-            
-            if is_mine_now:
-                label = f"<div>{s}<br><small>YOURS</small></div>"
-                disabled = True
-            elif is_blocked:
-                label = f"<div>{s}<br><small style='color: #B9535A;'>BUSY</small></div>"
-                disabled = True
-            else:
-                label = f"<div>{s}<br><small style='color: #50A86E;'>FREE</small></div>"
-                disabled = False
-            
-            st.button(label, on_click=handle_slot_click, args=(s,), disabled=disabled, key=f"slot_{s}", use_container_width=True, unsafe_allow_html=True)
+            st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_blocked, use_container_width=True)
 
 # --- CONFIRMATION SECTION ---
 if st.session_state.selected_slot:
