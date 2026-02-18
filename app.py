@@ -11,23 +11,22 @@ from datetime import datetime, date, timedelta
 # ---------- AUTO REFRESH ----------
 # st_autorefresh(interval=5000, key="refresh")
 
-# ---------- "15-YEAR-OLD PRO" UI STYLESHEET ----------
+# ---------- "15 YEARS OF EXPERIENCE" UI STYLESHEET ----------
 st.markdown("""
 <style>
-/* Import Google Font: Inter - The standard for modern UI */
+/* Import Google Font: Inter - The choice of professionals */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* --- Root Variables: A modern, dev-centric palette --- */
+/* --- Root Variables: A mature, minimalist, and confident design system --- */
 :root {
     --font-family: 'Inter', sans-serif;
-    --color-bg: #11111B; /* A deep, near-black space color */
-    --color-text-primary: #E5E7EB;
-    --color-text-secondary: #9CA3AF;
-    --color-border: rgba(255, 255, 255, 0.1); /* Subtle border for glass effect */
-    --color-accent: #8B5CF6; /* A vibrant, electric violet */
-    --color-accent-hover: #7C3AED;
-    --border-radius-lg: 1rem;
-    --border-radius-md: 0.5rem;
+    --color-bg: #121212; /* A deep, focused charcoal */
+    --color-bg-secondary: #1A1A1A; /* A slightly lighter shade for cards */
+    --color-text-primary: #EAEAEA; /* A soft, readable white */
+    --color-text-secondary: #A0A0A0; /* A muted gray for secondary info */
+    --color-border: #2A2A2A; /* Subtle, low-contrast borders */
+    --color-accent: #4A90E2; /* A desaturated, confident blue */
+    --border-radius: 6px;
 }
 
 /* --- Base App Styling --- */
@@ -36,40 +35,42 @@ st.markdown("""
     font-family: var(--font-family);
 }
 
-/* --- Typography & Headings --- */
+/* --- Typography: Deliberate and refined --- */
 h1, h2, h3 {
     color: var(--color-text-primary);
     font-family: var(--font-family);
+    letter-spacing: -0.02em; /* Subtle tightening for a sharper look */
 }
 h1 {
-    font-weight: 700;
-    font-size: 1.8rem;
+    font-weight: 600;
+    font-size: 1.75rem;
     padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     border-bottom: 1px solid var(--color-border);
 }
 h2 {
-    font-weight: 600;
-    font-size: 1.4rem;
+    font-weight: 500;
+    font-size: 1.25rem;
+    color: var(--color-text-secondary);
     margin-top: 2.5rem;
     margin-bottom: 1rem;
 }
 h3 {
-    font-weight: 600;
-    font-size: 1.15rem;
+    font-weight: 500;
+    font-size: 1.1rem;
     margin-top: 2rem;
     margin-bottom: 0.5rem;
 }
 
-/* --- UI Elements: Inputs & Buttons --- */
+/* --- UI Elements: Minimalist and Functional --- */
 .stTextInput > div > div > input,
 .stDateInput > div > div > input,
 .stTimeInput > div > div > input,
 .stSelectbox > div > div > button {
-    background-color: rgba(31, 41, 55, 0.3);
+    background-color: var(--color-bg);
     color: var(--color-text-primary);
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-md);
+    border-radius: var(--border-radius);
     transition: all 0.2s ease;
 }
 .stTextInput > div > div > input:focus,
@@ -77,53 +78,50 @@ h3 {
 .stTimeInput > div > div > input:focus,
 .stSelectbox > div > div > button:focus {
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
     outline: none;
 }
 
 .stButton > button {
     font-weight: 500;
-    background-color: rgba(31, 41, 55, 0.5);
+    background-color: var(--color-bg-secondary);
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-md);
-    transition: all 0.2s ease;
+    border-radius: var(--border-radius);
+    transition: background-color 0.15s ease-in-out;
 }
 .stButton > button:hover {
-    background-color: rgba(55, 65, 81, 0.5);
-    border-color: rgba(255, 255, 255, 0.2);
+    background-color: #242424;
 }
 
 .stButton > button.primary {
     background-color: var(--color-accent);
     border-color: var(--color-accent);
-    color: white;
+    color: #FFFFFF;
 }
 .stButton > button.primary:hover {
-    background-color: var(--color-accent-hover);
-    border-color: var(--color-accent-hover);
+    background-color: #5A9EE8;
+    border-color: #5A9EE8;
 }
 
-/* --- Glassmorphism Card Style for Metric & Status --- */
+/* --- Card Styling: Subtle layering --- */
 div[data-testid="stMetric"],
 div[data-testid="stAlert"] {
-    background: rgba(30, 30, 42, 0.5); /* Semi-transparent background */
-    backdrop-filter: blur(12px); /* The frosted glass effect */
-    -webkit-backdrop-filter: blur(12px); /* For Safari */
+    background-color: var(--color-bg-secondary);
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-lg);
+    border-radius: var(--border-radius);
     padding: 1.5rem;
     height: 100%;
 }
 div[data-testid="stAlert"][data-baseweb="alert-success"] {
-    background-color: rgba(22, 163, 74, 0.1);
-    border-color: rgba(34, 197, 94, 0.2);
+    background-color: rgba(34, 129, 74, 0.1);
+    border-color: rgba(34, 129, 74, 0.3);
 }
 div[data-testid="stAlert"][data-baseweb="alert-info"] {
-    background-color: rgba(59, 130, 246, 0.1);
-    border-color: rgba(59, 130, 246, 0.2);
+    background-color: rgba(74, 144, 226, 0.1);
+    border-color: rgba(74, 144, 226, 0.3);
 }
 
-/* --- Slot Grid --- */
+/* --- Slot Grid: Clear, functional, and understated --- */
 .slot-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
@@ -134,32 +132,35 @@ div[data-testid="stAlert"][data-baseweb="alert-info"] {
 .slot {
     padding: 1rem 0;
     text-align: center;
-    border-radius: var(--border-radius-md);
-    font-weight: 600;
-    color: white;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    color: var(--color-text-primary);
+    background-color: #242424;
+    border: 1px solid var(--color-border);
+    transition: border-color 0.2s ease;
 }
 .slot:hover {
-    transform: translateY(-3px);
-    border-color: rgba(255, 255, 255, 0.7);
+    border-color: var(--color-text-secondary);
 }
-.free { background-color: #16a34a; }
-.busy { background-color: #dc2626; }
+.free { color: #50A86E; border-left: 3px solid #50A86E; }
+.busy { color: #B9535A; border-left: 3px solid #B9535A; }
 .mine {
-    background-color: var(--color-accent);
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.7);
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+    background-color: rgba(74, 144, 226, 0.1);
 }
 small {
-    font-weight: 500;
-    font-size: 0.75rem;
-    opacity: 0.9;
+    font-weight: 400;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# (All Python code below is identical to the previous professional dark theme, as it is functionally correct.)
+# (All Python code below is identical, as the logic is sound. Only the CSS is changed.)
 # ---------- DATABASE ----------
 conn = sqlite3.connect("parking_v4.db", check_same_thread=False)
 cur = conn.cursor()
