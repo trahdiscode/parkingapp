@@ -10,7 +10,7 @@ st.set_page_config(page_title="Parking Slot Booking", layout="wide")
 # ---------- AUTO REFRESH (1 SECOND) ----------
 st_autorefresh(interval=1000, key="refresh")
 
-# ---------- "15 YEARS OF EXPERIENCE" UI STYLESHEET (Simplified and Corrected) ----------
+# ---------- "15 YEARS OF EXPERIENCE" UI STYLESHEET ----------
 st.markdown("""
 <style>
 /* Import Google Font: Inter */
@@ -26,7 +26,7 @@ st.markdown("""
     --color-border: #2A2A2A;
     --color-accent: #4A90E2; /* Blue for selection */
     --color-free: #50A86E; /* Green for free */
-    --color-busy: #B9535A; /* Red for busy */
+    --color-busy: #B9535A; /* Red for busy/cancel */
     --border-radius: 6px;
 }
 
@@ -61,40 +61,45 @@ h3 { font-weight: 500; font-size: 1.1rem; margin-top: 2rem; margin-bottom: 0.5re
 }
 .stButton > button.primary { background-color: var(--color-accent); border-color: var(--color-accent); color: #FFFFFF; }
 .stButton > button.primary:hover { background-color: #5A9EE8; border-color: #5A9EE8; }
+.stButton > button.warning { background-color: var(--color-busy); border-color: var(--color-busy); color: #FFFFFF; }
+.stButton > button.warning:hover { background-color: #D32F2F; border-color: #D32F2F; }
 
 /* --- Card Styling --- */
-div[data-testid="stMetric"], div[data-testid="stAlert"] {
+/* This will now style our custom container */
+div[data-testid="stVerticalBlock"].active-booking-card, 
+div[data-testid="stMetric"] {
     background-color: var(--color-bg-secondary);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius);
     padding: 1.5rem;
     height: 100%;
 }
-div[data-testid="stAlert"][data-baseweb="alert-success"] { background-color: rgba(34, 129, 74, 0.1); border-color: rgba(34, 129, 74, 0.3); }
-div[data-testid="stAlert"][data-baseweb="alert-info"] { background-color: rgba(74, 144, 226, 0.1); border-color: rgba(74, 144, 226, 0.3); }
+/* Specifically style the active booking card */
+div[data-testid="stVerticalBlock"].active-booking-card {
+    background-color: rgba(34, 129, 74, 0.1);
+    border-color: rgba(34, 129, 74, 0.3);
+}
+
+div[data-testid="stAlert"][data-baseweb="alert-info"] { 
+    background-color: rgba(74, 144, 226, 0.1); 
+    border-color: rgba(74, 144, 226, 0.3); 
+}
 
 /* --- Styling for st.button used as slots --- */
-div[data-testid="stHorizontalBlock"] {
-    gap: 0.75rem;
-}
+div[data-testid="stHorizontalBlock"] { gap: 0.75rem; }
 .stButton button {
     width: 100%;
-    height: 60px; /* Adjusted height */
+    height: 60px;
     padding: 0;
     margin: 0;
-    font-size: 1.1rem; /* Larger slot number */
+    font-size: 1.1rem;
     font-weight: 600;
     background-color: var(--color-bg-secondary);
     border-radius: var(--border-radius);
     transition: all 0.2s ease;
 }
-.stButton button:hover:not(:disabled) {
-    border-color: var(--color-text-secondary);
-}
-.stButton button:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
+.stButton button:hover:not(:disabled) { border-color: var(--color-text-secondary); }
+.stButton button:disabled { opacity: 0.7; cursor: not-allowed; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -127,18 +132,13 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
     st.title("🅿️ Parking Slot Booking System")
     tab1, tab2 = st.tabs(["Login", "Register"])
     with tab1:
-        u = st.text_input("Username", key="login_user")
-        p = st.text_input("Password", type="password", key="login_pass")
+        u, p = st.text_input("Username", key="login_user"), st.text_input("Password", type="password", key="login_pass")
         if st.button("Login", use_container_width=True):
             user = get_user(u, p)
-            if user:
-                st.session_state.user_id = user[0]
-                st.session_state.vehicle_number = user[1]
-                st.rerun()
+            if user: st.session_state.user_id, st.session_state.vehicle_number, st.rerun() = user[0], user[1]
             else: st.error("Invalid credentials")
     with tab2:
-        u = st.text_input("New Username", key="reg_user")
-        p = st.text_input("New Password", type="password", key="reg_pass")
+        u, p = st.text_input("New Username", key="reg_user"), st.text_input("New Password", type="password", key="reg_pass")
         if st.button("Register", use_container_width=True):
             if create_user(u, p): st.success("Account created. Login now.")
             else: st.error("Username already exists")
@@ -161,12 +161,37 @@ st.header("Dashboard Overview")
 col1, col2 = st.columns(2)
 with col1:
     now_dt = datetime.now()
-    active = cur.execute("SELECT slot_number, end_datetime FROM bookings WHERE user_id=? AND? BETWEEN start_datetime AND end_datetime", (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M"))).fetchone()
+    active = cur.execute("SELECT id, slot_number, end_datetime FROM bookings WHERE user_id=? AND? BETWEEN start_datetime AND end_datetime", (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M"))).fetchone()
+    
     if active:
-        end_time = datetime.strptime(active[1], "%Y-%m-%d %H:%M")
-        st.success(f"**Currently Parked**\n\n**Slot:** {active[0]}\n\n**Until:** {end_time.strftime('%I:%M %p')}\n\n**Time Remaining:** {str(end_time - now_dt).split('.')[0]}")
-    else: st.info("No active parking session.")
-with col2: st.metric("Total Lifetime Bookings", cur.execute("SELECT COUNT(*) FROM bookings").fetchone()[0])
+        booking_id, slot_number, end_datetime_str = active
+        end_time = datetime.strptime(end_datetime_str, "%Y-%m-%d %H:%M")
+        
+        # --- THE FIX: Use a container for the active booking card ---
+        with st.container(border=False):
+            st.markdown('<div class="active-booking-card">', unsafe_allow_html=True)
+            info_col, button_col = st.columns([3, 1])
+            with info_col:
+                st.markdown(f"""
+                    <p style="color: var(--color-text-primary); font-weight: 600;">Currently Parked</p>
+                    <p style="color: var(--color-text-secondary);">
+                        **Slot:** {slot_number}<br>
+                        **Until:** {end_time.strftime('%I:%M %p')}<br>
+                        **Time Remaining:** {str(end_time - now_dt).split('.')[0]}
+                    </p>
+                """, unsafe_allow_html=True)
+            with button_col:
+                st.button("Cancel", key=f"cancel_{booking_id}", type="warning", use_container_width=True, on_click=lambda: (
+                    cur.execute("DELETE FROM bookings WHERE id =?", (booking_id,)),
+                    conn.commit(),
+                    st.success(f"Booking for slot {slot_number} cancelled."),
+                    st.rerun()
+                ))
+            st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        st.info("No active parking session.")
+with col2:
+    st.metric("Total Lifetime Bookings", cur.execute("SELECT COUNT(*) FROM bookings").fetchone()[0])
 
 st.header("Book a New Parking Slot")
 st.markdown("<p style='color: var(--color-text-secondary);'>Step 1: Select your desired time frame.</p>", unsafe_allow_html=True)
@@ -180,7 +205,6 @@ if exit_time <= entry_time:
     end_dt += timedelta(days=1)
     st.warning("Exit time is before entry. Booking will extend to the next day.", icon="⚠️")
 
-# --- CLICKABLE LIVE AVAILABILITY GRID (The Correct Way) ---
 st.markdown("<p style='color: var(--color-text-secondary);'>Step 2: Click an available slot below.</p>", unsafe_allow_html=True)
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 blocked_for_selection = {r[0] for r in cur.execute("SELECT slot_number FROM bookings WHERE NOT (end_datetime <=? OR start_datetime >=?)", (start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()}
@@ -189,35 +213,27 @@ def handle_slot_click(slot_name):
     if st.session_state.selected_slot == slot_name: st.session_state.selected_slot = None
     else: st.session_state.selected_slot = slot_name
 
-# --- Inject CSS for slot colors dynamically ---
 slot_styles = ""
 for s in slots:
     is_blocked = s in blocked_for_selection
     is_selected = s == st.session_state.selected_slot
-    
-    # Base selector for this specific button
     selector = f'button[data-testid*="st.button"][data-testid$="slot_{s}"]'
-
     if is_selected:
         slot_styles += f"{selector} {{ border: 2px solid var(--color-accent); background-color: rgba(74, 144, 226, 0.1); color: white!important; }}\n"
     elif is_blocked:
         slot_styles += f"{selector} {{ border-left: 3px solid var(--color-busy); color: var(--color-text-secondary); }}\n"
-    else: # Free
+    else:
         slot_styles += f"{selector} {{ border-left: 3px solid var(--color-free); color: var(--color-free); }}\n"
-
 st.markdown(f"<style>{slot_styles}</style>", unsafe_allow_html=True)
 
-# Display the grid
 num_columns = 10
 rows = [slots[i:i + num_columns] for i in range(0, len(slots), num_columns)]
 for row in rows:
     cols = st.columns(num_columns)
     for i, s in enumerate(row):
         with cols[i]:
-            is_blocked = s in blocked_for_selection
-            st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_blocked, use_container_width=True)
+            st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=(s in blocked_for_selection), use_container_width=True)
 
-# --- CONFIRMATION SECTION ---
 if st.session_state.selected_slot:
     if st.session_state.selected_slot in blocked_for_selection:
         st.error(f"Slot {st.session_state.selected_slot} is no longer available.", icon="🚫")
