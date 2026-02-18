@@ -65,15 +65,15 @@ h3 { font-weight: 500; font-size: 1.1rem; margin-top: 2rem; margin-bottom: 0.5re
 .stButton > button.warning:hover { background-color: #D32F2F; border-color: #D32F2F; }
 
 /* --- Card Styling --- */
-div[data-testid="stVerticalBlock"].active-booking-card, 
-div[data-testid="stMetric"] {
+div[data-testid="stMetric"], 
+.active-booking-card {
     background-color: var(--color-bg-secondary);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius);
     padding: 1.5rem;
     height: 100%;
 }
-div[data-testid="stVerticalBlock"].active-booking-card {
+.active-booking-card {
     background-color: rgba(34, 129, 74, 0.1);
     border-color: rgba(34, 129, 74, 0.3);
 }
@@ -101,14 +101,12 @@ div[data-testid="stHorizontalBlock"] { gap: 0.75rem; }
 </style>
 """, unsafe_allow_html=True)
 
-# (Database and Helper functions are unchanged)
-# ---------- DATABASE ----------
+# ---------- DATABASE AND HELPERS (UNCHANGED) ----------
 conn = sqlite3.connect("parking_v4.db", check_same_thread=False)
 cur = conn.cursor()
 cur.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, vehicle_number TEXT)")
 cur.execute("CREATE TABLE IF NOT EXISTS bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, slot_number TEXT NOT NULL, start_datetime TEXT NOT NULL, end_datetime TEXT NOT NULL)")
 conn.commit()
-# ---------- HELPERS ----------
 def hash_password(p): return hashlib.sha256(p.encode()).hexdigest()
 def get_user(u, p):
     cur.execute("SELECT id, vehicle_number FROM users WHERE username=? AND password_hash=?", (u, hash_password(p)))
@@ -124,7 +122,7 @@ def create_user(u, p):
 if 'selected_slot' not in st.session_state:
     st.session_state.selected_slot = None
 
-# ---------- AUTH PAGE (CRITICAL BUG FIX) ----------
+# ---------- AUTH PAGE (BUG FIX APPLIED) ----------
 if 'user_id' not in st.session_state or st.session_state.user_id is None:
     st.title("🅿️ Parking Slot Booking System")
     tab1, tab2 = st.tabs(["Login", "Register"])
@@ -134,8 +132,6 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
         if st.button("Login", use_container_width=True):
             user = get_user(u, p)
             if user:
-                # --- THIS IS THE FIX ---
-                # Separate the assignments from the function call.
                 st.session_state.user_id = user[0]
                 st.session_state.vehicle_number = user[1]
                 st.rerun()
@@ -145,10 +141,8 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
         u = st.text_input("New Username", key="reg_user")
         p = st.text_input("New Password", type="password", key="reg_pass")
         if st.button("Register", use_container_width=True):
-            if create_user(u, p):
-                st.success("Account created. Login now.")
-            else:
-                st.error("Username already exists")
+            if create_user(u, p): st.success("Account created. Login now.")
+            else: st.error("Username already exists")
     st.stop()
 
 # ---------- MAIN APP LAYOUT ----------
@@ -175,19 +169,19 @@ with col1:
         cur.execute("DELETE FROM bookings WHERE id =?", (b_id,))
         conn.commit()
         st.success(f"Booking for slot {s_number} cancelled.")
-        st.rerun()
+        # No need to call rerun here, Streamlit's callback flow handles it.
 
     if active:
         booking_id, slot_number, end_datetime_str = active
         end_time = datetime.strptime(end_datetime_str, "%Y-%m-%d %H:%M")
         
-        with st.container(border=False):
+        with st.container():
             st.markdown('<div class="active-booking-card">', unsafe_allow_html=True)
             info_col, button_col = st.columns([3, 1])
             with info_col:
                 st.markdown(f"""
                     <p style="color: var(--color-text-primary); font-weight: 600;">Currently Parked</p>
-                    <p style="color: var(--color-text-secondary);">
+                    <p style="color: var(--color-text-secondary); line-height: 1.8;">
                         **Slot:** {slot_number}<br>
                         **Until:** {end_time.strftime('%I:%M %p')}<br>
                         **Time Remaining:** {str(end_time - now_dt).split('.')[0]}
