@@ -159,12 +159,13 @@ div[data-testid="stMetric"] label { /* Metric label */
     color: var(--color-text-secondary);
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
-    /* --- FIX FOR TRUNCATED METRIC LABEL --- */
-    white-space: normal!important; /* Force text wrapping */
-    overflow: visible!important; /* Ensure content is not clipped */
-    text-overflow: unset!important; /* Remove ellipsis */
-    width: 100%!important; /* Take full available width */
-    display: block!important; /* Ensure it's a block element for proper layout */
+    /* --- CRITICAL FIX FOR TRUNCATED METRIC LABEL --- */
+    white-space: normal!important; /* Force text to wrap */
+    overflow: visible!important; /* Ensure no content is clipped */
+    text-overflow: unset!important; /* Remove ellipsis if present */
+    display: block!important; /* Make sure it behaves as a block for full width */
+    width: 100%!important; /* Take up all available width */
+    max-width: 100%!important; /* Ensure it doesn't get limited by a smaller max-width */
 }
 div[data-testid="stMetric"] div[data-testid="stMarkdownContainer"] p { /* Metric value */
     color: var(--color-text-primary);
