@@ -117,13 +117,14 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.75rem 0 1.25rem;
-    margin-bottom: 1.5rem;
+    padding: 1.25rem 0 0.75rem;
+    margin-bottom: 0.25rem;
+    border-bottom: 1px solid var(--border);
 }
 .app-brand {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: 0.75rem;
 }
 .app-icon {
     width: 36px;
@@ -137,18 +138,20 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     box-shadow: var(--shadow-accent);
 }
 .app-brand-name {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     font-weight: 800;
     color: var(--text-1);
     letter-spacing: -0.04em;
+    line-height: 1;
 }
 .app-brand-sub {
-    font-size: 0.6rem;
+    font-size: 0.58rem;
     font-weight: 600;
     color: var(--text-3);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     line-height: 1;
+    margin-top: 2px;
 }
 .header-right {
     display: flex;
@@ -159,16 +162,17 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: 99px;
-    padding: 4px 10px 4px 6px;
+    padding: 5px 12px 5px 6px;
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.75rem;
+    gap: 7px;
+    font-size: 0.78rem;
+    font-weight: 500;
     color: var(--text-2);
 }
 .user-avatar {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%);
     border-radius: 50%;
     display: flex;
@@ -651,13 +655,17 @@ div[data-baseweb="popover"] { background: var(--surface-2)!important; border: 1p
     transform: translateY(-1px)!important;
 }
 .stButton > button[kind="secondary"] {
-    background: var(--surface-2)!important;
+    background: transparent!important;
     border: 1px solid var(--border)!important;
-    color: var(--text-2)!important;
+    color: var(--text-3)!important;
+    font-size: 0.78rem!important;
+    min-height: 34px!important;
+    padding: 0 0.75rem!important;
 }
 .stButton > button[kind="secondary"]:hover {
-    border-color: var(--border-hover)!important;
-    color: var(--text-1)!important;
+    border-color: var(--red)!important;
+    color: var(--red)!important;
+    background: rgba(239,68,68,0.06)!important;
 }
 
 /* Slot buttons */
@@ -996,28 +1004,31 @@ if 'username' not in st.session_state:
 username = st.session_state.get('username', 'User')
 avatar_letter = username[0].upper() if username else "U"
 
-# Header
-col_h1, col_h2 = st.columns([4, 1])
-with col_h1:
-    st.markdown(f"""
-    <div class="app-header">
-        <div class="app-brand">
-            <img src="{LOGO_B64}" style="width:40px;height:40px;object-fit:contain;border-radius:10px;flex-shrink:0;" />
-            <div>
-                <div class="app-brand-name">ParkOS</div>
-                <div class="app-brand-sub">Smart Parking</div>
-            </div>
+# Header — fully in HTML, sign out uses a query param trick via button hidden below
+st.markdown(f"""
+<div class="app-header">
+    <div class="app-brand">
+        <img src="{LOGO_B64}" style="width:38px;height:38px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(99,102,241,0.3));" />
+        <div>
+            <div class="app-brand-name">ParkOS</div>
+            <div class="app-brand-sub">Smart Parking</div>
         </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.625rem;">
         <div class="user-pill">
             <div class="user-avatar">{avatar_letter}</div>
             {username}
         </div>
     </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
-if st.button("Sign Out", type="secondary"):
-    for key in list(st.session_state.keys()): del st.session_state[key]
-    st.rerun()
+# Sign out tucked neatly below header
+col_so1, col_so2, col_so3 = st.columns([3, 1, 1])
+with col_so3:
+    if st.button("Sign Out", type="secondary", use_container_width=True):
+        for key in list(st.session_state.keys()): del st.session_state[key]
+        st.rerun()
 
 # Vehicle number gate
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
@@ -1063,6 +1074,7 @@ user_has_active_or_future = bool(user_current_future)
 upcoming_count = len([b for b in user_current_future if parse_dt(b[2]) > now_dt])
 
 # ── Overview ──
+st.markdown('<div style="height:1.25rem;"></div>', unsafe_allow_html=True)
 st.markdown('<div class="section-label">Overview</div>', unsafe_allow_html=True)
 
 # Stats row
@@ -1160,6 +1172,7 @@ else:
     """, unsafe_allow_html=True)
 
 # ── Bookings ──
+st.markdown('<div style="height:0.5rem;"></div>', unsafe_allow_html=True)
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 st.markdown('<div class="section-label">Your Bookings</div>', unsafe_allow_html=True)
 
