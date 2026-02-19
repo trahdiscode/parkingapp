@@ -1384,7 +1384,9 @@ body{{background:transparent;padding:2px}}
 .s.blocked{{background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.5);color:#EF4444;cursor:not-allowed}}
 </style></head><body>
 <div id="r"></div>
+<script src="https://unpkg.com/streamlit-component-lib@1.0.0/dist/index.js"></script>
 <script>
+Streamlit.setFrameHeight(145);
 const states={states_json};
 const root=document.getElementById('r');
 ['A','B'].forEach(row=>{{
@@ -1399,9 +1401,7 @@ const root=document.getElementById('r');
       el.onclick=()=>{{
         document.querySelectorAll('.s.selected').forEach(x=>{{x.className='s free'}});
         el.className='s selected';
-        const u=new URL(window.parent.location.href);
-        u.searchParams.set('sel',name);
-        window.parent.location.replace(u.toString());
+        Streamlit.setComponentValue(name);
       }};
     }}
     g.appendChild(el);
@@ -1410,7 +1410,10 @@ const root=document.getElementById('r');
 }});
 </script></body></html>"""
 
-    components.html(grid_html, height=145, scrolling=False)
+    clicked_slot = components.html(grid_html, height=145, scrolling=False)
+    if clicked_slot and clicked_slot in slots and clicked_slot not in blocked:
+        st.session_state.selected_slot = clicked_slot
+        st.rerun()
 
 
 
