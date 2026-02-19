@@ -58,6 +58,24 @@ html, body, .stApp {
     font-family: var(--font);
     color: var(--text-1);
 }
+
+/* ── Kill Streamlit's rerun fade/flicker ── */
+.stApp > div, .main, .block-container,
+[data-testid="stAppViewContainer"],
+[data-testid="stVerticalBlock"],
+[data-testid="stHorizontalBlock"],
+[data-testid="element-container"],
+iframe, .stMarkdown, .stButton,
+.stTextInput, .stSelectbox, .stDateInput {
+    animation: none!important;
+    transition: none!important;
+    opacity: 1!important;
+}
+/* Streamlit skeleton loader — hide it */
+[data-testid="stSkeleton"] { display: none!important; }
+/* Remove the white flash on rerun */
+.stApp [data-stale="true"] { opacity: 1!important; }
+.stApp [data-stale="true"] * { opacity: 1!important; }
 .stApp::before {
     content: '';
     position: fixed;
@@ -1093,19 +1111,19 @@ st.markdown(f"""
 
 # Active session
 if active_booking:
-    import streamlit.components.v1 as components
     _, slot_num, start_str, end_str = active_booking
     end_dt = parse_dt(end_str)
     start_dt_active = parse_dt(start_str)
     remaining = end_dt - now_dt
-    remaining_str = str(remaining).split('.')[0]
+    remaining_str = str(remaining).split(".")[0]
     end_ts_ms = int(end_dt.timestamp() * 1000)
 
+    # Everything in one st.markdown — no iframe, no flash
     st.markdown(f"""
     <div class="active-card">
         <div class="active-card-glow"></div>
         <div class="active-badge"><span class="active-dot"></span> Active Session</div>
-        <div class="vehicle-chip">\U0001f697 {st.session_state.vehicle_number}</div>
+        <div class="vehicle-chip">&#128663; {st.session_state.vehicle_number}</div>
         <div class="active-slot-display">
             <div>
                 <div class="active-slot-label">Slot</div>
@@ -1117,51 +1135,36 @@ if active_booking:
                 <div style="font-size:0.65rem;color:var(--text-3);margin-top:2px;">{end_dt.strftime('%b %d')}</div>
             </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    components.html(f"""
-    <style>
-        body {{ margin: 0; padding: 0; background: transparent; }}
-        .countdown-wrap {{
-            background: #1E2230;
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 8px;
-            padding: 10px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }}
-        .cd-label {{ font-family: sans-serif; font-size: 12px; color: #4B5068; font-weight: 500; }}
-        .cd-val {{ font-family: monospace; font-size: 20px; color: #10B981; font-weight: 700; letter-spacing: 0.05em; }}
-        .cd-val.urgent {{ color: #EF4444; }}
-    </style>
-    <div class="countdown-wrap">
-        <span class="cd-label">&#9201; Time remaining</span>
-        <span class="cd-val" id="cd">{remaining_str}</span>
+        <div class="active-remaining-bar">
+            <span class="remaining-label">&#9201; Time remaining</span>
+            <span class="remaining-val" id="parkos-countdown">{remaining_str}</span>
+        </div>
     </div>
     <script>
-        const endMs = {end_ts_ms};
-        function pad(n) {{ return String(n).padStart(2, '0'); }}
+    (function() {{
+        var endMs = {end_ts_ms};
+        function pad(n) {{ return String(n).padStart(2, "0"); }}
         function tick() {{
-            const el = document.getElementById('cd');
-            if (!el) return;
-            const diff = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
-            const h = Math.floor(diff / 3600);
-            const m = Math.floor((diff % 3600) / 60);
-            const s = diff % 60;
-            el.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
-            if (diff < 300) el.classList.add('urgent');
-            else el.classList.remove('urgent');
-            // When session expires, trigger a Streamlit page refresh to update UI
-            if (diff === 0) {{
-                setTimeout(() => window.parent.location.reload(), 2000);
-            }}
+            var el = document.getElementById("parkos-countdown");
+            if (!el) {{ setTimeout(tick, 100); return; }}
+            var diff = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
+            var h = Math.floor(diff / 3600);
+            var m = Math.floor((diff % 3600) / 60);
+            var s = diff % 60;
+            el.textContent = pad(h) + ":" + pad(m) + ":" + pad(s);
+            el.style.color = diff < 300 ? "#EF4444" : "#10B981";
+            if (diff === 0) {{ setTimeout(function(){{ window.parent.location.reload(); }}, 2000); return; }}
+            setTimeout(tick, 1000);
         }}
-        tick();
-        setInterval(tick, 1000);
+        // Wait for DOM then start
+        if (document.readyState === "loading") {{
+            document.addEventListener("DOMContentLoaded", tick);
+        }} else {{
+            tick();
+        }}
+    }})();
     </script>
-    """, height=52)
+    """, unsafe_allow_html=True)
 else:
     st.markdown("""
     <div class="empty-card">
@@ -1383,12 +1386,19 @@ if not user_has_active_or_future:
         else:
             st.markdown(f"""
             <div class="confirm-banner">
-                <div style="font-size:0.65rem;color:var(--text-3);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:2px;">Selected</div>
+                <div style="font-size:0.65rem;color:var(--text-3);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:2px;">Selected Slot</div>
                 <div class="confirm-slot-big">{st.session_state.selected_slot}</div>
                 <div class="confirm-time">{start_dt.strftime('%b %d · %I:%M %p')} → {end_dt.strftime('%I:%M %p')}</div>
             </div>
             """, unsafe_allow_html=True)
-            if st.button("Confirm Booking →", type="primary", use_container_width=True):
+            col_confirm, col_change = st.columns([3, 1])
+            with col_change:
+                if st.button("← Change", type="secondary", use_container_width=True):
+                    st.session_state.selected_slot = None
+                    st.rerun()
+            with col_confirm:
+                confirm_clicked = st.button("Confirm Booking →", type="primary", use_container_width=True)
+            if confirm_clicked:
                 if start_dt < now_dt_fresh_ist:
                     st.error("Your selected start time has just passed. Please pick a new time.")
                     st.session_state.selected_slot = None
