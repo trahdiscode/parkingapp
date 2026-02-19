@@ -1,5 +1,5 @@
 import streamlit as st
-import sqlite3
+from supabase import create_client, Client
 import hashlib
 from datetime import datetime, date, timedelta
 from streamlit_autorefresh import st_autorefresh
@@ -731,24 +731,33 @@ div[data-baseweb="calendar"] { background: var(--surface-2)!important; border: 1
 """, unsafe_allow_html=True)
 
 # ---------- DATABASE ----------
-conn = sqlite3.connect("parking_v4.db", check_same_thread=False)
-cur = conn.cursor()
-cur.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, vehicle_number TEXT)")
-cur.execute("CREATE TABLE IF NOT EXISTS bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, slot_number TEXT NOT NULL, start_datetime TEXT NOT NULL, end_datetime TEXT NOT NULL)")
-conn.commit()
+@st.cache_resource
+def init_supabase() -> Client:
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    return create_client(url, key)
+
+supabase = init_supabase()
 
 # ---------- HELPERS ----------
 def hash_password(p): return hashlib.sha256(p.encode()).hexdigest()
 
 def get_user(u, p):
-    cur.execute("SELECT id, vehicle_number FROM users WHERE username=? AND password_hash=?", (u, hash_password(p)))
-    return cur.fetchone()
+    res = supabase.table("users").select("id, vehicle_number").eq("username", u).eq("password_hash", hash_password(p)).execute()
+    if res.data:
+        row = res.data[0]
+        return (row["id"], row["vehicle_number"])
+    return None
 
 def create_user(u, p):
     try:
-        cur.execute("INSERT INTO users (username, password_hash) VALUES (?,?)", (u, hash_password(p)))
-        conn.commit(); return True
-    except sqlite3.IntegrityError: return False
+        existing = supabase.table("users").select("id").eq("username", u).execute()
+        if existing.data:
+            return False
+        supabase.table("users").insert({"username": u, "password_hash": hash_password(p)}).execute()
+        return True
+    except Exception:
+        return False
 
 ist_timezone = pytz.timezone('Asia/Kolkata')
 
@@ -985,8 +994,8 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
 
 # Fetch username if not set
 if 'username' not in st.session_state:
-    res = cur.execute("SELECT username FROM users WHERE id=?", (st.session_state.user_id,)).fetchone()
-    st.session_state.username = res[0] if res else "User"
+    res = supabase.table("users").select("username").eq("id", st.session_state.user_id).execute()
+    st.session_state.username = res.data[0]["username"] if res.data else "User"
 
 username = st.session_state.get('username', 'User')
 avatar_letter = username[0].upper() if username else "U"
@@ -1026,8 +1035,8 @@ if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number i
     v = st.text_input("Vehicle Number", placeholder="e.g., TN01 AB1234")
     if st.button("Save & Continue →", type="primary", use_container_width=True):
         if v.strip():
-            cur.execute("UPDATE users SET vehicle_number=? WHERE id=?", (v.upper(), st.session_state.user_id))
-            conn.commit(); st.session_state.vehicle_number = v.upper(); st.rerun()
+            supabase.table("users").update({"vehicle_number": v.upper()}).eq("id", st.session_state.user_id).execute()
+            st.session_state.vehicle_number = v.upper(); st.rerun()
         else:
             st.error("Please enter a valid vehicle number.")
     st.stop()
@@ -1038,10 +1047,8 @@ now_dt = now_dt_fresh_ist
 earliest_allowed_dt_ist = get_next_30min_slot_tz(now_dt_fresh_ist)
 
 # ── Fetch bookings ──
-all_user_bookings = cur.execute(
-    "SELECT id, slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? ORDER BY start_datetime",
-    (st.session_state.user_id,)
-).fetchall()
+_b = supabase.table("bookings").select("id, slot_number, start_datetime, end_datetime").eq("user_id", st.session_state.user_id).order("start_datetime").execute()
+all_user_bookings = [(r["id"], r["slot_number"], r["start_datetime"], r["end_datetime"]) for r in _b.data]
 
 total_bookings = len(all_user_bookings)
 user_current_future = [b for b in all_user_bookings if parse_dt(b[3]) > now_dt]
@@ -1182,8 +1189,7 @@ if user_current_future:
             st.markdown("<div style='height:6px;'></div>", unsafe_allow_html=True)
             if st.button(btn_label, key=btn_key, type="secondary", use_container_width=True):
                 if st.session_state.get(f"confirm_{btn_key}", False):
-                    cur.execute("DELETE FROM bookings WHERE id=?", (booking_id,))
-                    conn.commit()
+                    supabase.table("bookings").delete().eq("id", booking_id).execute()
                     del st.session_state[f"confirm_{btn_key}"]
                     st.session_state.selected_slot = None
                     st.rerun()
@@ -1290,10 +1296,10 @@ if not user_has_active_or_future:
     </div>
     """, unsafe_allow_html=True)
 
-    blocked = {r[0] for r in cur.execute(
-        "SELECT slot_number FROM bookings WHERE NOT (end_datetime <=? OR start_datetime >=?)",
-        (start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
-    ).fetchall()}
+    _bl = supabase.table("bookings").select("slot_number").execute()
+    blocked = {r["slot_number"] for r in _bl.data
+               if not (r["end_datetime"] <= start_dt.strftime("%Y-%m-%d %H:%M")
+                       or r["start_datetime"] >= end_dt.strftime("%Y-%m-%d %H:%M"))}
 
     def handle_slot_click(slot_name):
         if st.session_state.selected_slot == slot_name:
@@ -1348,10 +1354,10 @@ if not user_has_active_or_future:
                 st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_disabled, use_container_width=True)
 
     if st.session_state.selected_slot:
-        current_blocked = {r[0] for r in cur.execute(
-            "SELECT slot_number FROM bookings WHERE NOT (end_datetime <=? OR start_datetime >=?)",
-            (start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
-        ).fetchall()}
+        _cb = supabase.table("bookings").select("slot_number").execute()
+        current_blocked = {r["slot_number"] for r in _cb.data
+                           if not (r["end_datetime"] <= start_dt.strftime("%Y-%m-%d %H:%M")
+                                   or r["start_datetime"] >= end_dt.strftime("%Y-%m-%d %H:%M"))}
 
         if st.session_state.selected_slot in current_blocked:
             st.error(f"Slot {st.session_state.selected_slot} is no longer available. Please choose another.")
@@ -1372,16 +1378,16 @@ if not user_has_active_or_future:
                     st.rerun()
                 else:
                     try:
-                        cur.execute(
-                            "INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime) VALUES (?,?,?,?)",
-                            (st.session_state.user_id, st.session_state.selected_slot,
-                             start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
-                        )
-                        conn.commit()
+                        supabase.table("bookings").insert({
+                            "user_id": st.session_state.user_id,
+                            "slot_number": st.session_state.selected_slot,
+                            "start_datetime": start_dt.strftime("%Y-%m-%d %H:%M"),
+                            "end_datetime": end_dt.strftime("%Y-%m-%d %H:%M")
+                        }).execute()
                         st.success(f"✅ Slot {st.session_state.selected_slot} booked successfully!")
                         st.session_state.selected_slot = None
                         st.rerun()
-                    except sqlite3.IntegrityError:
+                    except Exception:
                         st.error(f"Failed to book slot {st.session_state.selected_slot}. It may have just been taken.")
                         st.session_state.selected_slot = None
                         st.rerun()
