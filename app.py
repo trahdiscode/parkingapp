@@ -1332,43 +1332,96 @@ if not user_has_active_or_future:
     def handle_slot_click(slot_name):
         st.session_state.selected_slot = slot_name
 
-    # Build per-slot CSS using unique id wrapper divs
-    slot_styles = []
+    import streamlit.components.v1 as components
+    import json
+
+    selected = st.session_state.selected_slot or ""
+
+    def handle_slot_click(slot_name):
+        st.session_state.selected_slot = slot_name
+
+    # Build slot states for iframe visuals
+    slot_states = {}
     for s in slots:
-        is_blocked = s in blocked
-        is_selected = (s == selected)
-        cid = f"slot-{s}"
-        if is_selected:
-            slot_styles.append(f"#{cid} button {{ background: rgba(59,130,246,0.18) !important; border: 2px solid #3B82F6 !important; color: #3B82F6 !important; font-weight: 700 !important; box-shadow: 0 0 0 3px rgba(59,130,246,0.12) !important; }}")
-        elif is_blocked:
-            slot_styles.append(f"#{cid} button {{ background: rgba(239,68,68,0.1) !important; border: 2px solid rgba(239,68,68,0.5) !important; color: #EF4444 !important; }}")
-            slot_styles.append(f"#{cid} button:hover {{ background: rgba(239,68,68,0.1) !important; color: #EF4444 !important; }}")
+        if s in blocked:
+            slot_states[s] = "blocked"
+        elif s == selected:
+            slot_states[s] = "selected"
         else:
-            slot_styles.append(f"#{cid} button {{ border-left: 2px solid #10B981 !important; color: #9397B0 !important; }}")
-            slot_styles.append(f"#{cid} button:hover {{ background: rgba(16,185,129,0.08) !important; border-color: #10B981 !important; color: #10B981 !important; }}")
+            slot_states[s] = "free"
 
-    all_css = """[id^="slot-"] button {
-        height: 46px !important; font-family: 'JetBrains Mono', monospace !important;
-        font-size: 0.78rem !important; font-weight: 600 !important;
-        background: #0F1117 !important; border: 1px solid #1E2230 !important;
-        border-radius: 8px !important; transition: all 0.15s ease !important;
-        padding: 0 !important; width: 100% !important;
-    }
-    [id^="slot-"] button:disabled {{ opacity: 1 !important; cursor: not-allowed !important; }}
-    """ + " ".join(slot_styles)
+    states_json = json.dumps(slot_states)
 
-    st.markdown(f"<style>{all_css}</style>", unsafe_allow_html=True)
+    # Inject a listener in the parent page that receives postMessage from iframe
+    # and programmatically clicks the matching hidden st.button
+    st.markdown("""
+    <script>
+    window.addEventListener('message', function(e) {
+        if (e.data && e.data.type === 'slot_click') {
+            const key = 'slot_btn_' + e.data.slot;
+            const btns = window.parent.document.querySelectorAll('button');
+            for (const btn of btns) {
+                if (btn.getAttribute('data-slot') === e.data.slot) {
+                    btn.click();
+                    break;
+                }
+            }
+        }
+    });
+    </script>
+    """, unsafe_allow_html=True)
 
-    for row_prefix in ['A', 'B']:
-        row_slots = [f"{row_prefix}{i}" for i in range(1, 11)]
-        st.markdown(f'<div class="row-label">Row {row_prefix}</div>', unsafe_allow_html=True)
-        cols = st.columns(10)
-        for j, s in enumerate(row_slots):
-            with cols[j]:
-                is_blocked = s in blocked
-                st.markdown(f'<div id="slot-{s}">', unsafe_allow_html=True)
-                st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_blocked, use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
+    # Visual iframe - pure HTML, full CSS control, sends postMessage on click
+    grid_html = f"""<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width">
+<style>
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{background:transparent;padding:2px}}
+.lbl{{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4B5068;display:flex;align-items:center;gap:5px;margin-bottom:5px;margin-top:10px}}
+.lbl:first-child{{margin-top:0}}
+.lbl::before{{content:\'\';width:3px;height:9px;background:#6366F1;border-radius:99px;display:inline-block}}
+.grid{{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}}
+.s{{height:42px;border-radius:7px;font-family:monospace;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;user-select:none;border:1px solid #1E2230;background:#0F1117;color:#9397B0}}
+.s.free{{border-left:2px solid #10B981}}
+.s.free:hover{{background:rgba(16,185,129,.08);border-color:#10B981;color:#10B981}}
+.s.selected{{background:rgba(59,130,246,.18);border:2px solid #3B82F6;color:#3B82F6;font-weight:700;box-shadow:0 0 0 3px rgba(59,130,246,.12)}}
+.s.blocked{{background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.5);color:#EF4444;cursor:not-allowed}}
+</style></head><body>
+<div id="r"></div>
+<script>
+const states={states_json};
+const root=document.getElementById('r');
+['A','B'].forEach(row=>{{
+  const lbl=document.createElement('div');
+  lbl.className='lbl';lbl.textContent='ROW '+row;root.appendChild(lbl);
+  const g=document.createElement('div');g.className='grid';
+  Object.keys(states).filter(k=>k[0]===row).forEach(name=>{{
+    const el=document.createElement('div');
+    el.className='s '+states[name];
+    el.textContent=name;
+    if(states[name]!=='blocked'){{
+      el.onclick=()=>{{
+        document.querySelectorAll('.s.selected').forEach(x=>x.className='s free');
+        el.className='s selected';
+        window.parent.postMessage({{type:'slot_click',slot:name}},'*');
+      }};
+    }}
+    g.appendChild(el);
+  }});
+  root.appendChild(g);
+}});
+</script></body></html>"""
+
+    components.html(grid_html, height=145, scrolling=False)
+
+    # Hidden real Streamlit buttons — invisible but clickable via JS
+    st.markdown("""<style>
+    .hidden-slots { position: fixed; left: -9999px; top: -9999px; }
+    </style>""", unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="hidden-slots">', unsafe_allow_html=True)
+        for s in slots:
+            st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=(s in blocked))
+        st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.selected_slot:
 
