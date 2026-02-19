@@ -1329,36 +1329,48 @@ if not user_has_active_or_future:
 
     slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
-    # Dynamic slot button styles
-    slot_css = ""
+    # Build per-slot CSS using the div wrapper class approach
+    slot_css = """
+    /* Base slot button style */
+    div[class*="slot-wrap-"] > div > button {
+        height: 48px!important;
+        font-family: var(--font-mono)!important;
+        font-size: 0.8rem!important;
+        font-weight: 600!important;
+        width: 100%!important;
+        background: var(--surface)!important;
+        border: 1px solid var(--border)!important;
+        color: var(--text-2)!important;
+        border-radius: var(--radius-sm)!important;
+        transition: all 0.15s ease!important;
+    }
+    div[class*="slot-wrap-"] > div > button:hover:not(:disabled) {
+        background: var(--green-soft)!important;
+        border-color: var(--green)!important;
+        color: var(--green)!important;
+    }
+    """
     for s in slots:
         is_blocked = s in blocked
         is_selected = s == st.session_state.selected_slot
-        sel = f'button[data-testid*="slot_{s}"]'
+        cls = f".slot-wrap-{s} > div > button"
         if is_selected:
-            slot_css += f"""{sel} {{
+            slot_css += f"""{cls} {{
                 background: rgba(59,130,246,0.15)!important;
-                border: 1.5px solid #3B82F6!important;
+                border: 2px solid #3B82F6!important;
                 color: #3B82F6!important;
-                font-weight:700!important;
-                box-shadow: 0 0 0 3px rgba(59,130,246,0.15)!important;
+                font-weight: 700!important;
+                box-shadow: 0 0 0 3px rgba(59,130,246,0.12)!important;
             }}\n"""
         elif is_blocked:
-            slot_css += f"""{sel} {{
-                background: rgba(239,68,68,0.12)!important;
-                border: 1.5px solid rgba(239,68,68,0.5)!important;
+            slot_css += f"""{cls} {{
+                background: rgba(239,68,68,0.1)!important;
+                border: 2px solid rgba(239,68,68,0.6)!important;
                 color: #EF4444!important;
-                cursor: not-allowed!important;
             }}\n"""
         else:
-            slot_css += f"""{sel} {{
+            slot_css += f"""{cls} {{
                 border-left: 2px solid var(--green)!important;
-                color: var(--text-2)!important;
-            }}\n"""
-            slot_css += f"""{sel}:hover {{
-                background: var(--green-soft)!important;
-                border-color: var(--green)!important;
-                color: var(--green)!important;
             }}\n"""
 
     st.markdown(f"<style>{slot_css}</style>", unsafe_allow_html=True)
@@ -1370,7 +1382,10 @@ if not user_has_active_or_future:
         for j, s in enumerate(row_slots):
             with cols[j]:
                 is_blocked = s in blocked
+                # Wrap in a div with unique class so CSS can target it reliably
+                st.markdown(f'<div class="slot-wrap-{s}">', unsafe_allow_html=True)
                 st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_blocked, use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.selected_slot:
         current_blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
