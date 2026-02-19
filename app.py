@@ -762,196 +762,143 @@ if 'selected_slot' not in st.session_state:
 # ---------- AUTH PAGE ----------
 if 'user_id' not in st.session_state or st.session_state.user_id is None:
 
-    # Full-page login styling
-    st.markdown("""
-    <style>
-    .main.block-container { max-width: 100%!important; padding: 0!important; }
-    section[data-testid="stSidebar"] { display: none; }
-
-    .login-page {
-        min-height: 100vh;
-        display: grid;
-        grid-template-columns: 1fr;
-        background: #080A0F;
-    }
-    @media (min-width: 900px) {
-        .login-page { grid-template-columns: 1fr 1fr; }
-    }
-
-    /* Left panel — branding */
-    .login-left {
-        background: linear-gradient(145deg, #0D0F1A 0%, #111320 60%, #0a0c17 100%);
-        border-right: 1px solid rgba(99,102,241,0.12);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 3rem 2.5rem;
-        position: relative;
-        overflow: hidden;
-        min-height: 280px;
-    }
-    .login-left::before {
-        content: '';
-        position: absolute;
-        top: -120px; left: -120px;
-        width: 400px; height: 400px;
-        background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 65%);
-        pointer-events: none;
-    }
-    .login-left::after {
-        content: '';
-        position: absolute;
-        bottom: -80px; right: -80px;
-        width: 280px; height: 280px;
-        background: radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 65%);
-        pointer-events: none;
-    }
-    .login-brand-logo {
-        width: 90px;
-        height: 90px;
-        object-fit: contain;
-        filter: drop-shadow(0 12px 32px rgba(99,102,241,0.4));
-        margin-bottom: 1.25rem;
-        position: relative;
-        z-index: 1;
-    }
-    .login-brand-name {
-        font-family: 'Outfit', sans-serif;
-        font-size: 2.5rem;
-        font-weight: 800;
-        letter-spacing: -0.05em;
-        color: #F1F2F6;
-        line-height: 1;
-        margin-bottom: 0.5rem;
-        position: relative;
-        z-index: 1;
-    }
-    .login-brand-tagline {
-        font-family: 'Outfit', sans-serif;
-        font-size: 0.82rem;
-        color: #4B5068;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        position: relative;
-        z-index: 1;
-        margin-bottom: 2rem;
-    }
-    .login-features {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        width: 100%;
-        max-width: 280px;
-        position: relative;
-        z-index: 1;
-    }
-    .login-feature-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-family: 'Outfit', sans-serif;
-        font-size: 0.82rem;
-        color: #6B7090;
-    }
-    .login-feature-icon {
-        width: 30px; height: 30px;
-        background: rgba(99,102,241,0.1);
-        border: 1px solid rgba(99,102,241,0.18);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.85rem;
-        flex-shrink: 0;
-    }
-
-    /* Right panel — form */
-    .login-right {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 2.5rem 1.5rem;
-        background: #080A0F;
-    }
-    .login-form-wrap {
-        width: 100%;
-        max-width: 380px;
-    }
-    .login-form-title {
-        font-family: 'Outfit', sans-serif;
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #F1F2F6;
-        letter-spacing: -0.03em;
-        margin-bottom: 0.25rem;
-    }
-    .login-form-sub {
-        font-family: 'Outfit', sans-serif;
-        font-size: 0.82rem;
-        color: #4B5068;
-        margin-bottom: 1.75rem;
-    }
-    .login-divider {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin: 1.25rem 0;
-    }
-    .login-divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
-    .login-divider-text { font-size: 0.7rem; color: #4B5068; font-family: 'Outfit', sans-serif; letter-spacing: 0.06em; }
-    .login-footer {
-        text-align: center;
-        margin-top: 1.5rem;
-        font-size: 0.72rem;
-        color: #4B5068;
-        font-family: 'Outfit', sans-serif;
-    }
-    </style>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-    <div class="login-page">
-        <div class="login-left">
-    """, unsafe_allow_html=True)
-
-    st.markdown(f"""
-            <img class="login-brand-logo" src="{LOGO_B64}" />
-            <div class="login-brand-name">ParkOS</div>
-            <div class="login-brand-tagline">Smart Parking Management</div>
-            <div class="login-features">
-                <div class="login-feature-item">
-                    <div class="login-feature-icon">📍</div>
-                    Real-time slot availability
-                </div>
-                <div class="login-feature-item">
-                    <div class="login-feature-icon">⚡</div>
-                    Instant booking confirmation
-                </div>
-                <div class="login-feature-item">
-                    <div class="login-feature-icon">🔒</div>
-                    Secure & private sessions
-                </div>
-            </div>
-        </div>
-        <div class="login-right">
-            <div class="login-form-wrap">
-    """, unsafe_allow_html=True)
-
-    # Toggle between sign in / create account
     if 'auth_mode' not in st.session_state:
         st.session_state.auth_mode = 'signin'
 
+    st.markdown(f"""
+    <style>
+    /* ── Override Streamlit layout for login page ── */
+    .main.block-container {{
+        max-width: 420px!important;
+        margin: 0 auto!important;
+        padding: 0 1.25rem 3rem!important;
+    }}
+
+    /* Floating card wrapper injected below */
+    .lp-card {{
+        background: #0F1117;
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 20px;
+        padding: 2rem 2rem 1.5rem;
+        margin-bottom: 1rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }}
+    .lp-card::before {{
+        content: '';
+        position: absolute;
+        top: -60px; right: -60px;
+        width: 200px; height: 200px;
+        background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 65%);
+        pointer-events: none;
+    }}
+    .lp-top {{
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.75rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }}
+    .lp-logo {{
+        width: 52px; height: 52px;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 16px rgba(99,102,241,0.4));
+        flex-shrink: 0;
+    }}
+    .lp-brand-name {{
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.6rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        color: #F1F2F6;
+        line-height: 1;
+    }}
+    .lp-brand-sub {{
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.7rem;
+        color: #4B5068;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        margin-top: 3px;
+    }}
+    .lp-title {{
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #F1F2F6;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.2rem;
+    }}
+    .lp-sub {{
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.78rem;
+        color: #4B5068;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }}
+    .lp-divider {{
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 1rem 0;
+    }}
+    .lp-divider-line {{ flex:1; height:1px; background: rgba(255,255,255,0.06); }}
+    .lp-divider-text {{ font-size:0.65rem; color:#4B5068; font-family:'Outfit',sans-serif; letter-spacing:0.1em; text-transform:uppercase; }}
+    .lp-features {{
+        background: #080A0F;
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 14px;
+        padding: 1.1rem 1.25rem;
+        margin-bottom: 1rem;
+    }}
+    .lp-feature {{
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.45rem 0;
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.8rem;
+        color: #6B7090;
+    }}
+    .lp-feature + .lp-feature {{
+        border-top: 1px solid rgba(255,255,255,0.04);
+    }}
+    .lp-feature-dot {{
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: #6366F1;
+        flex-shrink: 0;
+        box-shadow: 0 0 6px rgba(99,102,241,0.6);
+    }}
+    .lp-footer {{
+        text-align: center;
+        font-size: 0.68rem;
+        color: #2A2D3E;
+        font-family: 'Outfit', sans-serif;
+        padding-top: 0.5rem;
+    }}
+    </style>
+
+    <div class="lp-card">
+        <div class="lp-top">
+            <img class="lp-logo" src="{LOGO_B64}" />
+            <div>
+                <div class="lp-brand-name">ParkOS</div>
+                <div class="lp-brand-sub">Smart Parking Management</div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
     if st.session_state.auth_mode == 'signin':
         st.markdown("""
-        <div class="login-form-title">Welcome back</div>
-        <div class="login-form-sub">Sign in to manage your parking sessions</div>
+        <div class="lp-title">Welcome back</div>
+        <div class="lp-sub">Sign in to manage your parking sessions</div>
         """, unsafe_allow_html=True)
-
-        u = st.text_input("Username", key="login_user", placeholder="Enter your username")
-        p = st.text_input("Password", type="password", key="login_pass", placeholder="Enter your password")
-        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-
+        u = st.text_input("Username", key="login_user", placeholder="Enter your username", label_visibility="collapsed")
+        p = st.text_input("Password", type="password", key="login_pass", placeholder="Enter your password", label_visibility="collapsed")
+        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
         if st.button("Sign In →", type="primary", use_container_width=True):
             user = get_user(u, p)
             if user:
@@ -960,54 +907,53 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
                 st.session_state.username = u
                 st.rerun()
             else:
-                st.error("Invalid username or password.")
-
-        st.markdown("""<div class="login-divider">
-            <div class="login-divider-line"></div>
-            <div class="login-divider-text">NEW HERE?</div>
-            <div class="login-divider-line"></div>
+                st.error("Incorrect username or password.")
+        st.markdown("""<div class="lp-divider">
+            <div class="lp-divider-line"></div>
+            <div class="lp-divider-text">No account yet?</div>
+            <div class="lp-divider-line"></div>
         </div>""", unsafe_allow_html=True)
-
-        if st.button("Create an Account", type="secondary", use_container_width=True):
+        if st.button("Create a free account", type="secondary", use_container_width=True):
             st.session_state.auth_mode = 'register'
             st.rerun()
 
     else:
         st.markdown("""
-        <div class="login-form-title">Create account</div>
-        <div class="login-form-sub">Join ParkOS and start parking smarter</div>
+        <div class="lp-title">Create your account</div>
+        <div class="lp-sub">Join ParkOS and start parking smarter today</div>
         """, unsafe_allow_html=True)
-
-        u = st.text_input("Username", key="reg_user", placeholder="Choose a username")
-        p = st.text_input("Password", type="password", key="reg_pass", placeholder="Choose a strong password")
-        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-
+        u = st.text_input("Username", key="reg_user", placeholder="Choose a username", label_visibility="collapsed")
+        p = st.text_input("Password", type="password", key="reg_pass", placeholder="Choose a strong password", label_visibility="collapsed")
+        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
         if st.button("Create Account →", type="primary", use_container_width=True):
             if u.strip() and p.strip():
                 if create_user(u, p):
-                    st.success("✅ Account created! Please sign in.")
+                    st.success("✅ Account created! Sign in to continue.")
                     st.session_state.auth_mode = 'signin'
                     st.rerun()
                 else:
                     st.error("That username is already taken.")
             else:
                 st.error("Please fill in all fields.")
-
-        st.markdown("""<div class="login-divider">
-            <div class="login-divider-line"></div>
-            <div class="login-divider-text">HAVE AN ACCOUNT?</div>
-            <div class="login-divider-line"></div>
+        st.markdown("""<div class="lp-divider">
+            <div class="lp-divider-line"></div>
+            <div class="lp-divider-text">Already have an account?</div>
+            <div class="lp-divider-line"></div>
         </div>""", unsafe_allow_html=True)
-
-        if st.button("Back to Sign In", type="secondary", use_container_width=True):
+        if st.button("← Back to Sign In", type="secondary", use_container_width=True):
             st.session_state.auth_mode = 'signin'
             st.rerun()
 
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # Feature highlights below card
     st.markdown("""
-        <div class="login-footer">© 2025 ParkOS · All rights reserved</div>
-            </div>
-        </div>
+    <div class="lp-features">
+        <div class="lp-feature"><div class="lp-feature-dot"></div>Real-time slot availability across all rows</div>
+        <div class="lp-feature"><div class="lp-feature-dot"></div>Instant booking with live countdown timer</div>
+        <div class="lp-feature"><div class="lp-feature-dot"></div>Secure, private & IST timezone-aware sessions</div>
     </div>
+    <div class="lp-footer">© 2025 ParkOS · All rights reserved</div>
     """, unsafe_allow_html=True)
 
     st.stop()
