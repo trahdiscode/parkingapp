@@ -572,24 +572,30 @@ if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number i
     st.stop()
 
 # ── Data ──
-now_dt = datetime.now()
-now_str = now_dt.strftime("%Y-%m-%d %H:%M:%S")  # include seconds for precise comparison
+now_dt = datetime.now().replace(second=0, microsecond=0)  # floor to current minute
 
-# Fetch all user bookings and filter in Python to avoid SQLite string comparison quirks
+def parse_dt(s):
+    return datetime.strptime(s.strip(), "%Y-%m-%d %H:%M")
+
+# Fetch ALL bookings for user, filter in Python (avoids SQLite string comparison bugs)
 all_user_bookings = cur.execute(
     "SELECT id, slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? ORDER BY start_datetime",
     (st.session_state.user_id,)
 ).fetchall()
 
-user_current_future = [
-    b for b in all_user_bookings
-    if datetime.strptime(b[3], "%Y-%m-%d %H:%M") > now_dt
-]
-
 total_bookings = len(all_user_bookings)
+
+# current/future = end time is strictly after now
+user_current_future = [b for b in all_user_bookings if parse_dt(b[3]) > now_dt]
+
+# past = end time is now or earlier
+past_bookings_list = sorted(
+    [b for b in all_user_bookings if parse_dt(b[3]) <= now_dt],
+    key=lambda x: x[2], reverse=True
+)
+
 active_booking = next(
-    (b for b in user_current_future
-     if datetime.strptime(b[2], "%Y-%m-%d %H:%M") <= now_dt <= datetime.strptime(b[3], "%Y-%m-%d %H:%M")), None
+    (b for b in user_current_future if parse_dt(b[2]) <= now_dt <= parse_dt(b[3])), None
 )
 user_has_active_or_future = bool(user_current_future)
 
@@ -673,10 +679,7 @@ else:
     st.markdown('<div class="info-empty">No current or upcoming bookings.</div>', unsafe_allow_html=True)
 
 # Past bookings
-past_bookings = [
-    b for b in sorted(all_user_bookings, key=lambda x: x[2], reverse=True)
-    if datetime.strptime(b[3], "%Y-%m-%d %H:%M") <= now_dt
-]
+past_bookings = past_bookings_list
 
 if past_bookings:
     with st.expander(f"Booking History ({len(past_bookings)})"):
