@@ -1327,6 +1327,14 @@ if not user_has_active_or_future:
     import json
 
     slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
+    # Handle slot selection from iframe click via query param
+    if "sel" in st.query_params:
+        val = st.query_params["sel"]
+        if val in slots and val not in blocked:
+            st.session_state.selected_slot = val
+        st.query_params.clear()
+        st.rerun()
+
     selected = st.session_state.selected_slot or ""
 
     def handle_slot_click(slot_name):
@@ -1334,6 +1342,14 @@ if not user_has_active_or_future:
 
     import streamlit.components.v1 as components
     import json
+
+    # Handle slot selection from iframe click via query param
+    if "sel" in st.query_params:
+        val = st.query_params["sel"]
+        if val in slots and val not in blocked:
+            st.session_state.selected_slot = val
+        st.query_params.clear()
+        st.rerun()
 
     selected = st.session_state.selected_slot or ""
 
@@ -1352,33 +1368,14 @@ if not user_has_active_or_future:
 
     states_json = json.dumps(slot_states)
 
-    # Inject a listener in the parent page that receives postMessage from iframe
-    # and programmatically clicks the matching hidden st.button
-    st.markdown("""
-    <script>
-    window.addEventListener('message', function(e) {
-        if (e.data && e.data.type === 'slot_click') {
-            const key = 'slot_btn_' + e.data.slot;
-            const btns = window.parent.document.querySelectorAll('button');
-            for (const btn of btns) {
-                if (btn.getAttribute('data-slot') === e.data.slot) {
-                    btn.click();
-                    break;
-                }
-            }
-        }
-    });
-    </script>
-    """, unsafe_allow_html=True)
-
-    # Visual iframe - pure HTML, full CSS control, sends postMessage on click
+    # Visual slot grid - full CSS control inside iframe
     grid_html = f"""<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width">
 <style>
 *{{box-sizing:border-box;margin:0;padding:0}}
 body{{background:transparent;padding:2px}}
 .lbl{{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4B5068;display:flex;align-items:center;gap:5px;margin-bottom:5px;margin-top:10px}}
 .lbl:first-child{{margin-top:0}}
-.lbl::before{{content:\'\';width:3px;height:9px;background:#6366F1;border-radius:99px;display:inline-block}}
+.lbl::before{{content:'';width:3px;height:9px;background:#6366F1;border-radius:99px;display:inline-block}}
 .grid{{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}}
 .s{{height:42px;border-radius:7px;font-family:monospace;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;user-select:none;border:1px solid #1E2230;background:#0F1117;color:#9397B0}}
 .s.free{{border-left:2px solid #10B981}}
@@ -1400,9 +1397,11 @@ const root=document.getElementById('r');
     el.textContent=name;
     if(states[name]!=='blocked'){{
       el.onclick=()=>{{
-        document.querySelectorAll('.s.selected').forEach(x=>x.className='s free');
+        document.querySelectorAll('.s.selected').forEach(x=>{{x.className='s free'}});
         el.className='s selected';
-        window.parent.postMessage({{type:'slot_click',slot:name}},'*');
+        const u=new URL(window.parent.location.href);
+        u.searchParams.set('sel',name);
+        window.parent.location.replace(u.toString());
       }};
     }}
     g.appendChild(el);
@@ -1413,15 +1412,8 @@ const root=document.getElementById('r');
 
     components.html(grid_html, height=145, scrolling=False)
 
-    # Hidden real Streamlit buttons — invisible but clickable via JS
-    st.markdown("""<style>
-    .hidden-slots { position: fixed; left: -9999px; top: -9999px; }
-    </style>""", unsafe_allow_html=True)
-    with st.container():
-        st.markdown('<div class="hidden-slots">', unsafe_allow_html=True)
-        for s in slots:
-            st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=(s in blocked))
-        st.markdown('</div>', unsafe_allow_html=True)
+
+
 
     if st.session_state.selected_slot:
 
