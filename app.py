@@ -1324,116 +1324,94 @@ if not user_has_active_or_future:
                 if not (r["end_datetime"] <= start_str or r["start_datetime"] >= end_str)}
     blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
 
-    # --- Slot grid via components.html so we have full CSS control ---
-    import streamlit.components.v1 as components
-
     slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
-    selected = st.session_state.selected_slot or ""
 
-    # Build slot data JSON for JS
-    slot_data = []
+    def handle_slot_click(slot_name):
+        st.session_state.selected_slot = slot_name
+
+    # Build CSS using :has(p) to match button text — most reliable Streamlit selector
+    # Streamlit renders button label inside a <p> tag inside the button
+    css_parts = []
+
+    # Base style for all slot buttons (target by stButton inside stHorizontalBlock)
+    css_parts.append("""
+    .slot-row .stButton > button {
+        height: 46px !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 0.78rem !important;
+        font-weight: 600 !important;
+        background: #0F1117 !important;
+        border: 1px solid #1E2230 !important;
+        color: #9397B0 !important;
+        border-radius: 8px !important;
+        transition: all 0.15s ease !important;
+        padding: 0 !important;
+    }
+    .slot-row .stButton > button:hover:not(:disabled) {
+        background: rgba(16,185,129,0.08) !important;
+        border-color: #10B981 !important;
+        color: #10B981 !important;
+    }
+    .slot-row .stButton > button:disabled {
+        opacity: 1 !important;
+    }
+    """)
+
     for s in slots:
-        if s in blocked:
-            state = "blocked"
-        elif s == selected:
-            state = "selected"
-        else:
-            state = "free"
-        slot_data.append({"name": s, "state": state})
-
-    import json
-    slot_json = json.dumps(slot_data)
-
-    grid_html = f"""
-    <style>
-      * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-      body {{ background: transparent; font-family: 'JetBrains Mono', monospace; }}
-      .row-label {{
-        font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
-        text-transform: uppercase; color: #4B5068;
-        display: flex; align-items: center; gap: 6px;
-        margin-bottom: 6px; margin-top: 12px;
-      }}
-      .row-label:first-child {{ margin-top: 0; }}
-      .row-label::before {{
-        content: ''; display: inline-block;
-        width: 3px; height: 10px;
-        background: #6366F1; border-radius: 99px;
-      }}
-      .grid {{ display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }}
-      .slot {{
-        height: 44px; border-radius: 8px;
-        font-size: 12px; font-weight: 600;
-        border: 1px solid #1E2230;
-        background: #0F1117; color: #9397B0;
-        cursor: pointer; transition: all 0.15s ease;
-        display: flex; align-items: center; justify-content: center;
-      }}
-      .slot:hover {{ background: rgba(16,185,129,0.08); border-color: #10B981; color: #10B981; }}
-      .slot.free {{ border-left: 2px solid #10B981; }}
-      .slot.selected {{
+        is_blocked = s in blocked
+        is_selected = (s == st.session_state.selected_slot)
+        # Target by button text content using :has(p) where p contains the slot name
+        sel = f'.slot-row .stButton > button:has(p:-webkit-any("{s}"))'
+        sel2 = f'.slot-row .stButton > button:has(div:contains("{s}"))'
+        # Use attribute approach via aria-label which Streamlit sets to the button label
+        aria_sel = f'.slot-row .stButton > button[aria-label="{s}"]'
+        if is_selected:
+            css_parts.append(f"""
+    {aria_sel} {{
         background: rgba(59,130,246,0.15) !important;
         border: 2px solid #3B82F6 !important;
         color: #3B82F6 !important;
         font-weight: 700 !important;
-        box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
-      }}
-      .slot.blocked {{
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.12) !important;
+    }}""")
+        elif is_blocked:
+            css_parts.append(f"""
+    {aria_sel} {{
         background: rgba(239,68,68,0.1) !important;
         border: 2px solid rgba(239,68,68,0.55) !important;
         color: #EF4444 !important;
         cursor: not-allowed !important;
-      }}
-      .slot.blocked:hover {{ background: rgba(239,68,68,0.1) !important; border-color: rgba(239,68,68,0.55) !important; color: #EF4444 !important; }}
-    </style>
-    <div id="grid-root"></div>
-    <script>
-      const slots = {slot_json};
-      const root = document.getElementById('grid-root');
+    }}
+    {aria_sel}:hover {{
+        background: rgba(239,68,68,0.1) !important;
+        border-color: rgba(239,68,68,0.55) !important;
+        color: #EF4444 !important;
+    }}""")
+        else:
+            css_parts.append(f"""
+    {aria_sel} {{
+        border-left: 2px solid #10B981 !important;
+    }}""")
 
-      const rowA = slots.filter(s => s.name.startsWith('A'));
-      const rowB = slots.filter(s => s.name.startsWith('B'));
+    st.markdown(f"<style>{''.join(css_parts)}</style>", unsafe_allow_html=True)
 
-      function buildRow(label, items) {{
-        const lbl = document.createElement('div');
-        lbl.className = 'row-label';
-        lbl.textContent = 'ROW ' + label;
-        root.appendChild(lbl);
-        const grid = document.createElement('div');
-        grid.className = 'grid';
-        items.forEach(slot => {{
-          const btn = document.createElement('div');
-          btn.className = 'slot ' + slot.state;
-          btn.textContent = slot.name;
-          if (slot.state !== 'blocked') {{
-            btn.addEventListener('click', () => {{
-              // Navigate parent to add query param — Streamlit picks it up on rerun
-              const url = new URL(window.parent.location.href);
-              url.searchParams.set('selected_slot', slot.name);
-              window.parent.location.href = url.toString();
-            }});
-          }}
-          grid.appendChild(btn);
-        }});
-        root.appendChild(grid);
-      }}
-
-      buildRow('A', rowA);
-      buildRow('B', rowB);
-    </script>
-    """
-
-    # Check if iframe communicated a slot selection via query param
-    qp = st.query_params
-    if "selected_slot" in qp:
-        chosen = qp["selected_slot"]
-        if chosen in slots and chosen not in blocked:
-            st.session_state.selected_slot = chosen
-        st.query_params.clear()
-        st.rerun()
-
-    # Render the visual grid inside iframe — full CSS control
-    components.html(grid_html, height=140, scrolling=False)
+    for row_prefix in ['A', 'B']:
+        row_slots = [f"{row_prefix}{i}" for i in range(1, 11)]
+        st.markdown(f'<div class="row-label">Row {row_prefix}</div>', unsafe_allow_html=True)
+        st.markdown('<div class="slot-row">', unsafe_allow_html=True)
+        cols = st.columns(10)
+        for j, s in enumerate(row_slots):
+            with cols[j]:
+                is_blocked = s in blocked
+                st.button(
+                    s,
+                    key=f"slot_{s}",
+                    on_click=handle_slot_click,
+                    args=(s,),
+                    disabled=is_blocked,
+                    use_container_width=True
+                )
+        st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.selected_slot:
         current_blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
