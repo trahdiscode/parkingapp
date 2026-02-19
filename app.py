@@ -761,14 +761,16 @@ def get_next_30min_slot_tz(dt_tz):
     else:
         return (dt_tz + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
 
-def build_time_options(for_date, min_dt=None):
-    all_slots = [(datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").strftime("%I:%M %p"),
-                  datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").time())
-                 for h in range(24) for m in (0, 30)]
-    if for_date == date.today() and min_dt is not None:
-        cutoff = min_dt.time()
-        all_slots = [(label, t) for label, t in all_slots if t >= cutoff]
-    return all_slots
+def build_time_options(for_date, now_ist=None):
+    standard_slots = [(datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").strftime("%I:%M %p"),
+                       datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").time())
+                      for h in range(24) for m in (0, 30)]
+    if for_date == date.today() and now_ist is not None:
+        now_time = now_ist.time().replace(second=0, microsecond=0)
+        now_label = "Now (" + now_ist.strftime("%I:%M %p").lstrip("0") + ")"
+        future_slots = [(label, t) for label, t in standard_slots if t > now_time]
+        return [(now_label, now_time)] + future_slots
+    return standard_slots
 
 def parse_dt(s):
     dt_obj = datetime.strptime(s.strip(), "%Y-%m-%d %H:%M")
@@ -1227,7 +1229,7 @@ if not user_has_active_or_future:
     st.markdown('<div class="time-form">', unsafe_allow_html=True)
     booking_date = st.date_input("Date", min_value=date.today(), key="booking_date_input")
 
-    entry_options = build_time_options(booking_date, min_dt=earliest_allowed_dt_ist)
+    entry_options = build_time_options(booking_date, now_ist=now_dt_fresh_ist)
     if not entry_options:
         st.warning("No available time slots for today. Please select a future date.")
         st.stop()
@@ -1241,12 +1243,14 @@ if not user_has_active_or_future:
     selected_entry_time = entry_times[entry_labels.index(entry_label)]
     start_dt = ist_timezone.localize(datetime.combine(booking_date, selected_entry_time))
 
-    exit_options_raw = [(datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").strftime("%I:%M %p"),
-                         datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").time())
-                        for h in range(24) for m in (0, 30)]
-    exit_options = [(label, t) for label, t in exit_options_raw if t > selected_entry_time]
+    # Exit: 30-min slots strictly after entry time
+    # If entry is "Now" (current minute), build exits from next 30-min boundary onwards
+    all_exit_slots = [(datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").strftime("%I:%M %p"),
+                       datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").time())
+                      for h in range(24) for m in (0, 30)]
+    exit_options = [(label, t) for label, t in all_exit_slots if t > selected_entry_time]
     if not exit_options:
-        exit_options = exit_options_raw
+        exit_options = all_exit_slots  # wrap to next day
     exit_labels = [label for label, _ in exit_options]
     exit_times = [t for _, t in exit_options]
 
