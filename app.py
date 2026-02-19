@@ -886,16 +886,19 @@ st.markdown(f"""
 
 # Active session
 if active_booking:
+    import streamlit.components.v1 as components
     _, slot_num, start_str, end_str = active_booking
     end_dt = parse_dt(end_str)
     start_dt_active = parse_dt(start_str)
-    # Pass end time as a Unix timestamp (milliseconds) so JS can countdown live
+    remaining = end_dt - now_dt
+    remaining_str = str(remaining).split('.')[0]
     end_ts_ms = int(end_dt.timestamp() * 1000)
+
     st.markdown(f"""
     <div class="active-card">
         <div class="active-card-glow"></div>
         <div class="active-badge"><span class="active-dot"></span> Active Session</div>
-        <div class="vehicle-chip">🚗 {st.session_state.vehicle_number}</div>
+        <div class="vehicle-chip">\U0001f697 {st.session_state.vehicle_number}</div>
         <div class="active-slot-display">
             <div>
                 <div class="active-slot-label">Slot</div>
@@ -907,34 +910,47 @@ if active_booking:
                 <div style="font-size:0.65rem;color:var(--text-3);margin-top:2px;">{end_dt.strftime('%b %d')}</div>
             </div>
         </div>
-        <div class="active-remaining-bar">
-            <span class="remaining-label">⏱ Time remaining</span>
-            <span class="remaining-val" id="live-countdown">--:--:--</span>
-        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    components.html(f"""
+    <style>
+        body {{ margin: 0; padding: 0; background: transparent; }}
+        .countdown-wrap {{
+            background: #1E2230;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }}
+        .cd-label {{ font-family: sans-serif; font-size: 12px; color: #4B5068; font-weight: 500; }}
+        .cd-val {{ font-family: monospace; font-size: 20px; color: #10B981; font-weight: 700; letter-spacing: 0.05em; }}
+        .cd-val.urgent {{ color: #EF4444; }}
+    </style>
+    <div class="countdown-wrap">
+        <span class="cd-label">&#9201; Time remaining</span>
+        <span class="cd-val" id="cd">{remaining_str}</span>
     </div>
     <script>
-    (function() {{
         const endMs = {end_ts_ms};
         function pad(n) {{ return String(n).padStart(2, '0'); }}
         function tick() {{
-            const el = document.getElementById('live-countdown');
+            const el = document.getElementById('cd');
             if (!el) return;
             const diff = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
-            if (diff === 0) {{
-                el.textContent = '00:00:00';
-                el.style.color = 'var(--red)';
-                return;
-            }}
             const h = Math.floor(diff / 3600);
             const m = Math.floor((diff % 3600) / 60);
             const s = diff % 60;
             el.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+            if (diff < 300) el.classList.add('urgent');
+            else el.classList.remove('urgent');
         }}
         tick();
         setInterval(tick, 1000);
-    }})();
     </script>
-    """, unsafe_allow_html=True)
+    """, height=52)
 else:
     st.markdown("""
     <div class="empty-card">
