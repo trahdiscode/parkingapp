@@ -454,13 +454,13 @@ div[data-testid="stHorizontalBlock"] { gap: 0.5rem!important; }
 }
 
 @media (max-width: 768px) {
-  .main.block-container { padding: 1rem 1.25rem!important; }
-  .stat-grid { grid-template-columns: 1fr 1fr; }
-  .app-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
-  .booking-item { flex-wrap: wrap; }
+ .main.block-container { padding: 1rem 1.25rem!important; }
+ .stat-grid { grid-template-columns: 1fr 1fr; }
+ .app-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+ .booking-item { flex-wrap: wrap; }
 }
 @media (max-width: 480px) {
-  .stat-grid { grid-template-columns: 1fr; }
+ .stat-grid { grid-template-columns: 1fr; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -483,27 +483,30 @@ def create_user(u, p):
         conn.commit(); return True
     except sqlite3.IntegrityError: return False
 
-def get_next_30min_slot(dt):
-    """Round up a datetime to the next 30-minute boundary."""
-    minutes = dt.minute
+# Redefine get_next_30min_slot to directly operate on timezone-aware objects
+# (or ensure calls to it provide timezone-aware objects)
+def get_next_30min_slot_tz(dt_tz):
+    """Round up a timezone-aware datetime to the next 30-minute boundary."""
+    minutes = dt_tz.minute
     if minutes == 0:
-        return dt.replace(second=0, microsecond=0)
+        return dt_tz.replace(second=0, microsecond=0)
     elif minutes <= 30:
-        return dt.replace(minute=30, second=0, microsecond=0)
+        return dt_tz.replace(minute=30, second=0, microsecond=0)
     else:
-        return (dt + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+        # Ensure it stays timezone-aware
+        return (dt_tz + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
 
 def build_time_options(for_date, min_dt=None):
     """
     Build list of (label, time_obj) tuples for 30-min slots.
-    If for_date is today, only include times >= min_dt (current time rounded up).
+    If for_date is today, only include times >= min_dt.time() (current time rounded up).
     """
     all_slots = [(datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").strftime("%I:%M %p"),
                   datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").time())
                  for h in range(24) for m in (0, 30)]
 
     if for_date == date.today() and min_dt is not None:
-        cutoff = min_dt.time()
+        cutoff = min_dt.time() # Compare only the time part if min_dt is timezone-aware
         all_slots = [(label, t) for label, t in all_slots if t >= cutoff]
 
     return all_slots
@@ -576,31 +579,22 @@ if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number i
 # Define the Indian Standard Time timezone
 ist_timezone = pytz.timezone('Asia/Kolkata') # <--- New: define IST timezone
 
-# Get the current time in IST
-# Use now(ist_timezone) instead of naive now()
+# Get the current time in IST, floored to the minute, and timezone-aware
 now_dt_fresh_ist = datetime.now(ist_timezone).replace(second=0, microsecond=0) # <--- Modified
 
-# Floor to current minute for display and comparison, but keep timezone awareness
+# This `now_dt` is used for all comparisons against current time
 now_dt = now_dt_fresh_ist
 
-# Re-define get_next_30min_slot to be timezone-aware
-def get_next_30min_slot_ist(dt_ist):
-    """Round up a timezone-aware datetime to the next 30-minute boundary."""
-    minutes = dt_ist.minute
-    if minutes == 0:
-        return dt_ist.replace(second=0, microsecond=0)
-    elif minutes <= 30:
-        return dt_ist.replace(minute=30, second=0, microsecond=0)
-    else:
-        # Ensure it stays timezone-aware
-        return (dt_ist + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
-
-# Use the timezone-aware version for earliest_allowed
-earliest_allowed = get_next_30min_slot_ist(now_dt_fresh_ist) # <--- Modified
+# Use the timezone-aware version of get_next_30min_slot
+earliest_allowed_dt_ist = get_next_30min_slot_tz(now_dt_fresh_ist) # <--- Modified
 
 def parse_dt(s):
     # When parsing stored datetimes, they are naive, so localize them to IST for comparison
-    return ist_timezone.localize(datetime.strptime(s.strip(), "%Y-%m-%d %H:%M")) # <--- Modified
+    # Use ist_timezone.localize only if the datetime object is naive
+    dt_obj = datetime.strptime(s.strip(), "%Y-%m-%d %H:%M")
+    if dt_obj.tzinfo is None:
+        return ist_timezone.localize(dt_obj)
+    return dt_obj # Should not happen if stored format is consistent
 
 # Fetch ALL bookings for user, filter in Python (avoids SQLite string comparison bugs)
 all_user_bookings = cur.execute(
@@ -610,10 +604,10 @@ all_user_bookings = cur.execute(
 
 total_bookings = len(all_user_bookings)
 
-# current/future = end time is strictly after now
+# current/future = end time is strictly after now (using timezone-aware comparison)
 user_current_future = [b for b in all_user_bookings if parse_dt(b[3]) > now_dt]
 
-# past = end time is now or earlier
+# past = end time is now or earlier (using timezone-aware comparison)
 past_bookings_list = sorted(
     [b for b in all_user_bookings if parse_dt(b[3]) <= now_dt],
     key=lambda x: x[2], reverse=True
@@ -632,8 +626,8 @@ dash_col1, dash_col2 = st.columns([1.6, 1])
 with dash_col1:
     if active_booking:
         _, slot_num, start_str, end_str = active_booking
-        # Make sure parsed datetimes are also timezone-aware before subtraction
-        end_dt = parse_dt(end_str) # This is already handled by the modified parse_dt function
+        # end_dt is now timezone-aware
+        end_dt = parse_dt(end_str)
         remaining = end_dt - now_dt
         remaining_str = str(remaining).split('.')[0]
         st.markdown(f"""
@@ -668,7 +662,7 @@ st.markdown('<span class="section-label">Your Bookings</span>', unsafe_allow_htm
 
 if user_current_future:
     for booking_id, slot_number, start_dt_str, end_dt_str in user_current_future:
-        # These will now be timezone-aware due to modified parse_dt
+        # start_dt_obj and end_dt_obj are now timezone-aware
         start_dt_obj = parse_dt(start_dt_str)
         end_dt_obj = parse_dt(end_dt_str)
         is_active = (start_dt_obj <= now_dt <= end_dt_obj)
@@ -711,7 +705,7 @@ past_bookings = past_bookings_list
 if past_bookings:
     with st.expander(f"Booking History ({len(past_bookings)})"):
         for _, slot_number, start_dt_str, end_dt_str in past_bookings:
-            # These will now be timezone-aware due to modified parse_dt
+            # s and e are now timezone-aware
             s = parse_dt(start_dt_str)
             e = parse_dt(end_dt_str)
             st.markdown(f"""
@@ -738,19 +732,14 @@ if not user_has_active_or_future:
     </div>
     """, unsafe_allow_html=True)
 
-    # ── REAL-TIME TIME LOGIC ──
-    # Using the IST timezone-aware now_dt_fresh_ist and earliest_allowed from above
-    # now_dt_fresh = datetime.now() # Original line, now replaced by now_dt_fresh_ist
-    # earliest_allowed = get_next_30min_slot(now_dt_fresh) # Original line, now replaced by earliest_allowed (IST)
-
     col_d, col_en, col_ex = st.columns(3)
 
     with col_d:
         booking_date = st.date_input("Date", min_value=date.today(), key="booking_date_input")
 
     # Build entry time options — filter past times if booking today
-    # Pass the timezone-aware earliest_allowed to build_time_options
-    entry_options = build_time_options(booking_date, min_dt=earliest_allowed)
+    # Pass the timezone-aware earliest_allowed_dt_ist to build_time_options
+    entry_options = build_time_options(booking_date, min_dt=earliest_allowed_dt_ist)
 
     if not entry_options:
         # Edge case: no slots left today (e.g. 11:30 PM+)
@@ -773,7 +762,6 @@ if not user_has_active_or_future:
                          datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").time())
                         for h in range(24) for m in (0, 30)]
 
-    # Exit can wrap to next day so include all 48 slots, but label them properly
     # We filter to only show times after entry (same day) OR allow "next day" note for wrapping
     exit_options = [(label, t) for label, t in exit_options_raw if t > selected_entry_time]
 
@@ -796,7 +784,7 @@ if not user_has_active_or_future:
 
     next_day_note = False
     if selected_exit_time <= selected_entry_time:
-        end_dt += timedelta(days=1)
+        end_dt += timedelta(days=1) # Adding timedelta to an already timezone-aware datetime
         next_day_note = True
 
     # ── VALIDATE: start must not be in the past ──
