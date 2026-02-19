@@ -1438,13 +1438,7 @@ const root=document.getElementById('r');
                 <div class="confirm-time">{start_dt.strftime('%b %d · %I:%M %p')} → {end_dt.strftime('%I:%M %p')}</div>
             </div>
             """, unsafe_allow_html=True)
-            col_confirm, col_change = st.columns([3, 1])
-            with col_change:
-                if st.button("← Change", type="secondary", use_container_width=True):
-                    st.session_state.selected_slot = None
-                    st.rerun()
-            with col_confirm:
-                confirm_clicked = st.button("Confirm Booking →", type="primary", use_container_width=True)
+            confirm_clicked = st.button("Confirm Booking →", type="primary", use_container_width=True)
             if confirm_clicked:
                 if start_dt < now_dt_fresh_ist:
                     st.error("Your selected start time has just passed. Please pick a new time.")
