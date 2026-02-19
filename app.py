@@ -11,8 +11,8 @@ LOGO_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABLAAAASwCAYAAADrIbPPAA
 # ---------- PAGE CONFIG ----------
 st.set_page_config(page_title="ParkOS", layout="wide", page_icon="🅿️", initial_sidebar_state="collapsed")
 
-# ---------- AUTO REFRESH (30s — countdown timer runs in JS independently) ----------
-st_autorefresh(interval=30000, key="refresh")
+# ---------- AUTO REFRESH ----------
+st_autorefresh(interval=30000, key="refresh")  # Refresh every 30s — countdown handled by JS
 
 # ---------- STYLESHEET ----------
 st.markdown("""
@@ -93,6 +93,7 @@ p, li { color: var(--text-1); font-size: 0.9rem; line-height: 1.6; }
 
 h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 
+/* ── Section label ── */
 .section-label {
     font-size: 0.65rem;
     font-weight: 700;
@@ -111,6 +112,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     background: var(--border);
 }
 
+/* ── App Header ── */
 .app-header {
     display: flex;
     align-items: center;
@@ -122,6 +124,17 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     display: flex;
     align-items: center;
     gap: 0.625rem;
+}
+.app-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    box-shadow: var(--shadow-accent);
 }
 .app-brand-name {
     font-size: 1.5rem;
@@ -136,6 +149,11 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     letter-spacing: 0.08em;
     text-transform: uppercase;
     line-height: 1;
+}
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 .user-pill {
     background: var(--surface-2);
@@ -161,6 +179,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     color: white;
 }
 
+/* ── Active session card ── */
 .active-card {
     background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, var(--surface) 60%);
     border: 1px solid var(--green-border);
@@ -240,6 +259,18 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 }
 .active-time-label { font-size: 0.6rem; color: var(--text-3); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
 .active-time-val { font-family: var(--font-mono); font-size: 0.95rem; color: var(--text-1); font-weight: 500; }
+.active-remaining-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.875rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-top: 0.25rem;
+}
+.remaining-label { font-size: 0.7rem; color: var(--text-3); font-weight: 500; flex: 1; }
+.remaining-val { font-family: var(--font-mono); font-size: 0.9rem; color: var(--green); font-weight: 600; }
 .vehicle-chip {
     display: inline-flex;
     align-items: center;
@@ -254,6 +285,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     margin-bottom: 0.75rem;
 }
 
+/* ── Stats row ── */
 .stats-row {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -295,6 +327,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 .stat-value.accent { color: var(--accent-2); }
 .stat-value.green { color: var(--green); }
 
+/* ── Empty state ── */
 .empty-card {
     background: var(--surface);
     border: 1px dashed var(--border-hover);
@@ -307,6 +340,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 .empty-title { font-size: 0.9rem; font-weight: 600; color: var(--text-2); margin-bottom: 0.25rem; }
 .empty-sub { font-size: 0.78rem; color: var(--text-3); }
 
+/* ── Booking items ── */
 .booking-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -369,12 +403,14 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     margin-top: 1px;
 }
 
+/* ── Divider ── */
 .divider {
     border: none;
     border-top: 1px solid var(--border);
     margin: 1.5rem 0;
 }
 
+/* ── Step header ── */
 .step-wrap {
     display: flex;
     align-items: center;
@@ -396,6 +432,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 }
 .step-title { font-size: 0.875rem; font-weight: 600; color: var(--text-2); }
 
+/* ── Time pickers ── */
 .time-form {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -404,6 +441,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     margin-bottom: 1rem;
 }
 
+/* ── Slot legend ── */
 .slot-legend {
     display: flex;
     gap: 1rem;
@@ -416,6 +454,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 .legend-busy { background: var(--red); }
 .legend-selected { background: var(--accent); }
 
+/* ── Row label ── */
 .row-label {
     font-size: 0.6rem;
     letter-spacing: 0.1em;
@@ -436,6 +475,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     border-radius: 99px;
 }
 
+/* ── Confirm banner ── */
 .confirm-banner {
     background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, var(--surface) 60%);
     border: 1px solid rgba(99,102,241,0.25);
@@ -466,6 +506,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     font-family: var(--font-mono);
 }
 
+/* ── Warning / note ── */
 .warn-note {
     font-size: 0.78rem;
     color: var(--amber);
@@ -486,6 +527,49 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 .lock-title { font-size: 0.95rem; font-weight: 600; color: var(--text-2); margin-bottom: 0.375rem; }
 .lock-sub { font-size: 0.78rem; color: var(--text-3); line-height: 1.5; }
 
+/* ── Login page ── */
+.login-wrap {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+.login-card {
+    width: 100%;
+    max-width: 380px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) * 1.5);
+    padding: 2rem;
+    box-shadow: var(--shadow-lg);
+}
+.login-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-bottom: 0.25rem;
+}
+.login-logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    box-shadow: var(--shadow-accent);
+}
+.login-logo-text {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    color: var(--text-1);
+}
+.login-tagline { font-size: 0.78rem; color: var(--text-3); margin-bottom: 1.75rem; }
+
+/* ── Streamlit overrides ── */
 .stTextInput > label, .stDateInput > label, .stTimeInput > label, .stSelectbox > label {
     font-family: var(--font)!important;
     font-size: 0.7rem!important;
@@ -511,6 +595,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     box-shadow: 0 0 0 3px rgba(99,102,241,0.15)!important;
     outline: none!important;
 }
+/* Override BaseWeb's red/pink focus ring on input containers */
 .stTextInput > div:focus-within,
 .stTextInput > div > div:focus-within {
     border-color: var(--accent)!important;
@@ -528,9 +613,11 @@ div[data-baseweb="base-input"] input:focus {
     outline: none!important;
     box-shadow: none!important;
 }
+/* Kill any red/pink coming from BaseWeb theme */
 [data-baseweb="input"] { border-color: var(--border)!important; }
 [data-baseweb="input"]:focus-within { border-color: var(--accent)!important; box-shadow: 0 0 0 3px rgba(99,102,241,0.15)!important; }
 
+/* Selectbox */
 div[data-baseweb="select"] > div {
     background: var(--surface-2)!important;
     border: 1px solid var(--border)!important;
@@ -547,6 +634,7 @@ div[data-baseweb="popover"] { background: var(--surface-2)!important; border: 1p
 [data-baseweb="option"] { background: var(--surface-2)!important; color: var(--text-1)!important; font-size: 0.88rem!important; }
 [data-baseweb="option"]:hover, [aria-selected="true"] { background: var(--surface-3)!important; }
 
+/* Buttons */
 .stButton > button {
     font-family: var(--font)!important;
     font-size: 0.88rem!important;
@@ -576,6 +664,16 @@ div[data-baseweb="popover"] { background: var(--surface-2)!important; border: 1p
     color: var(--text-1)!important;
 }
 
+/* Slot buttons */
+.stButton > button[key*="slot_"] {
+    height: 48px!important;
+    font-family: var(--font-mono)!important;
+    font-size: 0.8rem!important;
+    font-weight: 600!important;
+    padding: 0!important;
+}
+
+/* Alerts */
 div[data-testid="stAlert"] {
     background: var(--surface)!important;
     border-radius: var(--radius)!important;
@@ -583,6 +681,15 @@ div[data-testid="stAlert"] {
     font-size: 0.85rem!important;
 }
 
+/* Metrics */
+div[data-testid="stMetric"] {
+    background: var(--surface)!important;
+    border: 1px solid var(--border)!important;
+    border-radius: var(--radius)!important;
+    padding: 1rem 1.25rem!important;
+}
+
+/* Tabs */
 .stTabs [data-baseweb="tab-list"] {
     background: var(--surface)!important;
     border: 1px solid var(--border)!important;
@@ -613,9 +720,11 @@ div[data-testid="stAlert"] {
 
 div[data-testid="stHorizontalBlock"] { gap: 0.4rem!important; }
 
+/* Expander */
 details { border: 1px solid var(--border)!important; border-radius: var(--radius)!important; background: var(--surface)!important; }
 summary { padding: 0.875rem 1rem!important; font-size: 0.85rem!important; color: var(--text-2)!important; font-weight: 600!important; }
 
+/* Date input */
 div[data-baseweb="calendar"] { background: var(--surface-2)!important; border: 1px solid var(--border)!important; border-radius: var(--radius)!important; }
 
 </style>
@@ -688,14 +797,17 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
     if 'auth_mode' not in st.session_state:
         st.session_state.auth_mode = 'signin'
 
-    st.markdown("""
+    st.markdown(f"""
     <style>
-    .main.block-container {
+    /* ── Override Streamlit layout for login page ── */
+    .main.block-container {{
         max-width: 420px!important;
         margin: 0 auto!important;
         padding: 0 1.25rem 3rem!important;
-    }
-    .lp-card {
+    }}
+
+    /* Floating card wrapper injected below */
+    .lp-card {{
         background: #0F1117;
         border: 1px solid rgba(255,255,255,0.07);
         border-radius: 20px;
@@ -704,81 +816,76 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
         position: relative;
         overflow: hidden;
         box-shadow: 0 24px 60px rgba(0,0,0,0.5);
-    }
-    .lp-card::before {
+    }}
+    .lp-card::before {{
         content: '';
         position: absolute;
         top: -60px; right: -60px;
         width: 200px; height: 200px;
         background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 65%);
         pointer-events: none;
-    }
-    .lp-top {
+    }}
+    .lp-top {{
         display: flex;
         align-items: center;
         gap: 1rem;
         margin-bottom: 1.75rem;
         padding-bottom: 1.25rem;
         border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-    .lp-logo-icon {
+    }}
+    .lp-logo {{
         width: 52px; height: 52px;
-        background: linear-gradient(135deg, #6366F1 0%, #818CF8 100%);
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        box-shadow: 0 4px 16px rgba(99,102,241,0.4);
+        object-fit: contain;
+        filter: drop-shadow(0 4px 16px rgba(99,102,241,0.4));
         flex-shrink: 0;
-    }
-    .lp-brand-name {
+    }}
+    .lp-brand-name {{
         font-family: 'Outfit', sans-serif;
         font-size: 1.6rem;
         font-weight: 800;
         letter-spacing: -0.04em;
         color: #F1F2F6;
         line-height: 1;
-    }
-    .lp-brand-sub {
+    }}
+    .lp-brand-sub {{
         font-family: 'Outfit', sans-serif;
         font-size: 0.7rem;
         color: #4B5068;
         letter-spacing: 0.07em;
         text-transform: uppercase;
         margin-top: 3px;
-    }
-    .lp-title {
+    }}
+    .lp-title {{
         font-family: 'Outfit', sans-serif;
         font-size: 1.2rem;
         font-weight: 700;
         color: #F1F2F6;
         letter-spacing: -0.02em;
         margin-bottom: 0.2rem;
-    }
-    .lp-sub {
+    }}
+    .lp-sub {{
         font-family: 'Outfit', sans-serif;
         font-size: 0.78rem;
         color: #4B5068;
         margin-bottom: 1.5rem;
         line-height: 1.5;
-    }
-    .lp-divider {
+    }}
+    .lp-divider {{
         display: flex;
         align-items: center;
         gap: 0.75rem;
         margin: 1rem 0;
-    }
-    .lp-divider-line { flex:1; height:1px; background: rgba(255,255,255,0.06); }
-    .lp-divider-text { font-size:0.65rem; color:#4B5068; font-family:'Outfit',sans-serif; letter-spacing:0.1em; text-transform:uppercase; }
-    .lp-features {
+    }}
+    .lp-divider-line {{ flex:1; height:1px; background: rgba(255,255,255,0.06); }}
+    .lp-divider-text {{ font-size:0.65rem; color:#4B5068; font-family:'Outfit',sans-serif; letter-spacing:0.1em; text-transform:uppercase; }}
+    .lp-features {{
         background: #080A0F;
         border: 1px solid rgba(255,255,255,0.05);
         border-radius: 14px;
         padding: 1.1rem 1.25rem;
         margin-bottom: 1rem;
-    }
-    .lp-feature {
+    }}
+    .lp-feature {{
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -786,29 +893,29 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
         font-family: 'Outfit', sans-serif;
         font-size: 0.8rem;
         color: #6B7090;
-    }
-    .lp-feature + .lp-feature {
+    }}
+    .lp-feature + .lp-feature {{
         border-top: 1px solid rgba(255,255,255,0.04);
-    }
-    .lp-feature-dot {
+    }}
+    .lp-feature-dot {{
         width: 6px; height: 6px;
         border-radius: 50%;
         background: #6366F1;
         flex-shrink: 0;
         box-shadow: 0 0 6px rgba(99,102,241,0.6);
-    }
-    .lp-footer {
+    }}
+    .lp-footer {{
         text-align: center;
         font-size: 0.68rem;
         color: #2A2D3E;
         font-family: 'Outfit', sans-serif;
         padding-top: 0.5rem;
-    }
+    }}
     </style>
 
     <div class="lp-card">
         <div class="lp-top">
-            <div class="lp-logo-icon">🅿️</div>
+            <img class="lp-logo" src="{LOGO_B64}" />
             <div>
                 <div class="lp-brand-name">ParkOS</div>
                 <div class="lp-brand-sub">Smart Parking Management</div>
@@ -871,6 +978,7 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
 
     st.markdown("</div>", unsafe_allow_html=True)
 
+    # Feature highlights below card
     st.markdown("""
     <div class="lp-features">
         <div class="lp-feature"><div class="lp-feature-dot"></div>Real-time slot availability across all rows</div>
@@ -884,6 +992,7 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
 
 # ---------- MAIN APP ----------
 
+# Fetch username if not set
 if 'username' not in st.session_state:
     res = supabase.table("users").select("username").eq("id", st.session_state.user_id).execute()
     st.session_state.username = res.data[0]["username"] if res.data else "User"
@@ -891,12 +1000,13 @@ if 'username' not in st.session_state:
 username = st.session_state.get('username', 'User')
 avatar_letter = username[0].upper() if username else "U"
 
+# Header
 col_h1, col_h2 = st.columns([4, 1])
 with col_h1:
     st.markdown(f"""
     <div class="app-header">
         <div class="app-brand">
-            <div style="width:40px;height:40px;background:linear-gradient(135deg,#6366F1,#818CF8);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">🅿️</div>
+            <img src="{LOGO_B64}" style="width:40px;height:40px;object-fit:contain;border-radius:10px;flex-shrink:0;" />
             <div>
                 <div class="app-brand-name">ParkOS</div>
                 <div class="app-brand-sub">Smart Parking</div>
@@ -909,10 +1019,9 @@ with col_h1:
     </div>
     """, unsafe_allow_html=True)
 
-with col_h2:
-    if st.button("Sign Out", type="secondary"):
-        for key in list(st.session_state.keys()): del st.session_state[key]
-        st.rerun()
+if st.button("Sign Out", type="secondary"):
+    for key in list(st.session_state.keys()): del st.session_state[key]
+    st.rerun()
 
 # Vehicle number gate
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
@@ -935,6 +1044,7 @@ if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number i
 # ── Current time ──
 now_dt_fresh_ist = datetime.now(ist_timezone).replace(second=0, microsecond=0)
 now_dt = now_dt_fresh_ist
+earliest_allowed_dt_ist = get_next_30min_slot_tz(now_dt_fresh_ist)
 
 # ── Fetch bookings ──
 _b = supabase.table("bookings").select("id, slot_number, start_datetime, end_datetime").eq("user_id", st.session_state.user_id).order("start_datetime").execute()
@@ -955,6 +1065,7 @@ upcoming_count = len([b for b in user_current_future if parse_dt(b[2]) > now_dt]
 # ── Overview ──
 st.markdown('<div class="section-label">Overview</div>', unsafe_allow_html=True)
 
+# Stats row
 st.markdown(f"""
 <div class="stats-row">
     <div class="stat-card">
@@ -973,6 +1084,7 @@ if active_booking:
     import streamlit.components.v1 as components
     _, slot_num, start_str, end_str = active_booking
     end_dt = parse_dt(end_str)
+    start_dt_active = parse_dt(start_str)
     remaining = end_dt - now_dt
     remaining_str = str(remaining).split('.')[0]
     end_ts_ms = int(end_dt.timestamp() * 1000)
@@ -1029,6 +1141,10 @@ if active_booking:
             el.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
             if (diff < 300) el.classList.add('urgent');
             else el.classList.remove('urgent');
+            // When session expires, trigger a Streamlit page refresh to update UI
+            if (diff === 0) {{
+                setTimeout(() => window.parent.location.reload(), 2000);
+            }}
         }}
         tick();
         setInterval(tick, 1000);
@@ -1112,6 +1228,7 @@ st.markdown('<hr class="divider">', unsafe_allow_html=True)
 if not user_has_active_or_future:
     st.markdown('<div class="section-label">New Booking</div>', unsafe_allow_html=True)
 
+    # Step 1
     st.markdown("""
     <div class="step-wrap">
         <span class="step-num">1</span>
@@ -1136,12 +1253,14 @@ if not user_has_active_or_future:
     selected_entry_time = entry_times[entry_labels.index(entry_label)]
     start_dt = ist_timezone.localize(datetime.combine(booking_date, selected_entry_time))
 
+    # Exit: 30-min slots strictly after entry time
+    # If entry is "Now" (current minute), build exits from next 30-min boundary onwards
     all_exit_slots = [(datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").strftime("%I:%M %p"),
                        datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").time())
                       for h in range(24) for m in (0, 30)]
     exit_options = [(label, t) for label, t in all_exit_slots if t > selected_entry_time]
     if not exit_options:
-        exit_options = all_exit_slots
+        exit_options = all_exit_slots  # wrap to next day
     exit_labels = [label for label, _ in exit_options]
     exit_times = [t for _, t in exit_options]
 
@@ -1165,6 +1284,7 @@ if not user_has_active_or_future:
     if next_day_note:
         st.markdown('<div class="warn-note">⚠️ Exit time is before entry — booking extends to the next day.</div>', unsafe_allow_html=True)
 
+    # Step 2
     st.markdown("""
     <div class="step-wrap" style="margin-top:1.25rem;">
         <span class="step-num">2</span>
@@ -1180,8 +1300,7 @@ if not user_has_active_or_future:
     </div>
     """, unsafe_allow_html=True)
 
-    # Single DB call — reused for both slot grid and confirm check
-    _bl = supabase.table("bookings").select("slot_number, start_datetime, end_datetime").execute()
+    _bl = supabase.table("bookings").select("slot_number").execute()
     blocked = {r["slot_number"] for r in _bl.data
                if not (r["end_datetime"] <= start_dt.strftime("%Y-%m-%d %H:%M")
                        or r["start_datetime"] >= end_dt.strftime("%Y-%m-%d %H:%M"))}
@@ -1194,6 +1313,7 @@ if not user_has_active_or_future:
 
     slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
+    # Dynamic slot button styles
     slot_css = ""
     for s in slots:
         is_blocked = s in blocked
@@ -1238,8 +1358,12 @@ if not user_has_active_or_future:
                 st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_disabled, use_container_width=True)
 
     if st.session_state.selected_slot:
-        # Use already-fetched blocked set — no extra DB call needed
-        if st.session_state.selected_slot in blocked:
+        _cb = supabase.table("bookings").select("slot_number").execute()
+        current_blocked = {r["slot_number"] for r in _cb.data
+                           if not (r["end_datetime"] <= start_dt.strftime("%Y-%m-%d %H:%M")
+                                   or r["start_datetime"] >= end_dt.strftime("%Y-%m-%d %H:%M"))}
+
+        if st.session_state.selected_slot in current_blocked:
             st.error(f"Slot {st.session_state.selected_slot} is no longer available. Please choose another.")
             st.session_state.selected_slot = None
             st.rerun()
