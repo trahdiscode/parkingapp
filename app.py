@@ -1337,18 +1337,18 @@ if not user_has_active_or_future:
         sel = f'button[data-testid*="slot_{s}"]'
         if is_selected:
             slot_css += f"""{sel} {{
-                background: var(--accent-soft)!important;
-                border: 1.5px solid var(--accent)!important;
-                color: var(--accent-2)!important;
+                background: rgba(59,130,246,0.15)!important;
+                border: 1.5px solid #3B82F6!important;
+                color: #3B82F6!important;
                 font-weight:700!important;
+                box-shadow: 0 0 0 3px rgba(59,130,246,0.15)!important;
             }}\n"""
         elif is_blocked:
             slot_css += f"""{sel} {{
-                background: var(--red-soft)!important;
-                border: 1px solid rgba(239,68,68,0.15)!important;
-                color: var(--red)!important;
+                background: rgba(239,68,68,0.12)!important;
+                border: 1.5px solid rgba(239,68,68,0.5)!important;
+                color: #EF4444!important;
                 cursor: not-allowed!important;
-                opacity:0.7!important;
             }}\n"""
         else:
             slot_css += f"""{sel} {{
