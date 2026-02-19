@@ -804,7 +804,7 @@ username = st.session_state.get('username', 'User')
 avatar_letter = username[0].upper() if username else "U"
 
 # Header
-col_h1, col_h2 = st.columns([1, 'auto'])
+col_h1, col_h2 = st.columns([4, 1])
 with col_h1:
     st.markdown(f"""
     <div class="app-header">
