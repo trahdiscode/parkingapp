@@ -482,6 +482,31 @@ def create_user(u, p):
         conn.commit(); return True
     except sqlite3.IntegrityError: return False
 
+def get_next_30min_slot(dt):
+    """Round up a datetime to the next 30-minute boundary."""
+    minutes = dt.minute
+    if minutes == 0:
+        return dt.replace(second=0, microsecond=0)
+    elif minutes <= 30:
+        return dt.replace(minute=30, second=0, microsecond=0)
+    else:
+        return (dt + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+
+def build_time_options(for_date, min_dt=None):
+    """
+    Build list of (label, time_obj) tuples for 30-min slots.
+    If for_date is today, only include times >= min_dt (current time rounded up).
+    """
+    all_slots = [(datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").strftime("%I:%M %p"),
+                  datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").time())
+                 for h in range(24) for m in (0, 30)]
+
+    if for_date == date.today() and min_dt is not None:
+        cutoff = min_dt.time()
+        all_slots = [(label, t) for label, t in all_slots if t >= cutoff]
+
+    return all_slots
+
 # ---------- SESSION STATE ----------
 if 'selected_slot' not in st.session_state:
     st.session_state.selected_slot = None
@@ -674,28 +699,67 @@ if not user_has_active_or_future:
     </div>
     """, unsafe_allow_html=True)
 
-    # Generate 30-min interval time options
-    time_labels = [datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").strftime("%I:%M %p") for h in range(24) for m in (0, 30)]
-    now_min_idx = datetime.now().hour * 2
-    default_exit_idx = min(now_min_idx + 4, len(time_labels) - 1)
+    # ── REAL-TIME TIME LOGIC ──
+    now_dt_fresh = datetime.now()
+    earliest_allowed = get_next_30min_slot(now_dt_fresh)  # round up to next 30-min boundary
 
     col_d, col_en, col_ex = st.columns(3)
+
     with col_d:
         booking_date = st.date_input("Date", min_value=date.today(), key="booking_date_input")
+
+    # Build entry time options — filter past times if booking today
+    entry_options = build_time_options(booking_date, min_dt=earliest_allowed)
+
+    if not entry_options:
+        # Edge case: no slots left today (e.g. 11:30 PM+)
+        st.warning("No available time slots for today. Please select a future date.")
+        st.stop()
+
+    entry_labels = [label for label, _ in entry_options]
+    entry_times  = [t     for _, t     in entry_options]
+
     with col_en:
-        entry_label = st.selectbox("Entry Time", time_labels, index=now_min_idx, key="entry_select")
+        entry_label = st.selectbox("Entry Time", entry_labels, index=0, key="entry_select")
+
+    selected_entry_time = entry_times[entry_labels.index(entry_label)]
+    start_dt = datetime.combine(booking_date, selected_entry_time)
+
+    # Build exit time options — must be strictly after entry time
+    # For today: also filter past times. For future dates: all times after entry.
+    exit_options_raw = [(datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").strftime("%I:%M %p"),
+                         datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").time())
+                        for h in range(24) for m in (0, 30)]
+
+    # Exit can wrap to next day so include all 48 slots, but label them properly
+    # We filter to only show times after entry (same day) OR allow "next day" note for wrapping
+    exit_options = [(label, t) for label, t in exit_options_raw if t > selected_entry_time]
+
+    # If no exit slots after entry time within same day, we still allow picking early times
+    # (booking will auto-extend to next day) — show all slots for clarity
+    if not exit_options:
+        exit_options = exit_options_raw  # full wrap-around
+
+    exit_labels = [label for label, _ in exit_options]
+    exit_times  = [t     for _, t     in exit_options]
+
     with col_ex:
-        exit_label = st.selectbox("Exit Time", time_labels, index=default_exit_idx, key="exit_select")
+        # Default to 2 hours (4 slots) after entry if possible
+        default_exit_idx = min(3, len(exit_labels) - 1)
+        exit_label = st.selectbox("Exit Time", exit_labels, index=default_exit_idx, key="exit_select")
 
-    entry_time = datetime.strptime(entry_label, "%I:%M %p").time()
-    exit_time = datetime.strptime(exit_label, "%I:%M %p").time()
+    selected_exit_time = exit_times[exit_labels.index(exit_label)]
+    end_dt = datetime.combine(booking_date, selected_exit_time)
 
-    start_dt = datetime.combine(booking_date, entry_time)
-    end_dt = datetime.combine(booking_date, exit_time)
     next_day_note = False
-    if exit_time <= entry_time:
+    if selected_exit_time <= selected_entry_time:
         end_dt += timedelta(days=1)
         next_day_note = True
+
+    # ── VALIDATE: start must not be in the past ──
+    if start_dt < now_dt_fresh:
+        st.markdown('<div class="warn-note">⚠️ Entry time is in the past. Please select a current or future time.</div>', unsafe_allow_html=True)
+        st.stop()
 
     if next_day_note:
         st.markdown('<div class="warn-note">⚠️ Exit time is before entry — booking extends to the next day.</div>', unsafe_allow_html=True)
@@ -768,23 +832,20 @@ if not user_has_active_or_future:
         for j, s in enumerate(row_slots):
             with cols[j]:
                 is_blocked = s in blocked
-                # Disable if blocked or if another slot is already selected
-                is_disabled = is_blocked or (st.session_state.selected_slot is not None and st.session_state.selected_slot!= s)
+                is_disabled = is_blocked or (st.session_state.selected_slot is not None and st.session_state.selected_slot != s)
                 st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_disabled, use_container_width=True)
 
     # Confirmation
     if st.session_state.selected_slot:
-        # Re-check if the slot is still available *just before* booking confirmation
-        # This is the crucial part for real-time safety against simultaneous bookings
         current_blocked_slots_at_confirmation = {r[0] for r in cur.execute(
             "SELECT slot_number FROM bookings WHERE NOT (end_datetime <=? OR start_datetime >=?)",
             (start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
         ).fetchall()}
 
         if st.session_state.selected_slot in current_blocked_slots_at_confirmation:
-            st.error(f"Sorry, slot {st.session_state.selected_slot} is no longer available for your selected time. Please choose another.")
-            st.session_state.selected_slot = None # Deselect the now-unavailable slot
-            st.rerun() # Refresh to show updated availability
+            st.error(f"Sorry, slot {st.session_state.selected_slot} is no longer available. Please choose another.")
+            st.session_state.selected_slot = None
+            st.rerun()
         else:
             st.markdown(f"""
             <div class="confirm-banner">
@@ -796,21 +857,26 @@ if not user_has_active_or_future:
             </div>
             """, unsafe_allow_html=True)
             if st.button("Confirm Booking →", type="primary", use_container_width=True):
-                try:
-                    cur.execute(
-                        "INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime) VALUES (?,?,?,?)",
-                        (st.session_state.user_id, st.session_state.selected_slot,
-                         start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
-                    )
-                    conn.commit()
-                    st.success(f"Slot {st.session_state.selected_slot} booked successfully.")
+                # Final real-time guard: reject if start is now in the past
+                if start_dt < datetime.now():
+                    st.error("Your selected start time has just passed. Please pick a new time.")
                     st.session_state.selected_slot = None
                     st.rerun()
-                except sqlite3.IntegrityError:
-                    # This could happen in a very rare race condition or if unique constraints were added
-                    st.error(f"Failed to book slot {st.session_state.selected_slot}. It might have just been taken by someone else.")
-                    st.session_state.selected_slot = None
-                    st.rerun()
+                else:
+                    try:
+                        cur.execute(
+                            "INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime) VALUES (?,?,?,?)",
+                            (st.session_state.user_id, st.session_state.selected_slot,
+                             start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
+                        )
+                        conn.commit()
+                        st.success(f"Slot {st.session_state.selected_slot} booked successfully.")
+                        st.session_state.selected_slot = None
+                        st.rerun()
+                    except sqlite3.IntegrityError:
+                        st.error(f"Failed to book slot {st.session_state.selected_slot}. It may have just been taken.")
+                        st.session_state.selected_slot = None
+                        st.rerun()
     else:
         st.markdown('<div class="info-empty" style="margin-top:0.75rem;">Select an available slot above to continue.</div>', unsafe_allow_html=True)
 else:
