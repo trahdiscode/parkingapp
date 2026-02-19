@@ -889,8 +889,8 @@ if active_booking:
     _, slot_num, start_str, end_str = active_booking
     end_dt = parse_dt(end_str)
     start_dt_active = parse_dt(start_str)
-    remaining = end_dt - now_dt
-    remaining_str = str(remaining).split('.')[0]
+    # Pass end time as a Unix timestamp (milliseconds) so JS can countdown live
+    end_ts_ms = int(end_dt.timestamp() * 1000)
     st.markdown(f"""
     <div class="active-card">
         <div class="active-card-glow"></div>
@@ -909,9 +909,31 @@ if active_booking:
         </div>
         <div class="active-remaining-bar">
             <span class="remaining-label">⏱ Time remaining</span>
-            <span class="remaining-val">{remaining_str}</span>
+            <span class="remaining-val" id="live-countdown">--:--:--</span>
         </div>
     </div>
+    <script>
+    (function() {{
+        const endMs = {end_ts_ms};
+        function pad(n) {{ return String(n).padStart(2, '0'); }}
+        function tick() {{
+            const el = document.getElementById('live-countdown');
+            if (!el) return;
+            const diff = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
+            if (diff === 0) {{
+                el.textContent = '00:00:00';
+                el.style.color = 'var(--red)';
+                return;
+            }}
+            const h = Math.floor(diff / 3600);
+            const m = Math.floor((diff % 3600) / 60);
+            const s = diff % 60;
+            el.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+        }}
+        tick();
+        setInterval(tick, 1000);
+    }})();
+    </script>
     """, unsafe_allow_html=True)
 else:
     st.markdown("""
