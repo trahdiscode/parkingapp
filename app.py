@@ -694,6 +694,11 @@ div[data-baseweb="popover"] { background: var(--surface-2)!important; border: 1p
     font-weight: 600!important;
     padding: 0!important;
 }
+.stButton > button[key*="slot_"]:hover {
+    border-color: #3B82F6!important;
+    color: #3B82F6!important;
+    background: rgba(59,130,246,0.08)!important;
+}
 
 /* Alerts */
 div[data-testid="stAlert"] {
