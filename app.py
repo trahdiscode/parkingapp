@@ -699,6 +699,13 @@ div[data-baseweb="popover"] { background: var(--surface-2)!important; border: 1p
     color: #3B82F6!important;
     background: rgba(59,130,246,0.08)!important;
 }
+.stButton > button[key*="slot_"]:disabled {
+    border-color: #EF4444!important;
+    color: #EF4444!important;
+    background: rgba(239,68,68,0.08)!important;
+    opacity: 1!important;
+    cursor: not-allowed!important;
+}
 
 /* Alerts */
 div[data-testid="stAlert"] {
@@ -1343,10 +1350,12 @@ if not user_has_active_or_future:
             with cols[j]:
                 is_blocked = s in blocked
                 is_selected = (s == selected)
-                if is_selected:
+                if is_blocked:
+                    st.markdown(f'''<div style="height:46px;border-radius:8px;border:2px solid rgba(239,68,68,0.6);background:rgba(239,68,68,0.08);color:#EF4444;font-size:0.78rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:monospace;">{s}</div>''', unsafe_allow_html=True)
+                elif is_selected:
                     st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), type="primary", use_container_width=True)
                 else:
-                    st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_blocked, use_container_width=True)
+                    st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), use_container_width=True)
 
 
 
