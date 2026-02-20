@@ -91,6 +91,10 @@ iframe, .stMarkdown, .stButton,
     position: relative;
     z-index: 1;
 }
+/* Streamlit injects 6rem top padding internally — kill it */
+.block-container { padding-top: 0.25rem!important; }
+section.main > div.block-container { padding-top: 0.25rem!important; }
+div[data-testid="stAppViewBlockContainer"] { padding-top: 0.25rem!important; }
 
 /* Desktop layout */
 @media (min-width: 769px) {
