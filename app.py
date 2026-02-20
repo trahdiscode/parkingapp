@@ -186,19 +186,23 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     gap: 0.5rem;
 }
 .signout-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 99px;
-    padding: 5px 14px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 8px;
+    padding: 6px 14px;
     font-size: 0.72rem;
     font-weight: 600;
-    color: var(--text-2);
+    color: #F87171;
     cursor: pointer;
     transition: all 0.18s;
     text-decoration: none;
+    letter-spacing: 0.02em;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 .signout-btn:hover {
-    border-color: #EF4444;
+    background: rgba(239,68,68,0.15);
+    border-color: rgba(239,68,68,0.6);
     color: #EF4444;
 }
 .user-pill {
@@ -686,6 +690,8 @@ div[data-baseweb="popover"] { background: var(--surface-2)!important; border: 1p
     transition: all 0.18s ease!important;
     min-height: 44px!important;
     letter-spacing: 0.01em!important;
+    touch-action: manipulation!important;
+    -webkit-tap-highlight-color: transparent!important;
 }
 .stButton > button[kind="primary"],
 [data-testid="stFormSubmitButton"] > button {
