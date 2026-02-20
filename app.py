@@ -1330,6 +1330,18 @@ if not user_has_active_or_future:
     def handle_slot_click(slot_name):
         st.session_state.selected_slot = slot_name
 
+    st.markdown("""<style>
+    div[data-testid="stHorizontalBlock"] button[kind="primary"] {
+        background: transparent !important;
+        border: 2px solid #10B981 !important;
+        color: #10B981 !important;
+        font-weight: 700 !important;
+    }
+    div[data-testid="stHorizontalBlock"] button[kind="primary"]:hover {
+        background: rgba(16,185,129,0.1) !important;
+    }
+    </style>""", unsafe_allow_html=True)
+
     for row_prefix in ['A', 'B']:
         row_slots = [f"{row_prefix}{i}" for i in range(1, 11)]
         st.markdown(f'<div class="row-label">Row {row_prefix}</div>', unsafe_allow_html=True)
