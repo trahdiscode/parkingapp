@@ -1345,7 +1345,10 @@ if not user_has_active_or_future:
     selected = st.session_state.selected_slot or ""
 
     def handle_slot_click(slot_name):
-        st.session_state.selected_slot = slot_name
+        if st.session_state.selected_slot == slot_name:
+            st.session_state.selected_slot = None
+        else:
+            st.session_state.selected_slot = slot_name
 
     # Force st.columns to stay horizontal on mobile via CSS
     # Then render real st.buttons — clicks work 100% reliably
