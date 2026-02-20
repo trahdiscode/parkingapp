@@ -987,10 +987,12 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
         <div class="lp-title">Welcome back</div>
         <div class="lp-sub">Sign in to manage your parking sessions</div>
         """, unsafe_allow_html=True)
-        u = st.text_input("Username", key="login_user", placeholder="Enter your username", label_visibility="collapsed")
-        p = st.text_input("Password", type="password", key="login_pass", placeholder="Enter your password", label_visibility="collapsed")
-        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-        if st.button("Sign In →", type="primary", use_container_width=True):
+        with st.form("login_form"):
+            u = st.text_input("Username", key="login_user", placeholder="Enter your username", label_visibility="collapsed")
+            p = st.text_input("Password", type="password", key="login_pass", placeholder="Enter your password", label_visibility="collapsed")
+            st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+            submitted = st.form_submit_button("Sign In →", type="primary", use_container_width=True)
+        if submitted:
             user = get_user(u, p)
             if user:
                 st.session_state.user_id = user[0]
@@ -1014,14 +1016,16 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
         <div class="lp-sub">Join ParkOS and start parking smarter today</div>
         """, unsafe_allow_html=True)
         import re
-        raw_u = st.text_input("Username", key="reg_user", placeholder="Choose a username", label_visibility="collapsed")
+        with st.form("register_form"):
+            raw_u = st.text_input("Username", key="reg_user", placeholder="Choose a username", label_visibility="collapsed")
+            p = st.text_input("Password", type="password", key="reg_pass", placeholder="Choose a strong password", label_visibility="collapsed")
+            st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+            reg_submitted = st.form_submit_button("Create Account →", type="primary", use_container_width=True)
         # Sanitize: spaces → underscore, keep only letters/numbers/dot/underscore
         u = re.sub(r'[^a-zA-Z0-9._]', '', raw_u.replace(' ', '_'))
         if u != raw_u and raw_u:
             st.caption(f"Username will be saved as: **{u}**")
-        p = st.text_input("Password", type="password", key="reg_pass", placeholder="Choose a strong password", label_visibility="collapsed")
-        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-        if st.button("Create Account →", type="primary", use_container_width=True):
+        if reg_submitted:
             if u.strip() and p.strip():
                 if create_user(u, p):
                     st.success("✅ Account created! Sign in to continue.")
