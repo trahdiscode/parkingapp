@@ -85,7 +85,7 @@ iframe, .stMarkdown, .stButton,
     z-index: 0;
 }
 .main.block-container {
-    padding: 1.5rem 1.25rem 4rem!important;
+    padding: 0.25rem 1.25rem 4rem!important;
     max-width: 480px!important;
     margin: 0 auto!important;
     position: relative;
@@ -95,7 +95,7 @@ iframe, .stMarkdown, .stButton,
 /* Desktop layout */
 @media (min-width: 769px) {
     .main.block-container {
-        padding: 2rem 2rem 4rem!important;
+        padding: 0.25rem 2rem 4rem!important;
         max-width: 900px!important;
     }
 }
