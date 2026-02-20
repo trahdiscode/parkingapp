@@ -108,6 +108,11 @@ p, li { color: var(--text-1); font-size: 0.9rem; line-height: 1.6; }
 
 #MainMenu, footer, header { visibility: hidden; }
 .stDeployButton, div[data-testid="stDecoration"] { display: none; }
+section[data-testid="stSidebar"] { display: none; }
+div[data-testid="stToolbar"] { display: none; }
+div[data-testid="stHeader"] { display: none !important; height: 0 !important; }
+div[data-testid="stStatusWidget"] { display: none; }
+div[data-testid="collapsedControl"] { display: none; }
 
 h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 
