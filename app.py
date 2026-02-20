@@ -988,7 +988,12 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
         <div class="lp-title">Create your account</div>
         <div class="lp-sub">Join ParkOS and start parking smarter today</div>
         """, unsafe_allow_html=True)
-        u = st.text_input("Username", key="reg_user", placeholder="Choose a username", label_visibility="collapsed")
+        import re
+        raw_u = st.text_input("Username", key="reg_user", placeholder="Choose a username", label_visibility="collapsed")
+        # Sanitize: spaces → underscore, keep only letters/numbers/dot/underscore
+        u = re.sub(r'[^a-zA-Z0-9._]', '', raw_u.replace(' ', '_'))
+        if u != raw_u and raw_u:
+            st.caption(f"Username will be saved as: **{u}**")
         p = st.text_input("Password", type="password", key="reg_pass", placeholder="Choose a strong password", label_visibility="collapsed")
         st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
         if st.button("Create Account →", type="primary", use_container_width=True):
@@ -1386,7 +1391,7 @@ if not user_has_active_or_future:
                 is_blocked = s in blocked
                 is_selected = (s == selected)
                 if is_blocked:
-                    st.markdown(f'<div style="height:36px;border-radius:8px;border:none;background:linear-gradient(135deg,rgba(239,68,68,0.35) 0%,rgba(239,68,68,0.18) 100%);color:#FCA5A5;font-size:0.62rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:monospace;letter-spacing:0.01em;box-shadow:0 0 0 1px rgba(239,68,68,0.3);">{s}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div style="height:36px;border-radius:8px;border:none;background:linear-gradient(135deg,rgba(239,68,68,0.35) 0%,rgba(239,68,68,0.18) 100%);color:#FCA5A5;font-size:0.62rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:Outfit,sans-serif;letter-spacing:0.01em;box-shadow:0 0 0 1px rgba(239,68,68,0.3);">{s}</div>', unsafe_allow_html=True)
                 elif is_selected:
                     st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), type="primary", use_container_width=True)
                 else:
