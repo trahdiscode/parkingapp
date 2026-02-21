@@ -1169,37 +1169,35 @@ def fetch_bookings(user_id):
 
 all_user_bookings = fetch_bookings(st.session_state.user_id)
 
-# ── Module-level interest fetcher (must be outside nested scope for cache to work) ──
-@st.cache_data(ttl=3, show_spinner=False)
-def fetch_interests_cached(start_str, end_str):
-    """Return {user_id: slot_number} for active interests in this time window."""
+def fetch_interests_now(start_str, end_str, my_user_id):
+    """Direct (no cache) query — returns set of slot names being viewed by OTHER users."""
     try:
         res = supabase.table("slot_interests").select(
             "user_id, slot_number, start_datetime, end_datetime, updated_at"
         ).execute()
         now_utc = datetime.now(pytz.utc)
-        result = {}
+        result = set()
         for r in res.data:
-            # Skip if not overlapping requested window
+            if r["user_id"] == my_user_id:
+                continue
+            # Skip non-overlapping time windows
             if r["end_datetime"] <= start_str or r["start_datetime"] >= end_str:
                 continue
-            # Parse Supabase ISO timestamp (handles +00:00 and Z)
+            # Expire stale records older than 30 seconds
             try:
-                raw = r["updated_at"].replace("Z", "+00:00")
-                # Handle both '2026-02-22T10:30:00+00:00' and '2026-02-22 10:30:00+00:00'
-                raw = raw.replace(" ", "T")
-                from datetime import timezone
+                raw = r["updated_at"].replace("Z", "+00:00").replace(" ", "T")
                 updated = datetime.fromisoformat(raw)
                 if updated.tzinfo is None:
                     updated = updated.replace(tzinfo=pytz.utc)
-                if (now_utc - updated).total_seconds() > 30:
+                age = (now_utc - updated).total_seconds()
+                if age > 30:
                     continue
             except Exception:
                 continue
-            result[r["user_id"]] = r["slot_number"]
+            result.add(r["slot_number"])
         return result
     except Exception:
-        return {}
+        return set()
 
 total_bookings = len(all_user_bookings)
 user_current_future = [b for b in all_user_bookings if parse_dt(b[3]) > now_dt]
@@ -1469,13 +1467,12 @@ if not user_has_active_or_future:
         except Exception:
             pass
 
-    # Use the module-level cached fetcher
-    interest_map = fetch_interests_cached(
+    # Use the module-level direct fetcher (no cache — always fresh on every 3s rerun)
+    other_interests = fetch_interests_now(
         start_dt.strftime("%Y-%m-%d %H:%M"),
-        end_dt.strftime("%Y-%m-%d %H:%M")
+        end_dt.strftime("%Y-%m-%d %H:%M"),
+        st.session_state.user_id
     )
-    other_interests = {slot for uid, slot in interest_map.items()
-                       if uid != st.session_state.user_id}
 
     slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
     selected = st.session_state.selected_slot or ""
@@ -1526,13 +1523,6 @@ if not user_has_active_or_future:
         min-height: unset !important;
     }
     /* Orange interest slot overlay button — transparent, sits on top of orange div */
-    .interest-slot-wrap { position: relative; height: 36px; }
-    .interest-slot-wrap > div[data-testid="stButton"] {
-        position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 2;
-    }
-    .interest-slot-wrap > div[data-testid="stButton"] button {
-        height: 36px !important; opacity: 0 !important;
-    }
     </style>""", unsafe_allow_html=True)
 
     for row_prefix in ['A', 'B']:
@@ -1549,19 +1539,7 @@ if not user_has_active_or_future:
                 elif is_selected:
                     st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), type="primary", use_container_width=True)
                 elif is_interest:
-                    # Orange div visible, invisible button overlaid on top so it stays clickable
-                    st.markdown(
-                        f'<div style="position:relative;height:36px;">'
-                        f'<div style="position:absolute;inset:0;border-radius:8px;'
-                        f'background:linear-gradient(135deg,#f97316 0%,#fb923c 100%);'
-                        f'color:#fff;font-size:0.88rem;font-weight:600;display:flex;'
-                        f'align-items:center;justify-content:center;font-family:Outfit,sans-serif;'
-                        f'box-shadow:0 4px 14px rgba(249,115,22,.4);pointer-events:none;z-index:1;">{s}</div>'
-                        f'<div style="position:absolute;inset:0;z-index:2;opacity:0;">',
-                        unsafe_allow_html=True
-                    )
-                    st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), use_container_width=True)
-                    st.markdown('</div></div>', unsafe_allow_html=True)
+                    st.markdown(f'<div style="height:36px;border-radius:8px;border:none;background:linear-gradient(135deg,#f97316 0%,#fb923c 100%);color:#fff;font-size:0.88rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:Outfit,sans-serif;letter-spacing:0.01em;box-shadow:0 4px 20px rgba(249,115,22,0.35);">{s}</div>', unsafe_allow_html=True)
                 else:
                     st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), use_container_width=True)
 
