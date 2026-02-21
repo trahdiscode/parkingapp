@@ -179,37 +179,28 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     gap: 0.5rem;
 }
 /* Sign Out button */
-.so-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 13px;
+div[data-testid="stButton"] button[kind="secondary"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 7px 13px !important;
     background: linear-gradient(135deg, rgba(99,102,241,0.14) 0%, rgba(99,102,241,0.07) 100%) !important;
     border: 1px solid rgba(99,102,241,0.35) !important;
-    border-radius: 10px;
+    border-radius: 10px !important;
     color: #A5B4FC !important;
-    -webkit-text-fill-color: #A5B4FC !important;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    text-decoration: none !important;
-    white-space: nowrap;
-    box-shadow: 0 2px 12px rgba(99,102,241,0.12), inset 0 1px 0 rgba(255,255,255,0.05);
-    transition: all 0.18s ease;
-    cursor: pointer;
-    flex-shrink: 0;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
+    white-space: nowrap !important;
+    box-shadow: 0 2px 12px rgba(99,102,241,0.12) !important;
+    transition: all 0.18s ease !important;
+    width: auto !important;
 }
-.so-btn:hover {
+div[data-testid="stButton"] button[kind="secondary"]:hover {
     background: linear-gradient(135deg, rgba(99,102,241,0.26) 0%, rgba(99,102,241,0.14) 100%) !important;
     border-color: rgba(99,102,241,0.65) !important;
     color: #fff !important;
-    -webkit-text-fill-color: #fff !important;
-    box-shadow: 0 4px 18px rgba(99,102,241,0.28);
-    transform: translateY(-1px);
-    text-decoration: none !important;
-}
-.so-btn svg {
-    flex-shrink: 0;
+    box-shadow: 0 4px 18px rgba(99,102,241,0.28) !important;
+    transform: translateY(-1px) !important;
 }
 .user-pill {
     background: var(--surface-2);
@@ -1120,21 +1111,11 @@ with col_hdr:
 with col_right:
     st.markdown(f'''<div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0.6rem 0 0.4rem;">
     <div class="user-pill"><div class="user-avatar">{avatar_letter}</div>{username}</div>
-    <a href="?signout=true" class="so-btn" title="Sign Out">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
-        <span>Sign Out</span>
-    </a>
 </div>''', unsafe_allow_html=True)
-
-# Handle signout from URL param
-if st.query_params.get("signout") == "true":
-    st.query_params.clear()
-    for key in list(st.session_state.keys()): del st.session_state[key]
-    st.rerun()
+    if st.button("Sign Out", key="signout_btn"):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.rerun()
 
 st.markdown('<div class="header-rule"></div>', unsafe_allow_html=True)
 
