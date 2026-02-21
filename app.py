@@ -82,22 +82,22 @@ iframe, .stMarkdown, .stButton,
     z-index: 0;
 }
 .main.block-container {
-    padding: 2rem 1.25rem 4rem!important;
+    padding: 1.25rem 1.5rem 5rem!important;
     max-width: 480px!important;
     margin: 0 auto!important;
     position: relative;
     z-index: 1;
 }
 /* Streamlit injects 6rem top padding internally — kill it */
-.block-container { padding-top: 2rem!important; }
-section.main > div.block-container { padding-top: 2rem!important; }
-div[data-testid="stAppViewBlockContainer"] { padding-top: 2rem!important; }
+.block-container { padding-top: 1.25rem!important; }
+section.main > div.block-container { padding-top: 1.25rem!important; }
+div[data-testid="stAppViewBlockContainer"] { padding-top: 1.25rem!important; }
 
 /* Desktop layout */
 @media (min-width: 769px) {
     .main.block-container {
-        padding: 2rem 2rem 4rem!important;
-        max-width: 900px!important;
+        padding: 1.5rem 2.5rem 5rem!important;
+        max-width: 960px!important;
     }
 }
 
@@ -245,8 +245,8 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, var(--surface) 60%);
     border: 1px solid var(--green-border);
     border-radius: var(--radius);
-    padding: 1.25rem;
-    margin-bottom: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
     position: relative;
     overflow: hidden;
 }
@@ -289,8 +289,8 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 .active-slot-display {
     display: flex;
     align-items: flex-end;
-    gap: 0.75rem;
-    margin: 0.5rem 0 0.75rem;
+    gap: 1rem;
+    margin: 0.75rem 0 1rem;
 }
 .active-slot-label {
     font-size: 0.65rem;
@@ -320,11 +320,11 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.625rem 0.875rem;
+    padding: 0.75rem 1rem;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    margin-top: 0.25rem;
+    margin-top: 0.5rem;
 }
 .remaining-label { font-size: 0.7rem; color: var(--text-3); font-weight: 500; flex: 1; }
 .remaining-val { font-family: var(--font-mono); font-size: 0.9rem; color: var(--green); font-weight: 600; }
@@ -344,17 +344,16 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 
 /* ── Stats row ── */
 .stats-row {
-    margin-bottom: 0.875rem;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.625rem;
-    margin-bottom: 1.25rem;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
 }
 .stat-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 1rem 1.125rem;
+    padding: 1.25rem 1.375rem;
     position: relative;
     overflow: hidden;
 }
@@ -373,12 +372,12 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-3);
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.5rem;
 }
 .stat-value {
     font-family: var(--font-mono);
-    font-size: 1.75rem;
-    font-weight: 600;
+    font-size: 2rem;
+    font-weight: 700;
     color: var(--text-1);
     line-height: 1;
 }
@@ -404,7 +403,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
-    margin-bottom: 0.625rem;
+    margin-bottom: 0.75rem;
     transition: border-color 0.2s;
 }
 .booking-card:hover { border-color: var(--border-hover); }
@@ -412,8 +411,8 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    gap: 0.875rem;
-    padding: 0.875rem 1rem;
+    gap: 1rem;
+    padding: 1rem 1.125rem;
 }
 .slot-badge {
     width: 48px;
@@ -1186,7 +1185,7 @@ user_has_active_or_future = bool(user_current_future)
 upcoming_count = len([b for b in user_current_future if parse_dt(b[2]) > now_dt])
 
 # ── Overview ──
-st.markdown('<div class="section-label" style="margin-top:1.25rem;">Overview</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-label" style="margin-top:2rem;margin-bottom:0.75rem;">Overview</div>', unsafe_allow_html=True)
 
 # Stats row
 st.markdown(f"""
@@ -1269,7 +1268,7 @@ else:
 
 # ── Bookings ──
 st.markdown('<hr class="divider" style="margin:1.25rem 0 1rem;">', unsafe_allow_html=True)
-st.markdown('<div class="section-label">Your Bookings</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-label" style="margin-bottom:0.75rem;">Your Bookings</div>', unsafe_allow_html=True)
 
 if user_current_future:
     for booking_id, slot_number, start_dt_str, end_dt_str in user_current_future:
@@ -1332,10 +1331,10 @@ if past_bookings_list:
             """, unsafe_allow_html=True)
 
 # ── Book New Slot ──
-st.markdown('<hr class="divider" style="margin:1.25rem 0 1rem;">', unsafe_allow_html=True)
+st.markdown('<hr class="divider" style="margin:2rem 0 1.5rem;">', unsafe_allow_html=True)
 
 if not user_has_active_or_future:
-    st.markdown('<div class="section-label">New Booking</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-label" style="margin-bottom:0.75rem;">New Booking</div>', unsafe_allow_html=True)
 
     # Step 1
     st.markdown("""
