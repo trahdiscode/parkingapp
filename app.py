@@ -182,37 +182,33 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     align-items: center;
     gap: 0.5rem;
 }
-a.signout-btn,
-a.signout-btn:link,
-a.signout-btn:visited,
-a.signout-btn:active,
-a.signout-btn:focus {
-    display: inline-flex !important;
-    align-items: center !important;
-    background: var(--surface-2) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 8px !important;
-    padding: 7px 16px !important;
-    font-size: 0.72rem !important;
-    font-family: var(--font) !important;
-    font-weight: 600 !important;
-    color: var(--text-2) !important;
-    cursor: pointer !important;
-    transition: all 0.18s !important;
-    text-decoration: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-    letter-spacing: 0.03em !important;
-    touch-action: manipulation !important;
-    -webkit-tap-highlight-color: transparent !important;
-    -webkit-text-fill-color: var(--text-2) !important;
+/* Sign Out button — targeted by key */
+div[data-testid="stButton"]:has(button[kind="secondary"]#signout_btn) button,
+button[kind="secondary"][data-testid="baseButton-secondary"] {
+    background: transparent !important;
 }
-a.signout-btn:hover {
-    background: rgba(99,102,241,0.12) !important;
-    border-color: rgba(99,102,241,0.45) !important;
-    color: var(--accent-2) !important;
-    -webkit-text-fill-color: var(--accent-2) !important;
+[data-testid="column"]:last-child .stButton > button[kind="secondary"] {
+    background: linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.06) 100%) !important;
+    border: 1px solid rgba(239,68,68,0.35) !important;
+    color: #FCA5A5 !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.04em !important;
+    min-height: 36px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 12px rgba(239,68,68,0.1) !important;
+    transition: all 0.18s ease !important;
+    padding: 0 1rem !important;
     text-decoration: none !important;
+    -webkit-text-fill-color: #FCA5A5 !important;
+}
+[data-testid="column"]:last-child .stButton > button[kind="secondary"]:hover {
+    background: linear-gradient(135deg, rgba(239,68,68,0.22) 0%, rgba(239,68,68,0.12) 100%) !important;
+    border-color: rgba(239,68,68,0.6) !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+    box-shadow: 0 4px 20px rgba(239,68,68,0.2) !important;
+    transform: translateY(-1px) !important;
 }
 .user-pill {
     background: var(--surface-2);
@@ -1042,7 +1038,7 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
             <div class="lp-divider-text">No account yet?</div>
             <div class="lp-divider-line"></div>
         </div>""", unsafe_allow_html=True)
-        if st.button("Create a new account", type="secondary", use_container_width=True):
+        if st.button("Create a free account", type="secondary", use_container_width=True):
             st.session_state.auth_mode = 'register'
             st.rerun()
 
@@ -1091,7 +1087,10 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
     st.markdown("""
     <div class="lp-features">
         <div class="lp-feature"><div class="lp-feature-dot"></div>Real-time slot availability across all rows</div>
+        <div class="lp-feature"><div class="lp-feature-dot"></div>Instant booking with live countdown timer</div>
+        <div class="lp-feature"><div class="lp-feature-dot"></div>Secure, private & IST timezone-aware sessions</div>
     </div>
+    <div class="lp-footer">© 2025 ParkOS · All rights reserved</div>
     """, unsafe_allow_html=True)
 
     st.stop()
