@@ -182,33 +182,36 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     align-items: center;
     gap: 0.5rem;
 }
-/* Sign Out — compact power icon button */
-[data-testid="column"]:last-child .stButton > button[kind="secondary"] {
-    background: linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(239,68,68,0.07) 100%) !important;
-    border: 1px solid rgba(239,68,68,0.4) !important;
-    color: #FCA5A5 !important;
-    -webkit-text-fill-color: #FCA5A5 !important;
-    font-size: 1.1rem !important;
-    font-weight: 400 !important;
-    min-height: 36px !important;
-    max-height: 36px !important;
-    width: 36px !important;
-    border-radius: 10px !important;
-    box-shadow: 0 2px 12px rgba(239,68,68,0.15), inset 0 1px 0 rgba(255,255,255,0.05) !important;
-    transition: all 0.18s ease !important;
-    padding: 0 !important;
-    line-height: 1 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+/* Sign Out button */
+.so-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    background: linear-gradient(135deg, rgba(239,68,68,0.14) 0%, rgba(239,68,68,0.07) 100%);
+    border: 1px solid rgba(239,68,68,0.38);
+    border-radius: 10px;
+    color: #FCA5A5;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 2px 12px rgba(239,68,68,0.12), inset 0 1px 0 rgba(255,255,255,0.05);
+    transition: all 0.18s ease;
+    cursor: pointer;
+    flex-shrink: 0;
 }
-[data-testid="column"]:last-child .stButton > button[kind="secondary"]:hover {
-    background: linear-gradient(135deg, rgba(239,68,68,0.28) 0%, rgba(239,68,68,0.15) 100%) !important;
-    border-color: rgba(239,68,68,0.7) !important;
-    color: #fff !important;
-    -webkit-text-fill-color: #fff !important;
-    box-shadow: 0 4px 20px rgba(239,68,68,0.3) !important;
-    transform: translateY(-1px) !important;
+.so-btn:hover {
+    background: linear-gradient(135deg, rgba(239,68,68,0.26) 0%, rgba(239,68,68,0.14) 100%);
+    border-color: rgba(239,68,68,0.65);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(239,68,68,0.28);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+.so-btn svg {
+    flex-shrink: 0;
 }
 .user-pill {
     background: var(--surface-2);
@@ -1063,9 +1066,11 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
                 st.caption(f"Username will be saved as: **{u}**")
             if reg_submitted:
                 if u.strip() and p.strip():
-                    if create_user(u, p):
-                        st.success("✅ Account created! Sign in to continue.")
-                        st.session_state.auth_mode = 'signin'
+                    new_id = create_user(u, p)
+                    if new_id:
+                        st.session_state.user_id = new_id
+                        st.session_state.username = u
+                        st.session_state.vehicle_number = None
                         st.rerun()
                     else:
                         st.error("That username is already taken.")
@@ -1108,22 +1113,31 @@ username = st.session_state.get('username', 'User')
 avatar_letter = username[0].upper() if username else "U"
 
 # Header: brand left, user pill + sign out right
-col_hdr, col_pill, col_so = st.columns([5, 2, 1])
+col_hdr, col_right = st.columns([5, 3])
 with col_hdr:
     st.markdown(f'''<div class="app-brand" style="padding:0.6rem 0 0.4rem;">
     <img src="{LOGO_B64}" style="width:36px;height:36px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(99,102,241,0.3));" />
     <div><div class="app-brand-name">ParkOS</div><div class="app-brand-sub">Smart Parking</div></div>
 </div>''', unsafe_allow_html=True)
-with col_pill:
-    st.markdown(f'''<div style="display:flex;align-items:center;justify-content:flex-end;padding:0.6rem 0 0.4rem;">
+with col_right:
+    st.markdown(f'''<div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0.6rem 0 0.4rem;">
     <div class="user-pill"><div class="user-avatar">{avatar_letter}</div>{username}</div>
+    <a href="?signout=true" class="so-btn" title="Sign Out">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        <span>Sign Out</span>
+    </a>
 </div>''', unsafe_allow_html=True)
-with col_so:
-    st.markdown('<div style="padding-top:0.55rem;">', unsafe_allow_html=True)
-    if st.button("⏻", key="signout_btn", type="secondary", use_container_width=True, help="Sign Out"):
-        for key in list(st.session_state.keys()): del st.session_state[key]
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+
+# Handle signout from URL param
+if st.query_params.get("signout") == "true":
+    st.query_params.clear()
+    for key in list(st.session_state.keys()): del st.session_state[key]
+    st.rerun()
+
 st.markdown('<div style="border-bottom:1px solid var(--border);margin-bottom:0.875rem;"></div>', unsafe_allow_html=True)
 
 # Vehicle number gate
