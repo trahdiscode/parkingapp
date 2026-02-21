@@ -124,7 +124,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--text-3);
-    margin-bottom: 0.875rem;
+    margin-bottom: 0.75rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -343,6 +343,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 
 /* ── Stats row ── */
 .stats-row {
+    margin-bottom: 0.875rem;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0.625rem;
@@ -1178,8 +1179,7 @@ user_has_active_or_future = bool(user_current_future)
 upcoming_count = len([b for b in user_current_future if parse_dt(b[2]) > now_dt])
 
 # ── Overview ──
-st.markdown('<div style="height:1.25rem;"></div>', unsafe_allow_html=True)
-st.markdown('<div class="section-label">Overview</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-label" style="margin-top:1.25rem;">Overview</div>', unsafe_allow_html=True)
 
 # Stats row
 st.markdown(f"""
@@ -1261,8 +1261,7 @@ else:
     """, unsafe_allow_html=True)
 
 # ── Bookings ──
-st.markdown('<div style="height:0.5rem;"></div>', unsafe_allow_html=True)
-st.markdown('<hr class="divider">', unsafe_allow_html=True)
+st.markdown('<hr class="divider" style="margin:1.25rem 0 1rem;">', unsafe_allow_html=True)
 st.markdown('<div class="section-label">Your Bookings</div>', unsafe_allow_html=True)
 
 if user_current_future:
@@ -1326,7 +1325,7 @@ if past_bookings_list:
             """, unsafe_allow_html=True)
 
 # ── Book New Slot ──
-st.markdown('<hr class="divider">', unsafe_allow_html=True)
+st.markdown('<hr class="divider" style="margin:1.25rem 0 1rem;">', unsafe_allow_html=True)
 
 if not user_has_active_or_future:
     st.markdown('<div class="section-label">New Booking</div>', unsafe_allow_html=True)
