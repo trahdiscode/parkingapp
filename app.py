@@ -179,7 +179,11 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     gap: 0.5rem;
 }
 /* Sign Out button */
-div[data-testid="stButton"] button[kind="secondary"] {
+div[data-testid="stButton"]:has(button[data-testid="baseButton-secondary"]) {
+    display: flex !important;
+    justify-content: flex-end !important;
+}
+button[data-testid="baseButton-secondary"] {
     display: inline-flex !important;
     align-items: center !important;
     padding: 7px 13px !important;
@@ -193,9 +197,10 @@ div[data-testid="stButton"] button[kind="secondary"] {
     white-space: nowrap !important;
     box-shadow: 0 2px 12px rgba(99,102,241,0.12) !important;
     transition: all 0.18s ease !important;
+    min-width: 0 !important;
     width: auto !important;
 }
-div[data-testid="stButton"] button[kind="secondary"]:hover {
+button[data-testid="baseButton-secondary"]:hover {
     background: linear-gradient(135deg, rgba(99,102,241,0.26) 0%, rgba(99,102,241,0.14) 100%) !important;
     border-color: rgba(99,102,241,0.65) !important;
     color: #fff !important;
@@ -1102,20 +1107,23 @@ username = st.session_state.get('username', 'User')
 avatar_letter = username[0].upper() if username else "U"
 
 # Header: brand left, user pill + sign out right
-col_hdr, col_right = st.columns([5, 3])
+col_hdr, col_pill, col_so = st.columns([5, 2, 1])
 with col_hdr:
     st.markdown(f'''<div class="app-brand" style="padding:0.6rem 0 0.4rem;">
     <img src="{LOGO_B64}" style="width:44px;height:44px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 2px 10px rgba(99,102,241,0.35));" />
     <div><div class="app-brand-name">ParkOS</div><div class="app-brand-sub">Smart Parking</div></div>
 </div>''', unsafe_allow_html=True)
-with col_right:
-    st.markdown(f'''<div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0.6rem 0 0.4rem;">
+with col_pill:
+    st.markdown(f'''<div style="display:flex;align-items:center;justify-content:flex-end;padding:0.6rem 0 0.4rem;">
     <div class="user-pill"><div class="user-avatar">{avatar_letter}</div>{username}</div>
 </div>''', unsafe_allow_html=True)
+with col_so:
+    st.markdown('<div style="padding:0.45rem 0 0.4rem;">', unsafe_allow_html=True)
     if st.button("Sign Out", key="signout_btn"):
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown('<div class="header-rule"></div>', unsafe_allow_html=True)
 
