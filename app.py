@@ -1299,23 +1299,7 @@ with col2:
 with col3:
     st.markdown(_zone_card("Zone C", zone_c, rows=2, cols=6, description="Block 2 × 6"), unsafe_allow_html=True)
 
-st.markdown("""
-<div style="
-    margin-top:0.75rem;
-    padding:0.625rem 1rem;
-    background:rgba(99,102,241,0.06);
-    border:1px solid rgba(99,102,241,0.15);
-    border-radius:var(--radius-sm);
-    font-size:0.72rem;
-    color:var(--text-3);
-    display:flex;
-    align-items:center;
-    gap:0.5rem;
-">
-    <span style="color:var(--accent-2);">⚡</span>
-    <span>Sensor integration with Electronics Dept. in progress — currently showing simulated data</span>
-</div>
-""", unsafe_allow_html=True)
+
 
 # ── Bookings ──
 st.markdown('<div style="height:0.5rem;"></div>', unsafe_allow_html=True)
