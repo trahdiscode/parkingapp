@@ -1256,7 +1256,7 @@ def _zone_card(zone_name, zone_dict, rows, cols, description):
     for r in range(1, rows + 1):
         slots_html += f'<div style="display:grid;grid-template-columns:repeat({cols},1fr);gap:6px;margin-bottom:6px;">'
         for c in range(1, cols + 1):
-            sid = f"{zone_name[0]}{r}{c}"
+        sid = f"{zone_name[-1]}{r}{c}"
             slots_html += _slot_html(sid, zone_dict.get(sid, False))
         slots_html += "</div>"
 
