@@ -1290,45 +1290,6 @@ def _zone_card(zone_name, zone_dict, rows, cols, description):
     </div>
     """
 
-# Countdown to next refresh (10 min window)
-secs_in_window = int(_time.time()) % 600
-secs_remaining = 600 - secs_in_window
-mins_left = secs_remaining // 60
-secs_left = secs_remaining % 60
-
-st.markdown(f"""
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;">
-    <div style="font-size:0.72rem;color:var(--text-3);">
-        Sensor data updates every 10 minutes
-    </div>
-    <div style="
-        font-family:'JetBrains Mono',monospace;
-        font-size:0.72rem;
-        color:var(--amber);
-        background:var(--amber-soft);
-        border:1px solid rgba(245,158,11,0.2);
-        border-radius:6px;
-        padding:3px 10px;
-    " id="sensor-refresh-countdown">Next update: {mins_left:02d}:{secs_left:02d}</div>
-</div>
-<script>
-(function(){{
-    var secsLeft = {secs_remaining};
-    function pad(n) {{ return String(n).padStart(2,'0'); }}
-    function tick(){{
-        var el = document.getElementById('sensor-refresh-countdown');
-        if(!el){{ setTimeout(tick,500); return; }}
-        if(secsLeft<=0){{ window.parent.location.reload(); return; }}
-        var m=Math.floor(secsLeft/60), s=secsLeft%60;
-        el.textContent = 'Next update: '+pad(m)+':'+pad(s);
-        secsLeft--;
-        setTimeout(tick,1000);
-    }}
-    tick();
-}})();
-</script>
-""", unsafe_allow_html=True)
-
 # 3 zone cards — on desktop: side by side, mobile: stacked
 col1, col2, col3 = st.columns(3)
 with col1:
