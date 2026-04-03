@@ -820,7 +820,7 @@ def build_time_options(for_date, now_ist=None):
     standard_slots = [(datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").strftime("%I:%M %p"),
                        datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").time())
                       for h in range(24) for m in (0, 30)]
-    if for_date == date.today() and now_ist is not None:
+    if now_ist is not None and for_date == now_ist.date():
         now_time = now_ist.time().replace(second=0, microsecond=0)
         now_label = "Now (" + now_ist.strftime("%I:%M %p").lstrip("0") + ")"
         future_slots = [(label, t) for label, t in standard_slots if t > now_time]
@@ -1391,7 +1391,7 @@ if not user_has_active_or_future:
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="time-form">', unsafe_allow_html=True)
-    booking_date = st.date_input("Date", min_value=date.today(), key="booking_date_input")
+    booking_date = st.date_input("Date", min_value=now_dt_fresh_ist.date(), key="booking_date_input")
 
     entry_options = build_time_options(booking_date, now_ist=now_dt_fresh_ist)
     if not entry_options:
