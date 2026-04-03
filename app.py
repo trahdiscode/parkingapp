@@ -1117,14 +1117,21 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Premium Sign out tucked neatly below header
+# Premium Sign out tucked inside header via CSS
 st.markdown("""
 <style>
-/* Premium Right-Aligned Sign Out Button */
+/* Pull the button up and right-align it next to the user pill */
+div[data-testid="stElementContainer"]:has(#premium-signout) {
+    display: none;
+}
 div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] {
     display: flex;
     justify-content: flex-end;
-    margin-top: 0.25rem;
+    margin-top: -3.8rem; /* Pulls it up vertically into the header */
+    margin-right: 140px; /* Pushes it left so it sits nicely beside the profile logo */
+    margin-bottom: 2rem; /* Creates space below it so the rest of the app isn't crushed */
+    position: relative;
+    z-index: 50;
 }
 div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] button {
     background: rgba(255, 255, 255, 0.04) !important;
@@ -1137,8 +1144,8 @@ div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="s
     font-weight: 700 !important;
     letter-spacing: 0.08em !important;
     text-transform: uppercase !important;
-    min-height: 32px !important;
-    height: 32px !important;
+    min-height: 34px !important;
+    height: 34px !important;
     width: auto !important;
     transition: all 0.3s ease !important;
     box-shadow: none !important;
