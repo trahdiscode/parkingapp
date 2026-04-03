@@ -4,10 +4,10 @@ import hashlib
 from datetime import datetime, date, timedelta
 from streamlit_autorefresh import st_autorefresh
 import pytz
+import base64
+import time as _time
 
 # ---------- LOGO ----------
-import base64
-
 @st.cache_data
 def get_image_base64(image_path):
     try:
@@ -17,6 +17,7 @@ def get_image_base64(image_path):
         return ""
 
 logo_base64 = get_image_base64("parking_logo_flat.png")
+
 # ---------- PAGE CONFIG ----------
 st.set_page_config(page_title="ParkOS", layout="wide", page_icon="🅿️", initial_sidebar_state="collapsed")
 
@@ -155,17 +156,6 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     display: flex;
     align-items: center;
     gap: 0.75rem;
-}
-.app-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    box-shadow: var(--shadow-accent);
 }
 .app-brand-name {
     font-size: 1.4rem;
@@ -557,47 +547,116 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 .lock-title { font-size: 0.95rem; font-weight: 600; color: var(--text-2); margin-bottom: 0.375rem; }
 .lock-sub { font-size: 0.78rem; color: var(--text-3); line-height: 1.5; }
 
-/* ── Login page ── */
+/* ── Login / Auth Styles ── */
 .login-wrap {
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 1.5rem;
+    padding: 2rem 0;
 }
-.login-card {
+.lp-card {
+    background: #0F1117;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    padding: 2rem 2rem 1.5rem;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
     width: 100%;
-    max-width: 380px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: calc(var(--radius) * 1.5);
-    padding: 2rem;
-    box-shadow: var(--shadow-lg);
+    max-width: 420px;
 }
-.login-logo {
+.lp-card::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 65%);
+    pointer-events: none;
+}
+.lp-top {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
-    margin-bottom: 0.25rem;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
 }
-.login-logo-icon {
-    width: 40px; height: 40px;
-    background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    box-shadow: var(--shadow-accent);
-}
-.login-logo-text {
-    font-size: 1.75rem;
+.lp-brand-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.6rem;
     font-weight: 800;
-    letter-spacing: -0.05em;
-    color: var(--text-1);
+    letter-spacing: -0.04em;
+    color: #F1F2F6;
+    line-height: 1;
 }
-.login-tagline { font-size: 0.78rem; color: var(--text-3); margin-bottom: 1.75rem; }
+.lp-brand-sub {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    color: #4B5068;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-top: 3px;
+}
+.lp-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #F1F2F6;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.2rem;
+}
+.lp-sub {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.78rem;
+    color: #4B5068;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+.lp-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+.lp-divider-line { flex:1; height:1px; background: rgba(255,255,255,0.06); }
+.lp-divider-text { font-size:0.65rem; color:#4B5068; font-family:'Outfit',sans-serif; letter-spacing:0.1em; text-transform:uppercase; }
+.lp-features {
+    background: #080A0F;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1rem;
+    width: 100%;
+    max-width: 420px;
+}
+.lp-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.45rem 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    color: #6B7090;
+}
+.lp-feature + .lp-feature { border-top: 1px solid rgba(255,255,255,0.04); }
+.lp-feature-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #6366F1;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(99,102,241,0.6);
+}
+.lp-footer {
+    text-align: center;
+    font-size: 0.68rem;
+    color: #2A2D3E;
+    font-family: 'Outfit', sans-serif;
+    padding-top: 0.5rem;
+    width: 100%;
+    max-width: 420px;
+}
 
 /* ── Streamlit overrides ── */
 .stTextInput > label, .stDateInput > label, .stTimeInput > label, .stSelectbox > label {
@@ -625,13 +684,6 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     box-shadow: 0 0 0 3px rgba(99,102,241,0.15)!important;
     outline: none!important;
 }
-/* Override BaseWeb's red/pink focus ring on input containers */
-.stTextInput > div:focus-within,
-.stTextInput > div > div:focus-within {
-    border-color: var(--accent)!important;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.15)!important;
-    outline: none!important;
-}
 div[data-baseweb="input"]:focus-within,
 div[data-baseweb="base-input"]:focus-within {
     border-color: var(--accent)!important;
@@ -643,11 +695,9 @@ div[data-baseweb="base-input"] input:focus {
     outline: none!important;
     box-shadow: none!important;
 }
-/* Kill any red/pink coming from BaseWeb theme */
 [data-baseweb="input"] { border-color: var(--border)!important; }
 [data-baseweb="input"]:focus-within { border-color: var(--accent)!important; box-shadow: 0 0 0 3px rgba(99,102,241,0.15)!important; }
 
-/* Selectbox */
 div[data-baseweb="select"] > div {
     background: var(--surface-2)!important;
     border: 1px solid var(--border)!important;
@@ -664,7 +714,6 @@ div[data-baseweb="popover"] { background: var(--surface-2)!important; border: 1p
 [data-baseweb="option"] { background: var(--surface-2)!important; color: var(--text-1)!important; font-size: 0.88rem!important; }
 [data-baseweb="option"]:hover, [aria-selected="true"] { background: var(--surface-3)!important; }
 
-/* Buttons */
 .stButton > button {
     font-family: var(--font)!important;
     font-size: 0.88rem!important;
@@ -698,7 +747,6 @@ div[data-baseweb="popover"] { background: var(--surface-2)!important; border: 1p
     background: rgba(59,130,246,0.08)!important;
 }
 
-/* Slot buttons */
 .stButton > button[key*="slot_"] {
     height: 48px!important;
     font-family: var(--font-mono)!important;
@@ -718,24 +766,18 @@ div[data-baseweb="popover"] { background: var(--surface-2)!important; border: 1p
     opacity: 1!important;
     cursor: not-allowed!important;
 }
-
-/* Alerts */
 div[data-testid="stAlert"] {
     background: var(--surface)!important;
     border-radius: var(--radius)!important;
     border: 1px solid var(--border)!important;
     font-size: 0.85rem!important;
 }
-
-/* Metrics */
 div[data-testid="stMetric"] {
     background: var(--surface)!important;
     border: 1px solid var(--border)!important;
     border-radius: var(--radius)!important;
     padding: 1rem 1.25rem!important;
 }
-
-/* Tabs */
 .stTabs [data-baseweb="tab-list"] {
     background: var(--surface)!important;
     border: 1px solid var(--border)!important;
@@ -763,14 +805,9 @@ div[data-testid="stMetric"] {
     box-shadow: var(--shadow-sm)!important;
 }
 .stTabs [data-baseweb="tab-panel"] { padding-top: 1.25rem!important; }
-
 div[data-testid="stHorizontalBlock"] { gap: 0.4rem!important; }
-
-/* Expander */
 details { border: 1px solid var(--border)!important; border-radius: var(--radius)!important; background: var(--surface)!important; }
 summary { padding: 0.875rem 1rem!important; font-size: 0.85rem!important; color: var(--text-2)!important; font-weight: 600!important; }
-
-/* Date input */
 div[data-baseweb="calendar"] { background: var(--surface-2)!important; border: 1px solid var(--border)!important; border-radius: var(--radius)!important; }
 
 </style>
@@ -837,213 +874,221 @@ def parse_dt(s):
 if 'selected_slot' not in st.session_state:
     st.session_state.selected_slot = None
 
-# ---------- AUTH PAGE ----------
-if 'user_id' not in st.session_state or st.session_state.user_id is None:
+if 'show_booking_flow' not in st.session_state:
+    st.session_state.show_booking_flow = False
 
+
+# ── LIVE PARKING SENSOR FUNCTIONS ──
+def _get_sensor_state(seed_offset=0):
+    bucket = int(_time.time() // 600) + seed_offset
+    def _occupied(slot_id):
+        h = int(hashlib.md5(f"{bucket}-{slot_id}".encode()).hexdigest(), 16)
+        return (h % 100) < 45
+    zone_a = {f"A{r}{c}": _occupied(f"zA{r}{c}") for r in range(1, 4) for c in range(1, 5)}
+    zone_b = {f"B{r}{c}": _occupied(f"zB{r}{c}") for r in range(1, 5) for c in range(1, 4)}
+    zone_c = {f"C{r}{c}": _occupied(f"zC{r}{c}") for r in range(1, 3) for c in range(1, 7)}
+    return zone_a, zone_b, zone_c
+
+def _count(zone): 
+    total = len(zone)
+    occ = sum(zone.values())
+    return total - occ, occ, total
+
+def _slot_html(slot_id, occupied):
+    color = "#EF4444" if occupied else "#10B981"
+    bg = "rgba(239,68,68,0.12)" if occupied else "rgba(16,185,129,0.10)"
+    border = "rgba(239,68,68,0.35)" if occupied else "rgba(16,185,129,0.35)"
+    icon = "🔴" if occupied else "🟢"
+    label = slot_id[1:]
+    return f"""<div style="
+        background:{bg};
+        border:1.5px solid {border};
+        border-radius:8px;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        gap:3px;
+        padding:6px 4px;
+        min-width:0;
+    ">
+        <span style="font-size:0.7rem;">{icon}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;font-weight:700;color:{color};">{label}</span>
+    </div>"""
+
+def _zone_card(zone_name, zone_dict, rows, cols, description):
+    free, occ, total = _count(zone_dict)
+    pct_free = int(free / total * 100) if total > 0 else 0
+    bar_color = "#10B981" if pct_free > 40 else ("#F59E0B" if pct_free > 15 else "#EF4444")
+    slots_html = ""
+    for r in range(1, rows + 1):
+        slots_html += f'<div style="display:grid;grid-template-columns:repeat({cols},1fr);gap:6px;margin-bottom:6px;">'
+        for c in range(1, cols + 1):
+            sid = f"{zone_name[-1]}{r}{c}"
+            slots_html += _slot_html(sid, zone_dict.get(sid, False))
+        slots_html += "</div>"
+    return f"""
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1rem 0.875rem; flex:1; min-width:0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.625rem;">
+            <div>
+                <div style="font-size:0.75rem;font-weight:800;color:var(--text-1);letter-spacing:-0.01em;">{zone_name}</div>
+                <div style="font-size:0.6rem;color:var(--text-3);letter-spacing:0.05em;text-transform:uppercase;margin-top:1px;">{description}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:{bar_color};">{free}<span style="font-size:0.65rem;color:var(--text-3);font-weight:400;">/{total}</span></div>
+                <div style="font-size:0.58rem;color:var(--text-3);">free slots</div>
+            </div>
+        </div>
+        <div style="height:3px;background:var(--surface-3);border-radius:99px;margin-bottom:0.75rem;">
+            <div style="height:100%;width:{pct_free}%;background:{bar_color};border-radius:99px;transition:width 0.4s ease;"></div>
+        </div>
+        {slots_html}
+        <div style="display:flex;gap:0.875rem;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--border);">
+            <span style="font-size:0.62rem;color:#10B981;">🟢 Available ({free})</span>
+            <span style="font-size:0.62rem;color:#EF4444;">🔴 Occupied ({occ})</span>
+        </div>
+    </div>
+    """
+
+def render_live_parking():
+    zone_a, zone_b, zone_c = _get_sensor_state()
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown(_zone_card("Zone A", zone_a, rows=3, cols=4, description="Block 3 × 4"), unsafe_allow_html=True)
+    with col2:
+        st.markdown(_zone_card("Zone B", zone_b, rows=4, cols=3, description="Block 4 × 3"), unsafe_allow_html=True)
+    with col3:
+        st.markdown(_zone_card("Zone C", zone_c, rows=2, cols=6, description="Block 2 × 6"), unsafe_allow_html=True)
+
+
+# ---------- PUBLIC OR AUTH PAGE ----------
+if 'user_id' not in st.session_state or st.session_state.user_id is None:
     if 'auth_mode' not in st.session_state:
         st.session_state.auth_mode = 'signin'
 
+    # --- PUBLIC DASHBOARD HEADER ---
     st.markdown(f"""
-    <style>
-    /* ── Override Streamlit layout for login page ── */
-    .main.block-container {{
-        max-width: 420px!important;
-        margin: 0 auto!important;
-        padding: 0 1.25rem 3rem!important;
-    }}
-
-    /* Floating card wrapper injected below */
-    .lp-card {{
-        background: #0F1117;
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 20px;
-        padding: 2rem 2rem 1.5rem;
-        margin-bottom: 1rem;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 24px 60px rgba(0,0,0,0.5);
-    }}
-    .lp-card::before {{
-        content: '';
-        position: absolute;
-        top: -60px; right: -60px;
-        width: 200px; height: 200px;
-        background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 65%);
-        pointer-events: none;
-    }}
-    .lp-top {{
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 1.75rem;
-        padding-bottom: 1.25rem;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-    }}
-    .lp-logo {{
-        width: 52px; height: 52px;
-        object-fit: contain;
-        filter: drop-shadow(0 4px 16px rgba(99,102,241,0.4));
-        flex-shrink: 0;
-    }}
-    .lp-brand-name {{
-        font-family: 'Outfit', sans-serif;
-        font-size: 1.6rem;
-        font-weight: 800;
-        letter-spacing: -0.04em;
-        color: #F1F2F6;
-        line-height: 1;
-    }}
-    .lp-brand-sub {{
-        font-family: 'Outfit', sans-serif;
-        font-size: 0.7rem;
-        color: #4B5068;
-        letter-spacing: 0.07em;
-        text-transform: uppercase;
-        margin-top: 3px;
-    }}
-    .lp-title {{
-        font-family: 'Outfit', sans-serif;
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #F1F2F6;
-        letter-spacing: -0.02em;
-        margin-bottom: 0.2rem;
-    }}
-    .lp-sub {{
-        font-family: 'Outfit', sans-serif;
-        font-size: 0.78rem;
-        color: #4B5068;
-        margin-bottom: 1.5rem;
-        line-height: 1.5;
-    }}
-    .lp-divider {{
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin: 1rem 0;
-    }}
-    .lp-divider-line {{ flex:1; height:1px; background: rgba(255,255,255,0.06); }}
-    .lp-divider-text {{ font-size:0.65rem; color:#4B5068; font-family:'Outfit',sans-serif; letter-spacing:0.1em; text-transform:uppercase; }}
-    .lp-features {{
-        background: #080A0F;
-        border: 1px solid rgba(255,255,255,0.05);
-        border-radius: 14px;
-        padding: 1.1rem 1.25rem;
-        margin-bottom: 1rem;
-    }}
-    .lp-feature {{
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.45rem 0;
-        font-family: 'Outfit', sans-serif;
-        font-size: 0.8rem;
-        color: #6B7090;
-    }}
-    .lp-feature + .lp-feature {{
-        border-top: 1px solid rgba(255,255,255,0.04);
-    }}
-    .lp-feature-dot {{
-        width: 6px; height: 6px;
-        border-radius: 50%;
-        background: #6366F1;
-        flex-shrink: 0;
-        box-shadow: 0 0 6px rgba(99,102,241,0.6);
-    }}
-    .lp-footer {{
-        text-align: center;
-        font-size: 0.68rem;
-        color: #2A2D3E;
-        font-family: 'Outfit', sans-serif;
-        padding-top: 0.5rem;
-    }}
-    </style>
-
-    <div class="lp-card">
-        <div class="lp-top">
-            <img src="data:image/png;base64,{logo_base64}" style="width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3));flex-shrink:0;">
-            <div>
-                <div class="lp-brand-name">ParkOS</div>
-                <div class="lp-brand-sub">Smart Parking Management</div>
-            </div>
+    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 1rem 0 2rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+        <img src="data:image/png;base64,{logo_base64}" style="width: 56px; height: 56px; object-fit: contain; filter: drop-shadow(0 4px 16px rgba(99,102,241,0.4)); flex-shrink: 0;">
+        <div>
+            <div style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--text-1); line-height: 1; letter-spacing: -0.04em;">ParkOS</div>
+            <div style="font-family: 'Outfit', sans-serif; font-size: 0.8rem; color: var(--text-3); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px;">Faculty Parking Portal</div>
         </div>
+    </div>
     """, unsafe_allow_html=True)
 
-    if st.session_state.auth_mode == 'signin':
+    # --- RENDER VAST INTERFACE ---
+    render_live_parking()
+    st.markdown('<div style="height:2rem;"></div>', unsafe_allow_html=True)
+
+    # --- BOOKING CTA OR LOGIN FLOW ---
+    if not st.session_state.show_booking_flow:
         st.markdown("""
-        <div class="lp-title">Welcome back</div>
-        <div class="lp-sub">Sign in to manage your parking sessions</div>
+        <div style="background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; text-align: center; max-width: 600px; margin: 0 auto;">
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--text-1); margin-bottom: 0.5rem;">Need to reserve a slot?</div>
+            <div style="font-size: 0.85rem; color: var(--text-3); margin-bottom: 1.5rem;">Faculty members can log in to securely book and manage parking spaces in advance.</div>
+        </div>
         """, unsafe_allow_html=True)
-        u = st.text_input("Username", key="login_user", placeholder="Enter your username", label_visibility="collapsed")
-        p = st.text_input("Password", type="password", key="login_pass", placeholder="Enter your password", label_visibility="collapsed")
-        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-        if st.button("Sign In →", type="primary", use_container_width=True):
-            user = get_user(u, p)
-            if user:
-                st.session_state.user_id = user[0]
-                st.session_state.vehicle_number = user[1]
-                st.session_state.username = u
+        
+        # Center the button nicely
+        col_space1, col_btn, col_space2 = st.columns([1, 1.5, 1])
+        with col_btn:
+            # Move the button slightly up to overlap the container nicely
+            st.markdown('<div style="margin-top: -1.5rem;"></div>', unsafe_allow_html=True)
+            if st.button("Log In to Book a Slot →", type="primary", use_container_width=True):
+                st.session_state.show_booking_flow = True
                 st.rerun()
-            else:
-                st.error("Incorrect username or password.")
-        st.markdown("""<div class="lp-divider">
-            <div class="lp-divider-line"></div>
-            <div class="lp-divider-text">No account yet?</div>
-            <div class="lp-divider-line"></div>
-        </div>""", unsafe_allow_html=True)
-        if st.button("Create a free account", type="secondary", use_container_width=True):
-            st.session_state.auth_mode = 'register'
-            st.rerun()
-
+        st.stop()
     else:
-        st.markdown("""
-        <div class="lp-title">Create your account</div>
-        <div class="lp-sub">Join ParkOS and start parking smarter today</div>
+        # --- LOGIN / REGISTER CARD ---
+        st.markdown('<div class="login-wrap">', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="lp-card">
+            <div class="lp-top">
+                <img src="data:image/png;base64,{logo_base64}" style="width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3));flex-shrink:0;">
+                <div>
+                    <div class="lp-brand-name">ParkOS</div>
+                    <div class="lp-brand-sub">Smart Parking Management</div>
+                </div>
+            </div>
         """, unsafe_allow_html=True)
 
-        import re
-        raw_u = st.text_input("Username", key="reg_user", placeholder="Choose a username", label_visibility="collapsed")
-        # Sanitize: spaces → underscore, keep only letters/numbers/dot/underscore
-        u = re.sub(r'[^a-zA-Z0-9._]', '', raw_u.replace(' ', '_'))
-        if u != raw_u and raw_u:
-            st.caption(f"Username will be saved as: **{u}**")
-
-        p = st.text_input("Password", type="password", key="reg_pass", placeholder="Choose a strong password", label_visibility="collapsed")
-        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-        if st.button("Create Account →", type="primary", use_container_width=True):
-            if u.strip() and p.strip():
-                if create_user(u, p):
-                    st.success("✅ Account created! Sign in to continue.")
-                    st.session_state.auth_mode = 'signin'
+        if st.session_state.auth_mode == 'signin':
+            st.markdown("""
+            <div class="lp-title">Welcome back</div>
+            <div class="lp-sub">Sign in to manage your parking sessions</div>
+            """, unsafe_allow_html=True)
+            u = st.text_input("Username", key="login_user", placeholder="Enter your username", label_visibility="collapsed")
+            p = st.text_input("Password", type="password", key="login_pass", placeholder="Enter your password", label_visibility="collapsed")
+            st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+            if st.button("Sign In →", type="primary", use_container_width=True):
+                user = get_user(u, p)
+                if user:
+                    st.session_state.user_id = user[0]
+                    st.session_state.vehicle_number = user[1]
+                    st.session_state.username = u
                     st.rerun()
                 else:
-                    st.error("That username is already taken.")
-            else:
-                st.error("Please fill in all fields.")
-        st.markdown("""<div class="lp-divider">
-            <div class="lp-divider-line"></div>
-            <div class="lp-divider-text">Already have an account?</div>
-            <div class="lp-divider-line"></div>
-        </div>""", unsafe_allow_html=True)
-        if st.button("← Back to Sign In", type="secondary", use_container_width=True):
-            st.session_state.auth_mode = 'signin'
-            st.rerun()
+                    st.error("Incorrect username or password.")
+            
+            st.markdown("""<div class="lp-divider">
+                <div class="lp-divider-line"></div>
+                <div class="lp-divider-text">No account yet?</div>
+                <div class="lp-divider-line"></div>
+            </div>""", unsafe_allow_html=True)
+            if st.button("Create a free account", type="secondary", use_container_width=True):
+                st.session_state.auth_mode = 'register'
+                st.rerun()
 
-    st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div class="lp-title">Create your account</div>
+            <div class="lp-sub">Join ParkOS and start parking smarter today</div>
+            """, unsafe_allow_html=True)
 
-    # Feature highlights below card
-    st.markdown("""
-    <div class="lp-features">
-        <div class="lp-feature"><div class="lp-feature-dot"></div>Real-time slot availability across all rows</div>
-        <div class="lp-feature"><div class="lp-feature-dot"></div>Instant booking with live countdown timer</div>
-        <div class="lp-feature"><div class="lp-feature-dot"></div>Secure, private & IST timezone-aware sessions</div>
-    </div>
-    <div class="lp-footer">© 2025 ParkOS · All rights reserved</div>
-    """, unsafe_allow_html=True)
+            import re
+            raw_u = st.text_input("Username", key="reg_user", placeholder="Choose a username", label_visibility="collapsed")
+            u = re.sub(r'[^a-zA-Z0-9._]', '', raw_u.replace(' ', '_'))
+            if u != raw_u and raw_u:
+                st.caption(f"Username will be saved as: **{u}**")
 
-    st.stop()
+            p = st.text_input("Password", type="password", key="reg_pass", placeholder="Choose a strong password", label_visibility="collapsed")
+            st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+            if st.button("Create Account →", type="primary", use_container_width=True):
+                if u.strip() and p.strip():
+                    if create_user(u, p):
+                        st.success("✅ Account created! Sign in to continue.")
+                        st.session_state.auth_mode = 'signin'
+                        st.rerun()
+                    else:
+                        st.error("That username is already taken.")
+                else:
+                    st.error("Please fill in all fields.")
+            
+            st.markdown("""<div class="lp-divider">
+                <div class="lp-divider-line"></div>
+                <div class="lp-divider-text">Already have an account?</div>
+                <div class="lp-divider-line"></div>
+            </div>""", unsafe_allow_html=True)
+            if st.button("← Back to Sign In", type="secondary", use_container_width=True):
+                st.session_state.auth_mode = 'signin'
+                st.rerun()
 
-# ---------- MAIN APP ----------
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown("""
+        <div class="lp-features">
+            <div class="lp-feature"><div class="lp-feature-dot"></div>Real-time slot availability across all rows</div>
+            <div class="lp-feature"><div class="lp-feature-dot"></div>Instant booking with live countdown timer</div>
+            <div class="lp-feature"><div class="lp-feature-dot"></div>Secure, private & IST timezone-aware sessions</div>
+        </div>
+        <div class="lp-footer">© 2025 ParkOS · All rights reserved</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.stop()
+
+
+# ---------- MAIN APP (LOGGED IN) ----------
 
 # Fetch username if not set
 if 'username' not in st.session_state:
@@ -1149,7 +1194,6 @@ if active_booking:
     remaining_str = str(remaining).split('.')[0]
     end_ts_ms = int(end_dt.timestamp() * 1000)
 
-    # Everything in one st.markdown --- no iframe, no flash
     st.markdown(f"""
     <div class="active-card">
         <div class="active-card-glow"></div>
@@ -1187,7 +1231,6 @@ if active_booking:
             if (diff === 0) {{ setTimeout(function(){{ window.parent.location.reload(); }}, 2000); return; }}
             setTimeout(tick, 1000);
         }}
-        // Wait for DOM then start
         if (document.readyState === "loading") {{
             document.addEventListener("DOMContentLoaded", tick);
         }} else {{
@@ -1210,106 +1253,7 @@ st.markdown('<div style="height:0.5rem;"></div>', unsafe_allow_html=True)
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 st.markdown('<div class="section-label">Live Parking Status</div>', unsafe_allow_html=True)
 
-import hashlib as _hl, time as _time
-
-def _get_sensor_state(seed_offset=0):
-    """Generate deterministic pseudo-random slot occupancy that changes every 10 minutes."""
-    bucket = int(_time.time() // 600) + seed_offset  # 600s = 10 min window
-    def _occupied(slot_id):
-        h = int(_hl.md5(f"{bucket}-{slot_id}".encode()).hexdigest(), 16)
-        return (h % 100) < 45  # ~45% occupancy
-
-    # Zone A: 3 rows × 4 cols = 12 slots
-    zone_a = {f"A{r}{c}": _occupied(f"zA{r}{c}") for r in range(1, 4) for c in range(1, 5)}
-    # Zone B: 4 rows × 3 cols = 12 slots (different shape)
-    zone_b = {f"B{r}{c}": _occupied(f"zB{r}{c}") for r in range(1, 5) for c in range(1, 4)}
-    # Zone C: 2 rows × 6 cols = 12 slots (wide/flat)
-    zone_c = {f"C{r}{c}": _occupied(f"zC{r}{c}") for r in range(1, 3) for c in range(1, 7)}
-
-    return zone_a, zone_b, zone_c
-
-zone_a, zone_b, zone_c = _get_sensor_state()
-
-def _count(zone): 
-    total = len(zone)
-    occ = sum(zone.values())
-    return total - occ, occ, total
-
-def _slot_html(slot_id, occupied):
-    color = "#EF4444" if occupied else "#10B981"
-    bg = "rgba(239,68,68,0.12)" if occupied else "rgba(16,185,129,0.10)"
-    border = "rgba(239,68,68,0.35)" if occupied else "rgba(16,185,129,0.35)"
-    icon = "🔴" if occupied else "🟢"
-    label = slot_id[1:]  # strip zone letter
-    return f"""<div style="
-        background:{bg};
-        border:1.5px solid {border};
-        border-radius:8px;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        justify-content:center;
-        gap:3px;
-        padding:6px 4px;
-        min-width:0;
-    ">
-        <span style="font-size:0.7rem;">{icon}</span>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;font-weight:700;color:{color};">{label}</span>
-    </div>"""
-
-def _zone_card(zone_name, zone_dict, rows, cols, description):
-    free, occ, total = _count(zone_dict)
-    pct_free = int(free / total * 100)
-    bar_color = "#10B981" if pct_free > 40 else ("#F59E0B" if pct_free > 15 else "#EF4444")
-
-    slots_html = ""
-    for r in range(1, rows + 1):
-        slots_html += f'<div style="display:grid;grid-template-columns:repeat({cols},1fr);gap:6px;margin-bottom:6px;">'
-        for c in range(1, cols + 1):
-            sid = f"{zone_name[-1]}{r}{c}"
-            slots_html += _slot_html(sid, zone_dict.get(sid, False))
-        slots_html += "</div>"
-
-    return f"""
-    <div style="
-        background:var(--surface);
-        border:1px solid var(--border);
-        border-radius:var(--radius);
-        padding:1rem 1rem 0.875rem;
-        flex:1;
-        min-width:0;
-    ">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.625rem;">
-            <div>
-                <div style="font-size:0.75rem;font-weight:800;color:var(--text-1);letter-spacing:-0.01em;">{zone_name}</div>
-                <div style="font-size:0.6rem;color:var(--text-3);letter-spacing:0.05em;text-transform:uppercase;margin-top:1px;">{description}</div>
-            </div>
-            <div style="text-align:right;">
-                <div style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:{bar_color};">{free}<span style="font-size:0.65rem;color:var(--text-3);font-weight:400;">/{total}</span></div>
-                <div style="font-size:0.58rem;color:var(--text-3);">free slots</div>
-            </div>
-        </div>
-        <div style="height:3px;background:var(--surface-3);border-radius:99px;margin-bottom:0.75rem;">
-            <div style="height:100%;width:{pct_free}%;background:{bar_color};border-radius:99px;transition:width 0.4s ease;"></div>
-        </div>
-        {slots_html}
-        <div style="display:flex;gap:0.875rem;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--border);">
-            <span style="font-size:0.62rem;color:#10B981;">🟢 Available ({free})</span>
-            <span style="font-size:0.62rem;color:#EF4444;">🔴 Occupied ({occ})</span>
-        </div>
-    </div>
-    """
-
-# 3 zone cards — on desktop: side by side, mobile: stacked
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.markdown(_zone_card("Zone A", zone_a, rows=3, cols=4, description="Block 3 × 4"), unsafe_allow_html=True)
-with col2:
-    st.markdown(_zone_card("Zone B", zone_b, rows=4, cols=3, description="Block 4 × 3"), unsafe_allow_html=True)
-with col3:
-    st.markdown(_zone_card("Zone C", zone_c, rows=2, cols=6, description="Block 2 × 6"), unsafe_allow_html=True)
-
-
+render_live_parking()
 
 # ── Bookings ──
 st.markdown('<div style="height:0.5rem;"></div>', unsafe_allow_html=True)
@@ -1408,7 +1352,6 @@ if not user_has_active_or_future:
     start_dt = ist_timezone.localize(datetime.combine(booking_date, selected_entry_time))
 
     # Exit: 30-min slots strictly after entry time
-    # If entry is "Now" (current minute), build exits from next 30-min boundary onwards
     all_exit_slots = [(datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").strftime("%I:%M %p"),
                        datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").time())
                       for h in range(24) for m in (0, 30)]
@@ -1471,39 +1414,14 @@ if not user_has_active_or_future:
         else:
             st.session_state.selected_slot = slot_name
 
-    # Force st.columns to stay horizontal on mobile via CSS
-    # Then render real st.buttons --- clicks work 100% reliably
     st.markdown("""<style>
 /* Force slot columns horizontal on all screen sizes */
-[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) {
-    flex-wrap: nowrap !important;
-    overflow: hidden !important;
-}
-[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) > div {
-    min-width: 0 !important;
-    flex: 1 !important;
-}
-[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) button {
-    height: 36px !important;
-    font-size: 0.62rem !important;
-    padding: 0 !important;
-    min-height: unset !important;
-    white-space: nowrap !important;
-}
-[data-testid="stHorizontalBlock"]:has(button[kind="primary"]) {
-    flex-wrap: nowrap !important;
-    overflow: hidden !important;
-}
-[data-testid="stHorizontalBlock"]:has(button[kind="primary"]) > div {
-    min-width: 0 !important;
-    flex: 1 !important;
-}
-[data-testid="stHorizontalBlock"]:has(button[kind="primary"]) button {
-    height: 36px !important;
-    font-size: 0.62rem !important;
-    padding: 0 !important;
-    min-height: unset !important;
-}
+[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) { flex-wrap: nowrap !important; overflow: hidden !important; }
+[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) > div { min-width: 0 !important; flex: 1 !important; }
+[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) button { height: 36px !important; font-size: 0.62rem !important; padding: 0 !important; min-height: unset !important; white-space: nowrap !important; }
+[data-testid="stHorizontalBlock"]:has(button[kind="primary"]) { flex-wrap: nowrap !important; overflow: hidden !important; }
+[data-testid="stHorizontalBlock"]:has(button[kind="primary"]) > div { min-width: 0 !important; flex: 1 !important; }
+[data-testid="stHorizontalBlock"]:has(button[kind="primary"]) button { height: 36px !important; font-size: 0.62rem !important; padding: 0 !important; min-height: unset !important; }
 </style>""", unsafe_allow_html=True)
 
     for row_prefix in ['A', 'B']:
