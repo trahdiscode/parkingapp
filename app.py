@@ -1451,7 +1451,15 @@ if not user_has_active_or_future:
         return {r["slot_number"] for r in _bl.data
                 if not (r["end_datetime"] <= start_str or r["start_datetime"] >= end_str)}
 
-    blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
+    # 1. Get real bookings from Supabase
+    db_blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
+    
+    # 2. Get the current simulated "Occupied" (red) slots from the sensor
+    z_a, z_b, z_c = _get_sensor_state()
+    simulated_blocked = {slot for z in (z_a, z_b, z_c) for slot, is_occupied in z.items() if is_occupied}
+    
+    # 3. Combine them! Now both Supabase bookings AND visual red slots are blocked.
+    blocked = db_blocked.union(simulated_blocked)
 
     # Map the selected zone to its specific layout to match the Live Sensor View
     zone_configs = {
