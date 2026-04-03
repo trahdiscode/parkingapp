@@ -1120,42 +1120,49 @@ st.markdown(f"""
 # Premium Sign out tucked inside header via CSS
 st.markdown("""
 <style>
-/* Pull the button up and right-align it next to the user pill */
+/* Absolutely position the button to the top right */
 div[data-testid="stElementContainer"]:has(#premium-signout) {
     display: none;
 }
 div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: -3.8rem; /* Pulls it up vertically into the header */
-    margin-right: 140px; /* Pushes it left so it sits nicely beside the profile logo */
-    margin-bottom: 2rem; /* Creates space below it so the rest of the app isn't crushed */
-    position: relative;
-    z-index: 50;
+    position: absolute;
+    top: 1.85rem; /* Vertical alignment for mobile */
+    right: 120px; /* Pushes it just left of the profile pill */
+    z-index: 100;
+    width: auto;
 }
 div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] button {
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     color: var(--text-2) !important;
-    border-radius: 99px !important; /* Sleek pill shape */
-    padding: 0 1.25rem !important;
+    border-radius: 99px !important;
+    padding: 0 1rem !important;
     font-family: var(--font) !important;
-    font-size: 0.72rem !important;
+    font-size: 0.65rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.08em !important;
     text-transform: uppercase !important;
-    min-height: 34px !important;
-    height: 34px !important;
+    min-height: 28px !important;
+    height: 28px !important;
+    line-height: 1 !important;
     width: auto !important;
     transition: all 0.3s ease !important;
     box-shadow: none !important;
 }
 div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] button:hover {
-    background: rgba(239, 68, 68, 0.08) !important; /* Soft glowing red */
+    background: rgba(239, 68, 68, 0.08) !important;
     border-color: rgba(239, 68, 68, 0.4) !important;
     color: #EF4444 !important;
     box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15) !important;
     transform: translateY(-1px) !important;
+}
+
+/* Adjust coordinates slightly for desktop screens */
+@media (min-width: 769px) {
+    div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] {
+        top: 2.45rem;
+        right: 140px; 
+    }
 }
 </style>
 <div id="premium-signout"></div>
