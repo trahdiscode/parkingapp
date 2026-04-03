@@ -1438,7 +1438,97 @@ if not user_has_active_or_future:
                     st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), type="primary", use_container_width=True)
                 else:
                     st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), use_container_width=True)
+    # Step 2 (Zone Selection)
+    st.markdown("""
+    <div class="step-wrap" style="margin-top:1.25rem;">
+        <span class="step-num">2</span>
+        <span class="step-title">Choose a Parking Zone</span>
+    </div>
+    """, unsafe_allow_html=True)
 
+    # Use a horizontal radio button to act as the 3 selection boxes
+    selected_zone = st.radio("Select Zone", ["Zone A", "Zone B", "Zone C"], horizontal=True, label_visibility="collapsed")
+
+    # Step 3 (Slot Selection)
+    st.markdown("""
+    <div class="step-wrap" style="margin-top:1.5rem;">
+        <span class="step-num">3</span>
+        <span class="step-title">Choose an available slot</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="slot-legend">
+        <div class="legend-item"><div class="legend-dot legend-free"></div> Available</div>
+        <div class="legend-item"><div class="legend-dot legend-busy"></div> Occupied</div>
+        <div class="legend-item"><div class="legend-dot legend-selected"></div> Selected</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    @st.cache_data(ttl=15, show_spinner=False)
+    def fetch_blocked(start_str, end_str):
+        _bl = supabase.table("bookings").select("slot_number, start_datetime, end_datetime").execute()
+        return {r["slot_number"] for r in _bl.data
+                if not (r["end_datetime"] <= start_str or r["start_datetime"] >= end_str)}
+
+    blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
+
+    # Map the selected zone to its specific layout to match the Live Sensor View
+    zone_configs = {
+        "Zone A": {"prefix": "A", "rows": 3, "cols": 4},
+        "Zone B": {"prefix": "B", "rows": 4, "cols": 3},
+        "Zone C": {"prefix": "C", "rows": 2, "cols": 6},
+    }
+    
+    current_conf = zone_configs[selected_zone]
+    z_prefix = current_conf["prefix"]
+    z_rows = current_conf["rows"]
+    z_cols = current_conf["cols"]
+
+    # Clear selected slot if the user switches zones
+    if st.session_state.selected_slot and not st.session_state.selected_slot.startswith(z_prefix):
+        st.session_state.selected_slot = None
+
+    selected = st.session_state.selected_slot or ""
+
+    def handle_slot_click(slot_name):
+        if st.session_state.selected_slot == slot_name:
+            st.session_state.selected_slot = None
+        else:
+            st.session_state.selected_slot = slot_name
+
+    st.markdown("""<style>
+/* Force slot columns horizontal on all screen sizes */
+[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) { flex-wrap: nowrap !important; overflow: hidden !important; }
+[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) > div { min-width: 0 !important; flex: 1 !important; }
+[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) button { height: 36px !important; font-size: 0.62rem !important; padding: 0 !important; min-height: unset !important; white-space: nowrap !important; }
+[data-testid="stHorizontalBlock"]:has(button[kind="primary"]) { flex-wrap: nowrap !important; overflow: hidden !important; }
+[data-testid="stHorizontalBlock"]:has(button[kind="primary"]) > div { min-width: 0 !important; flex: 1 !important; }
+[data-testid="stHorizontalBlock"]:has(button[kind="primary"]) button { height: 36px !important; font-size: 0.62rem !important; padding: 0 !important; min-height: unset !important; }
+
+/* Style the radio buttons to look like clickable boxes */
+div[role="radiogroup"] { gap: 1rem; margin-bottom: 0.5rem; }
+div[role="radiogroup"] label { background: var(--surface-2); border: 1px solid var(--border); padding: 0.5rem 1.25rem; border-radius: var(--radius-sm); transition: all 0.2s; cursor: pointer; }
+div[role="radiogroup"] label:hover { border-color: var(--accent); }
+div[role="radiogroup"] label[data-checked="true"] { background: rgba(99,102,241,0.1); border-color: var(--accent); }
+</style>""", unsafe_allow_html=True)
+
+    # Render only the slots for the currently selected zone
+    for r in range(1, z_rows + 1):
+        st.markdown(f'<div class="row-label">Row {r}</div>', unsafe_allow_html=True)
+        cols = st.columns(z_cols)
+        for c in range(1, z_cols + 1):
+            s = f"{z_prefix}{r}{c}"
+            with cols[c - 1]:
+                is_blocked = s in blocked
+                is_selected = (s == selected)
+                if is_blocked:
+                    st.markdown(f'<div style="height:36px;border-radius:8px;border:none;background:linear-gradient(135deg,#EF4444 0%,#F87171 100%);color:#fff;font-size:0.88rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:Outfit,sans-serif;letter-spacing:0.01em;box-shadow:0 4px 20px rgba(239,68,68,0.25);">{s}</div>', unsafe_allow_html=True)
+                elif is_selected:
+                    st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), type="primary", use_container_width=True)
+                else:
+                    st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), use_container_width=True)
+                    
     if st.session_state.selected_slot:
         current_blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
         if st.session_state.selected_slot in current_blocked:
