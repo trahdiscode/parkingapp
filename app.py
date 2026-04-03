@@ -1381,63 +1381,6 @@ if not user_has_active_or_future:
     if next_day_note:
         st.markdown('<div class="warn-note">⚠️ Exit time is before entry --- booking extends to the next day.</div>', unsafe_allow_html=True)
 
-    # Step 2
-    st.markdown("""
-    <div class="step-wrap" style="margin-top:1.25rem;">
-        <span class="step-num">2</span>
-        <span class="step-title">Choose an available slot</span>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="slot-legend">
-        <div class="legend-item"><div class="legend-dot legend-free"></div> Available</div>
-        <div class="legend-item"><div class="legend-dot legend-busy"></div> Occupied</div>
-        <div class="legend-item"><div class="legend-dot legend-selected"></div> Selected</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    @st.cache_data(ttl=15, show_spinner=False)
-    def fetch_blocked(start_str, end_str):
-        _bl = supabase.table("bookings").select("slot_number, start_datetime, end_datetime").execute()
-        return {r["slot_number"] for r in _bl.data
-                if not (r["end_datetime"] <= start_str or r["start_datetime"] >= end_str)}
-
-    blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
-
-    slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
-    selected = st.session_state.selected_slot or ""
-
-    def handle_slot_click(slot_name):
-        if st.session_state.selected_slot == slot_name:
-            st.session_state.selected_slot = None
-        else:
-            st.session_state.selected_slot = slot_name
-
-    st.markdown("""<style>
-/* Force slot columns horizontal on all screen sizes */
-[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) { flex-wrap: nowrap !important; overflow: hidden !important; }
-[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) > div { min-width: 0 !important; flex: 1 !important; }
-[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) button { height: 36px !important; font-size: 0.62rem !important; padding: 0 !important; min-height: unset !important; white-space: nowrap !important; }
-[data-testid="stHorizontalBlock"]:has(button[kind="primary"]) { flex-wrap: nowrap !important; overflow: hidden !important; }
-[data-testid="stHorizontalBlock"]:has(button[kind="primary"]) > div { min-width: 0 !important; flex: 1 !important; }
-[data-testid="stHorizontalBlock"]:has(button[kind="primary"]) button { height: 36px !important; font-size: 0.62rem !important; padding: 0 !important; min-height: unset !important; }
-</style>""", unsafe_allow_html=True)
-
-    for row_prefix in ['A', 'B']:
-        row_slots = [f"{row_prefix}{i}" for i in range(1, 11)]
-        st.markdown(f'<div class="row-label">Row {row_prefix}</div>', unsafe_allow_html=True)
-        cols = st.columns(10)
-        for j, s in enumerate(row_slots):
-            with cols[j]:
-                is_blocked = s in blocked
-                is_selected = (s == selected)
-                if is_blocked:
-                    st.markdown(f'<div style="height:36px;border-radius:8px;border:none;background:linear-gradient(135deg,#EF4444 0%,#F87171 100%);color:#fff;font-size:0.88rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:Outfit,sans-serif;letter-spacing:0.01em;box-shadow:0 4px 20px rgba(239,68,68,0.25);">{s}</div>', unsafe_allow_html=True)
-                elif is_selected:
-                    st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), type="primary", use_container_width=True)
-                else:
-                    st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), use_container_width=True)
     # Step 2 (Zone Selection)
     st.markdown("""
     <div class="step-wrap" style="margin-top:1.25rem;">
