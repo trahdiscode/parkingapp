@@ -6,7 +6,17 @@ from streamlit_autorefresh import st_autorefresh
 import pytz
 
 # ---------- LOGO ----------
+import base64
 
+@st.cache_data
+def get_image_base64(image_path):
+    try:
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode()
+    except Exception:
+        return ""
+
+logo_base64 = get_image_base64("parking_logo_flat.png")
 # ---------- PAGE CONFIG ----------
 st.set_page_config(page_title="ParkOS", layout="wide", page_icon="🅿️", initial_sidebar_state="collapsed")
 
@@ -951,7 +961,7 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
 
     <div class="lp-card">
         <div class="lp-top">
-            <div style="width:52px;height:52px;background:linear-gradient(135deg,#6366F1,#818CF8);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 4px 16px rgba(99,102,241,0.4);flex-shrink:0;">🅿️</div>
+            <img src="data:image/png;base64,{logo_base64}" style="width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3));flex-shrink:0;">
             <div>
                 <div class="lp-brand-name">ParkOS</div>
                 <div class="lp-brand-sub">Smart Parking Management</div>
@@ -1047,7 +1057,7 @@ avatar_letter = username[0].upper() if username else "U"
 st.markdown(f"""
 <div class="app-header">
     <div class="app-brand">
-        <div style="width:38px;height:38px;background:linear-gradient(135deg,#6366F1,#818CF8);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">🅿️</div>
+       <img src="data:image/png;base64,{logo_base64}" style="width:38px;height:38px;object-fit:contain;flex-shrink:0;">
         <div>
             <div class="app-brand-name">ParkOS</div>
             <div class="app-brand-sub">Smart Parking</div>
