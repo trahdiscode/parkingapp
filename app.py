@@ -1117,12 +1117,46 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Sign out tucked neatly below header
-col_so1, col_so2, col_so3 = st.columns([3, 1, 1])
-with col_so3:
-    if st.button("Sign Out", type="secondary", use_container_width=True):
-        for key in list(st.session_state.keys()): del st.session_state[key]
-        st.rerun()
+# Premium Sign out tucked neatly below header
+st.markdown("""
+<style>
+/* Premium Right-Aligned Sign Out Button */
+div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.25rem;
+}
+div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] button {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-2) !important;
+    border-radius: 99px !important; /* Sleek pill shape */
+    padding: 0 1.25rem !important;
+    font-family: var(--font) !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    min-height: 32px !important;
+    height: 32px !important;
+    width: auto !important;
+    transition: all 0.3s ease !important;
+    box-shadow: none !important;
+}
+div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] button:hover {
+    background: rgba(239, 68, 68, 0.08) !important; /* Soft glowing red */
+    border-color: rgba(239, 68, 68, 0.4) !important;
+    color: #EF4444 !important;
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15) !important;
+    transform: translateY(-1px) !important;
+}
+</style>
+<div id="premium-signout"></div>
+""", unsafe_allow_html=True)
+
+if st.button("Sign Out", key="premium_logout"):
+    for key in list(st.session_state.keys()): del st.session_state[key]
+    st.rerun()
 
 # Vehicle number gate
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
