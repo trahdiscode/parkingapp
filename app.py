@@ -880,15 +880,36 @@ if 'show_booking_flow' not in st.session_state:
 
 # ── LIVE PARKING SENSOR FUNCTIONS ──
 def _get_sensor_state(seed_offset=0):
-    """Generate deterministic pseudo-random slot occupancy that changes every 10 minutes."""
-    bucket = int(_time.time() // 600) + seed_offset  
-    def _occupied(slot_id):
-        h = int(hashlib.md5(f"{bucket}-{slot_id}".encode()).hexdigest(), 16)
-        return (h % 100) < 45  # ~45% occupancy
+    """Generate pseudo-random occupancy AND merge with real active bookings."""
+    
+    # 1. Fetch real active bookings from Supabase
+    now_str = datetime.now(ist_timezone).strftime("%Y-%m-%d %H:%M")
+    try:
+        _res = supabase.table("bookings").select("slot_number, start_datetime, end_datetime").execute()
+        # A slot is really occupied if the current time falls inside its booked window
+        real_active_slots = {
+            r["slot_number"] for r in _res.data 
+            if r["start_datetime"] <= now_str <= r["end_datetime"]
+        }
+    except Exception:
+        real_active_slots = set()
 
-    zone_a = {f"A{r}{c}": _occupied(f"zA{r}{c}") for r in range(1, 4) for c in range(1, 5)}
-    zone_b = {f"B{r}{c}": _occupied(f"zB{r}{c}") for r in range(1, 5) for c in range(1, 4)}
-    zone_c = {f"C{r}{c}": _occupied(f"zC{r}{c}") for r in range(1, 3) for c in range(1, 7)}
+    # 2. Simulated pseudo-random generator
+    bucket = int(_time.time() // 600) + seed_offset  
+    
+    def _is_occupied(hash_id, real_id):
+        # Force RED if it is actively booked by a real user right now
+        if real_id in real_active_slots:
+            return True
+            
+        # Otherwise, fall back to the random 10-minute sensor simulation
+        h = int(hashlib.md5(f"{bucket}-{hash_id}".encode()).hexdigest(), 16)
+        return (h % 100) < 45
+
+    # 3. Build the zones
+    zone_a = {f"A{r}{c}": _is_occupied(f"zA{r}{c}", f"A{r}{c}") for r in range(1, 4) for c in range(1, 5)}
+    zone_b = {f"B{r}{c}": _is_occupied(f"zB{r}{c}", f"B{r}{c}") for r in range(1, 5) for c in range(1, 4)}
+    zone_c = {f"C{r}{c}": _is_occupied(f"zC{r}{c}", f"C{r}{c}") for r in range(1, 3) for c in range(1, 7)}
 
     return zone_a, zone_b, zone_c
 
