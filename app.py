@@ -879,31 +879,17 @@ if 'show_booking_flow' not in st.session_state:
 
 
 # ── LIVE PARKING SENSOR FUNCTIONS ──
-def _get_sensor_state():
-    """Fetch real-time active bookings from Supabase to show true occupancy."""
-    now_str = datetime.now(ist_timezone).strftime("%Y-%m-%d %H:%M")
-    
-    try:
-        # Fetch all bookings from Supabase
-        res = supabase.table("bookings").select("slot_number, start_datetime, end_datetime").execute()
-        
-        # A slot is occupied right now ONLY if current time is within its booked window
-        active_slots = {
-            r["slot_number"] for r in res.data 
-            if r["start_datetime"] <= now_str < r["end_datetime"]
-        }
-    except Exception:
-        active_slots = set()
-
-    # Helper to check if a slot is in the active list
+def _get_sensor_state(seed_offset=0):
+    """Generate deterministic pseudo-random slot occupancy that changes every 10 minutes."""
+    bucket = int(_time.time() // 600) + seed_offset  
     def _occupied(slot_id):
-        return slot_id in active_slots
+        h = int(hashlib.md5(f"{bucket}-{slot_id}".encode()).hexdigest(), 16)
+        return (h % 100) < 45  # ~45% occupancy
 
-    # Map the real database slots to the visual zones
-    zone_a = {f"A{r}{c}": _occupied(f"A{r}{c}") for r in range(1, 4) for c in range(1, 5)}
-    zone_b = {f"B{r}{c}": _occupied(f"B{r}{c}") for r in range(1, 5) for c in range(1, 4)}
-    zone_c = {f"C{r}{c}": _occupied(f"C{r}{c}") for r in range(1, 3) for c in range(1, 7)}
-    
+    zone_a = {f"A{r}{c}": _occupied(f"zA{r}{c}") for r in range(1, 4) for c in range(1, 5)}
+    zone_b = {f"B{r}{c}": _occupied(f"zB{r}{c}") for r in range(1, 5) for c in range(1, 4)}
+    zone_c = {f"C{r}{c}": _occupied(f"zC{r}{c}") for r in range(1, 3) for c in range(1, 7)}
+
     return zone_a, zone_b, zone_c
 
 def _count(zone): 
