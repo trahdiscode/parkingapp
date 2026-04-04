@@ -302,11 +302,14 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
     [data-testid="stHeader"] { display: none !important; }
     </style>
     """, unsafe_allow_html=True)
-    admin_count_res = supabase.table("admins").select("id").eq("status", "active").execute()
+    
+    # Check if ANY admins exist
+    admin_count_res = supabase.table("admins").select("id").neq("status", "removed").execute()
     admin_count = len(admin_count_res.data) if admin_count_res.data else 0
 
     if 'admin_logged_in' not in st.session_state:
         st.session_state.admin_logged_in = False
+        st.session_state.admin_role = None
 
     st.markdown("""
     <div style="max-width:480px; margin: 1rem auto 1.5rem; background: linear-gradient(145deg, #0D0F14 0%, #111318 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 24px; padding: 2.5rem 2.5rem 2rem; box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 32px 64px rgba(0,0,0,0.6); text-align: center; position: relative; overflow: hidden;">
@@ -318,28 +321,89 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
         <div style="color:#4B5563; font-family:'Inter',sans-serif; font-size:0.82rem; line-height:1.5;">System Management & Access Control</div>
     </div>
     """, unsafe_allow_html=True)
+
     if st.session_state.admin_logged_in:
-        st.markdown("#### Pending Admin Requests")
         
-        pending = supabase.table("admins").select("*").eq("status", "pending").execute()
-        if pending.data:
-            for req in pending.data:
-                col1, col2, col3 = st.columns([3, 1, 1])
-                with col1: st.markdown(f"**{req['username']}**<br><span style='font-size:0.7rem;color:gray;'>Requested Access</span>", unsafe_allow_html=True)
-                with col2:
-                    if st.button("✅ Approve", key=f"app_{req['id']}", type="primary"):
-                        supabase.table("admins").update({"status": "active"}).eq("id", req["id"]).execute()
-                        st.rerun()
-                with col3:
-                    if st.button("❌ Deny", key=f"den_{req['id']}"):
-                        supabase.table("admins").delete().eq("id", req["id"]).execute()
-                        st.rerun()
+        # ── ROOT ONLY CONTROLS ──
+        if st.session_state.admin_role == "root":
+            st.markdown("#### Root Admin Controls")
+            
+            t_req, t_manage = st.tabs(["Pending Requests", "Manage Admins"])
+            
+            with t_req:
+                pending = supabase.table("admins").select("*").eq("status", "pending").execute()
+                if pending.data:
+                    for req in pending.data:
+                        col1, col2, col3 = st.columns([3, 1, 1])
+                        with col1: st.markdown(f"**{req['username']}**<br><span style='font-size:0.7rem;color:gray;'>Requested Access</span>", unsafe_allow_html=True)
+                        with col2:
+                            if st.button("✅ Approve", key=f"app_{req['id']}", type="primary"):
+                                supabase.table("admins").update({"status": "active"}).eq("id", req["id"]).execute()
+                                st.rerun()
+                        with col3:
+                            if st.button("❌ Deny", key=f"den_{req['id']}"):
+                                supabase.table("admins").delete().eq("id", req["id"]).execute()
+                                st.rerun()
+                else:
+                    st.success("No pending requests at this time.")
+                    
+            with t_manage:
+                all_other_admins = supabase.table("admins").select("*").in_("status", ["active", "removed"]).neq("status", "root").execute()
+                if all_other_admins.data:
+                    for adm in all_other_admins.data:
+                        col_info, col_act = st.columns([3, 1])
+                        with col_info: 
+                            status_color = "green" if adm['status'] == "active" else "red"
+                            st.markdown(f"**{adm['username']}**<br><span style='font-size:0.7rem;color:{status_color}; text-transform:uppercase;'>{adm['status']}</span>", unsafe_allow_html=True)
+                        with col_act:
+                            if adm['status'] == 'active':
+                                if st.button("Remove", key=f"rm_{adm['id']}"):
+                                    supabase.table("admins").update({"status": "removed"}).eq("id", adm['id']).execute()
+                                    st.rerun()
+                            elif adm['status'] == 'removed':
+                                if st.button("Restore", key=f"res_{adm['id']}"):
+                                    supabase.table("admins").update({"status": "active"}).eq("id", adm['id']).execute()
+                                    st.rerun()
+                else:
+                    st.info("No other admins currently exist.")
+
+            st.markdown("<br><hr style='border-color: rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
+
+        # ── GLOBAL ADMIN VIEWS (Root + Active) ──
+        
+        # 1. Recent Bookings (Last 24 Hours)
+        st.markdown("#### System Activity (Last 24 Hours)")
+        twenty_four_hours_ago = (datetime.now(ist_timezone) - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M")
+        recent_bookings = supabase.table("bookings").select("*").gte("start_datetime", twenty_four_hours_ago).order("start_datetime", desc=True).execute().data
+        
+        if recent_bookings:
+            # Fetch usernames to match with user_id
+            user_ids = list(set([b["user_id"] for b in recent_bookings]))
+            users_res = supabase.table("users").select("id, username").in_("id", user_ids).execute().data
+            user_map = {u["id"]: u["username"] for u in users_res} if users_res else {}
+
+            for b in recent_bookings:
+                u_name = user_map.get(b["user_id"], "Unknown User")
+                s_time = parse_dt(b["start_datetime"]).strftime('%b %d, %I:%M %p')
+                e_time = parse_dt(b["end_datetime"]).strftime('%I:%M %p')
+                
+                st.markdown(f"""
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 0.85rem; font-weight: 600; color: #F3F4F6;">{u_name}</div>
+                        <div style="font-size: 0.7rem; color: #9CA3AF; font-family: monospace;">{s_time} → {e_time}</div>
+                    </div>
+                    <div style="background: rgba(99,102,241,0.15); color: #818CF8; border: 1px solid rgba(99,102,241,0.3); padding: 4px 10px; border-radius: 6px; font-family: monospace; font-size: 0.8rem; font-weight: 600;">
+                        {b["slot_number"]}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
         else:
-            st.success("No pending requests at this time.")
+            st.info("No bookings in the last 24 hours.")
 
         st.markdown("<br><hr style='border-color: rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
         
-        # --- SYSTEM SETTINGS ---
+        # 2. System Settings
         st.markdown("#### System Settings")
         
         current_res = supabase.table("settings").select("setting_value").eq("setting_key", "sensor_interval_minutes").execute()
@@ -361,18 +425,20 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
         st.markdown("<br><hr style='border-color: rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
         if st.button("🔒 Exit Command Center", use_container_width=True):
             st.session_state.admin_logged_in = False
+            st.session_state.admin_role = None
             st.query_params.clear()
             st.rerun()
 
     else:
         if admin_count == 0:
-            # STATE 1: NO ADMINS EXIST YET
+            # STATE 1: NO ADMINS EXIST YET - CREATE ROOT
             st.markdown('<div style="text-align:center; color:#A0A0A0; margin-bottom:1rem;">Initialize the Root Admin Account</div>', unsafe_allow_html=True)
             u = st.text_input("Root Username", key="root_u")
             p = st.text_input("Root Password", type="password", key="root_p")
             if st.button("Initialize Root Admin", type="primary", use_container_width=True):
                 if u and p:
-                    supabase.table("admins").insert({"username": u, "password_hash": hash_password(p), "status": "active"}).execute()
+                    # Note the status is set to 'root'
+                    supabase.table("admins").insert({"username": u, "password_hash": hash_password(p), "status": "root"}).execute()
                     st.success("✅ Root Admin created! Please log in.")
                     st.rerun()
         else:
@@ -383,12 +449,14 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
                 u = st.text_input("Username", key="al_u")
                 p = st.text_input("Password", type="password", key="al_p")
                 if st.button("Authorize", type="primary", use_container_width=True):
-                    res = supabase.table("admins").select("id").eq("username", u).eq("password_hash", hash_password(p)).eq("status", "active").execute()
+                    # Check for both root and active statuses, explicitly excluding removed
+                    res = supabase.table("admins").select("id, status").eq("username", u).eq("password_hash", hash_password(p)).in_("status", ["active", "root"]).execute()
                     if res.data:
                         st.session_state.admin_logged_in = True
+                        st.session_state.admin_role = res.data[0]["status"] # Will be 'root' or 'active'
                         st.rerun()
                     else:
-                        st.error("Authentication failed or access pending.")
+                        st.error("Authentication failed, access pending, or account removed.")
             
             with t2:
                 u_req = st.text_input("Desired Username", key="ar_u")
@@ -408,7 +476,6 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
             st.query_params.clear()
             st.rerun()
     st.stop() # Prevents the rest of the standard app from loading!
-
 
 # ── LIVE PARKING SENSOR FUNCTIONS ──
 @st.cache_data(ttl=30, show_spinner=False)
