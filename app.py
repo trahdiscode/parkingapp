@@ -297,7 +297,7 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
         0 0 0 1px rgba(255,255,255,0.03) inset,
         0 1px 0 rgba(212,175,55,0.15) inset;
     max-width: 520px;
-    margin: 3rem auto 3rem;
+    margin: 1rem auto 1.5rem;
     text-align: center;
     position: relative;
     overflow: hidden;
