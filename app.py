@@ -281,26 +281,23 @@ if 'show_booking_flow' not in st.session_state:
 
 # ── SECRET ADMIN ROUTING & UI ──
 if "mode" in st.query_params and st.query_params["mode"] == "admin":
-    #Ultra-Premium Admin Styling 
-
-    # Check if any active admins exist
-    admin_count_res = supabase.table("admins").select("id").eq("status", "active").execute()
-    admin_count = len(admin_count_res.data) if admin_count_res.data else 0
-
-    if 'admin_logged_in' not in st.session_state:
-        st.session_state.admin_logged_in = False
-
-    # Render the unified header banner
     st.markdown("""
-    <div style="max-width:480px; margin: 1rem auto 1.5rem; background: linear-gradient(145deg, #0D0F14 0%, #111318 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 24px; padding: 2.5rem 2.5rem 2rem; box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 32px 64px rgba(0,0,0,0.6); text-align: center; position: relative; overflow: hidden;">
-         <div style="display:inline-flex; align-items:center; gap:6px; padding:5px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:99px; color:#6B7280; font-family:'Inter',sans-serif; font-size:0.6rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; margin-bottom:1.25rem;">
-             <span style="width:5px; height:5px; background:#22C55E; border-radius:50%; display:inline-block; box-shadow:0 0 8px rgba(34,197,94,0.6);"></span>
-             Secure Portal
-         </div>
-         <div style="font-family:'Inter',sans-serif; font-size:2.4rem; font-weight:700; letter-spacing:-0.04em; color:#F9FAFB; margin-bottom:0.4rem; line-height:1.1;">Command Center</div>
-        <div style="color:#4B5563; font-family:'Inter',sans-serif; font-size:0.82rem; line-height:1.5;">System Management & Access Control</div>
-     </div>
-     """, unsafe_allow_html=True)
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    .stTabs [data-baseweb="tab-highlight"] { display: none !important; }
+    .stTabs [data-baseweb="tab-border"] { background-color: rgba(255,255,255,0.06) !important; }
+    .stTabs [data-baseweb="tab-list"] { background: #0D0F14 !important; border: 1px solid rgba(255,255,255,0.06) !important; border-radius: 12px !important; padding: 4px !important; gap: 2px !important; }
+    .stTabs [data-baseweb="tab"] { color: #4B5563 !important; font-family: 'Inter', sans-serif !important; font-size: 0.8rem !important; font-weight: 500 !important; border-radius: 8px !important; }
+    .stTabs [aria-selected="true"] { background: #1A1D24 !important; color: #F9FAFB !important; box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important; }
+    .stTextInput > label { font-family: 'Inter', sans-serif !important; font-size: 0.68rem !important; font-weight: 500 !important; letter-spacing: 0.06em !important; color: #4B5563 !important; text-transform: uppercase !important; }
+    .stTextInput input { background: #0A0C10 !important; border: 1px solid rgba(255,255,255,0.07) !important; border-radius: 10px !important; color: #F3F4F6 !important; font-family: 'Inter', sans-serif !important; font-size: 0.88rem !important; min-height: 46px !important; }
+    .stTextInput input:focus { border-color: rgba(99,102,241,0.5) !important; box-shadow: 0 0 0 3px rgba(99,102,241,0.08) !important; }
+    .stButton > button[kind="primary"] { background: #4F46E5 !important; border: none !important; color: #fff !important; font-family: 'Inter', sans-serif !important; font-weight: 600 !important; font-size: 0.85rem !important; min-height: 46px !important; border-radius: 10px !important; box-shadow: 0 4px 16px rgba(79,70,229,0.25) !important; }
+    .stButton > button[kind="primary"]:hover { background: #4338CA !important; box-shadow: 0 6px 20px rgba(79,70,229,0.35) !important; }
+    .stButton > button[kind="secondary"] { background: transparent !important; border: 1px solid rgba(255,255,255,0.07) !important; color: #4B5563 !important; border-radius: 10px !important; font-family: 'Inter', sans-serif !important; }
+    .stButton > button[kind="secondary"]:hover { border-color: rgba(255,255,255,0.12) !important; color: #9CA3AF !important; }
+    </style>
+    """, unsafe_allow_html=True)
 
     if st.session_state.admin_logged_in:
         st.markdown("#### Pending Admin Requests")
