@@ -1250,90 +1250,15 @@ st.markdown(f"""
     </div>
 </div>
 
-<img src="x" style="display:none;" onerror="
-    if (!window.adminTrackerAdded) {{
-        window.adminTrackerAdded = true;
-        window.adminClicks = [];
-        window.document.addEventListener('click', function(e) {{
-            if (e.target.closest('#secret-admin-trigger')) {{
-                var now = Date.now();
-                window.adminClicks.push(now);
-                window.adminClicks = window.adminClicks.filter(function(t) {{ return now - t <= 20000; }});
-                
-                if (window.adminClicks.length >= 10) {{
-                    window.location.search = '?mode=admin';
-                }}
-            }}
-        }});
-    }}
-">
+<img src="x" style="display:none;" onerror="if(!window.adminTrackerAdded){{window.adminTrackerAdded=true;window.adminClicks=[];window.parent.document.addEventListener('click',function(e){{if(e.target.closest('#secret-admin-trigger')){{var now=Date.now();window.adminClicks.push(now);window.adminClicks=window.adminClicks.filter(function(t){{return now-t<=20000;}});if(window.adminClicks.length>=10){{window.parent.location.search='?mode=admin';}}}}}});}}">
 """, unsafe_allow_html=True)
 
-if st.button("Sign Out", key="premium_logout"):
-    for key in list(st.session_state.keys()): del st.session_state[key]
-    st.rerun()
-
-# Vehicle number gate
-if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
-    st.markdown("""
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-top:1rem;">
-        <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:0.5rem;">One-time Setup</div>
-        <div style="font-size:1.05rem;font-weight:700;color:var(--text-1);margin-bottom:0.375rem;">Register Your Vehicle</div>
-        <div style="font-size:0.82rem;color:var(--text-2);margin-bottom:1.25rem;">Your vehicle number will be linked to all future bookings.</div>
-    </div>
-    """, unsafe_allow_html=True)
-    v = st.text_input("Vehicle Number", placeholder="e.g., TN01 AB1234")
-    if st.button("Save & Continue →", type="primary", use_container_width=True):
-        if v.strip():
-            supabase.table("users").update({"vehicle_number": v.upper()}).eq("id", st.session_state.user_id).execute()
-            st.session_state.vehicle_number = v.upper(); st.rerun()
-        else:
-            st.error("Please enter a valid vehicle number.")
-    st.stop()
-
-# ── Current time ──
-now_dt_fresh_ist = datetime.now(ist_timezone).replace(second=0, microsecond=0)
-now_dt = now_dt_fresh_ist
-earliest_allowed_dt_ist = get_next_30min_slot_tz(now_dt_fresh_ist)
-
-# ── Fetch bookings (cached for 30s to reduce Supabase calls) ──
-@st.cache_data(ttl=30, show_spinner=False)
-def fetch_bookings(user_id):
-    res = supabase.table("bookings").select("id, slot_number, start_datetime, end_datetime").eq("user_id", user_id).order("start_datetime").execute()
-    return [(r["id"], r["slot_number"], r["start_datetime"], r["end_datetime"]) for r in res.data]
-
-all_user_bookings = fetch_bookings(st.session_state.user_id)
-
-total_bookings = len(all_user_bookings)
-user_current_future = [b for b in all_user_bookings if parse_dt(b[3]) > now_dt]
-past_bookings_list = sorted(
-    [b for b in all_user_bookings if parse_dt(b[3]) <= now_dt],
-    key=lambda x: x[2], reverse=True
-)
-active_booking = next(
-    (b for b in user_current_future if parse_dt(b[2]) <= now_dt <= parse_dt(b[3])), None
-)
-user_has_active_or_future = bool(user_current_future)
-upcoming_count = len([b for b in user_current_future if parse_dt(b[2]) > now_dt])
-
-# ── Overview ──
-st.markdown('<div style="height:1.25rem;"></div>', unsafe_allow_html=True)
-st.markdown('<div class="section-label">Overview</div>', unsafe_allow_html=True)
-
-# Stats row
-st.markdown(f"""
-<div class="stats-row">
-    <div class="stat-card">
-        <div class="stat-label">Total Bookings</div>
-        <div class="stat-value accent">{total_bookings}</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Upcoming</div>
-        <div class="stat-value green">{upcoming_count}</div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
+# Original, clean Sign Out button tucked neatly below header
+col_so1, col_so2, col_so3 = st.columns([3, 1, 1])
+with col_so3:
+    if st.button("Sign Out", type="secondary", use_container_width=True):
+        for key in list(st.session_state.keys()): del st.session_state[key]
+        st.rerun()
 # Active session
 if active_booking:
     _, slot_num, start_str, end_str = active_booking
