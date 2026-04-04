@@ -75,11 +75,8 @@ html, body, .stApp { background: var(--bg)!important; font-family: var(--font); 
 .stApp::before { content: ''; position: fixed; inset: 0; background: var(--bg-grad); pointer-events: none; z-index: 0; }
 .main.block-container { padding: 1.5rem 1.25rem 4rem!important; max-width: 480px!important; margin: 0 auto!important; position: relative; z-index: 1; }
 @media (min-width: 769px) { .main.block-container { padding: 2rem 2rem 4rem!important; max-width: 900px!important; } }
-.main.block-container {
-    max-width: 700px !important;
-    padding-top: 0rem !important;
-    margin-top: -6rem !important;
-}
+.main.block-container { max-width: 900px !important; }
+
 p, li { color: var(--text-1); font-size: 0.9rem; line-height: 1.6; }
 ::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -820,7 +817,7 @@ user_has_active_or_future = bool(user_current_future)
 upcoming_count = len([b for b in user_current_future if parse_dt(b[2]) > now_dt])
 
 # ── Overview ──
-st.markdown('<div style="height:1.25rem;"></div>', unsafe_allow_html=True)
+st.markdown('<div style="height:4rem;"></div>', unsafe_allow_html=True)
 st.markdown('<div class="section-label">Overview</div>', unsafe_allow_html=True)
 
 # Stats row
