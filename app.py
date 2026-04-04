@@ -570,15 +570,8 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
     else:
         # --- LOGIN / REGISTER CARD ---
         st.markdown('<div class="login-wrap">', unsafe_allow_html=True)
-        st.markdown(f"""
+        st.markdown("""
         <div class="lp-card">
-            <div class="lp-top">
-                <img src="data:image/png;base64,{logo_base64}" style="width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3));flex-shrink:0;">
-                <div>
-                    <div class="lp-brand-name">ParkOS</div>
-                    <div class="lp-brand-sub">Smart Parking Management</div>
-                </div>
-            </div>
         """, unsafe_allow_html=True)
 
         if st.session_state.auth_mode == 'signin':
