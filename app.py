@@ -298,7 +298,11 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
     .stButton > button[kind="secondary"]:hover { border-color: rgba(255,255,255,0.12) !important; color: #9CA3AF !important; }
     </style>
     """, unsafe_allow_html=True)
+    admin_count_res = supabase.table("admins").select("id").eq("status", "active").execute()
+    admin_count = len(admin_count_res.data) if admin_count_res.data else 0
 
+    if 'admin_logged_in' not in st.session_state:
+        st.session_state.admin_logged_in = False
     if st.session_state.admin_logged_in:
         st.markdown("#### Pending Admin Requests")
         
