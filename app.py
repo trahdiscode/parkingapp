@@ -1233,7 +1233,6 @@ username = st.session_state.get('username', 'User')
 avatar_letter = username[0].upper() if username else "U"
 
 # Header --- fully in HTML, sign out uses a query param trick via button hidden below
-# Header --- fully in HTML, sign out uses a query param trick via button hidden below
 st.markdown(f"""
 <div class="app-header">
     <div class="app-brand">
@@ -1251,65 +1250,23 @@ st.markdown(f"""
     </div>
 </div>
 
-<script>
-(function() {{
-    var clicks = [];
-    window.parent.document.addEventListener('click', function(e) {{
-        if (e.target.closest('#secret-admin-trigger')) {{
-            var now = Date.now();
-            clicks.push(now);
-            // Remove clicks older than 20 seconds (20000 ms)
-            clicks = clicks.filter(function(t) {{ return now - t <= 20000; }});
-            
-            // If 10 clicks within 20 seconds, blast off to Admin mode!
-            if (clicks.length >= 10) {{
-                window.parent.location.search = '?mode=admin';
+<img src="x" style="display:none;" onerror="
+    if (!window.adminTrackerAdded) {{
+        window.adminTrackerAdded = true;
+        window.adminClicks = [];
+        window.document.addEventListener('click', function(e) {{
+            if (e.target.closest('#secret-admin-trigger')) {{
+                var now = Date.now();
+                window.adminClicks.push(now);
+                window.adminClicks = window.adminClicks.filter(function(t) {{ return now - t <= 20000; }});
+                
+                if (window.adminClicks.length >= 10) {{
+                    window.location.search = '?mode=admin';
+                }}
             }}
-        }}
-    }});
-}})();
-</script>
-""", unsafe_allow_html=True)
-# Premium Sign out tucked neatly below header
-st.markdown("""
-<style>
-/* Hide the anchor div */
-div[data-testid="stElementContainer"]:has(#premium-signout) {
-    display: none;
-}
-/* Premium Right-Aligned Sign Out Button, placed naturally below header */
-div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
-}
-div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] button {
-    background: rgba(255, 255, 255, 0.04) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: var(--text-2) !important;
-    border-radius: 99px !important; /* Sleek pill shape */
-    padding: 0 1.25rem !important;
-    font-family: var(--font) !important;
-    font-size: 0.72rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.08em !important;
-    text-transform: uppercase !important;
-    min-height: 32px !important;
-    height: 32px !important;
-    width: auto !important;
-    transition: all 0.3s ease !important;
-    box-shadow: none !important;
-}
-div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] button:hover {
-    background: rgba(239, 68, 68, 0.08) !important; /* Soft glowing red */
-    border-color: rgba(239, 68, 68, 0.4) !important;
-    color: #EF4444 !important;
-    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15) !important;
-    transform: translateY(-1px) !important;
-}
-</style>
-<div id="premium-signout"></div>
+        }});
+    }}
+">
 """, unsafe_allow_html=True)
 
 if st.button("Sign Out", key="premium_logout"):
