@@ -632,54 +632,49 @@ if 'username' not in st.session_state:
 username = st.session_state.get('username', 'User')
 avatar_letter = username[0].upper() if username else "U"
 
-# Header --- fully in HTML (Clean, no JS inside the markdown)
-st.markdown(f"""
-<div class="app-header">
-    <div class="app-brand">
+# Header Layout using columns to isolate the interactive Javascript
+col_h1, col_h2 = st.columns([3, 1])
+
+with col_h1:
+    st.markdown(f"""
+    <div style="display:flex; align-items:center; gap:0.75rem; padding: 1rem 0 0.5rem;">
        <img src="data:image/png;base64,{logo_base64}" style="width:38px;height:38px;object-fit:contain;flex-shrink:0;">
         <div>
-            <div class="app-brand-name">ParkOS</div>
-            <div class="app-brand-sub">Smart Parking</div>
+            <div style="font-size: 1.4rem; font-weight: 800; color: var(--text-1); letter-spacing: -0.04em; line-height: 1;">ParkOS</div>
+            <div style="font-size: 0.58rem; font-weight: 600; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; line-height: 1; margin-top: 2px;">Smart Parking</div>
         </div>
     </div>
-    <div style="display:flex;align-items:center;gap:0.625rem;">
-        <div class="user-pill" id="secret-admin-trigger" style="cursor:pointer; user-select:none;">
-            <div class="user-avatar">{avatar_letter}</div>
-            {username}
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-# INVISIBLE JAVASCRIPT TRACKER (Bypasses Markdown completely)
-components.html("""
-<script>
-const parentDoc = window.parent.document;
-if (!window.parent.adminTrackerAdded) {
-    window.parent.adminTrackerAdded = true;
+with col_h2:
+    # The user pill is now its own secure HTML iframe. This avoids ALL Streamlit security blocks!
+    components.html(f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&display=swap');
+    body {{ margin: 0; padding: 0; overflow: hidden; font-family: 'Outfit', sans-serif; display: flex; justify-content: flex-end; align-items: center; height: 75px; }}
+    .user-pill {{ background: #161923; border: 1px solid rgba(255,255,255,0.06); border-radius: 99px; padding: 5px 12px 5px 6px; display: flex; align-items: center; gap: 7px; font-size: 0.78rem; font-weight: 500; color: #9397B0; cursor: pointer; user-select: none; transition: border-color 0.2s; }}
+    .user-pill:hover {{ border-color: rgba(99,102,241,0.4); }}
+    .user-avatar {{ width: 24px; height: 24px; background: linear-gradient(135deg, #6366F1 0%, #818CF8 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; color: white; }}
+    </style>
+    <div class="user-pill" id="secret-pill">
+        <div class="user-avatar">{avatar_letter}</div>
+        {username}
+    </div>
+    <script>
     let clicks = [];
-    parentDoc.addEventListener('click', function(e) {
-        let trigger = e.target.closest('#secret-admin-trigger');
-        if (trigger) {
-            let now = Date.now();
-            clicks.push(now);
-            clicks = clicks.filter(t => now - t <= 20000); // Keep clicks within 20 seconds
-            
-            if (clicks.length >= 10) {
-                // Trigger the Easter Egg!
-                let url = new URL(window.parent.location.href);
-                url.searchParams.set('mode', 'admin');
-                window.parent.location.href = url.toString();
-            }
-        }
-    });
-}
-</script>
-""", height=0, width=0)
+    document.getElementById('secret-pill').addEventListener('click', function() {{
+        let now = Date.now();
+        clicks.push(now);
+        clicks = clicks.filter(t => now - t <= 20000); // Keep clicks within 20 seconds
+        if (clicks.length >= 10) {{
+            window.top.location.search = '?mode=admin';
+        }}
+    }});
+    </script>
+    """, height=75)
 
-if st.button("Sign Out", key="premium_logout"):
-    for key in list(st.session_state.keys()): del st.session_state[key]
-    st.rerun()
+# Restore the header bottom border
+st.markdown('<div style="border-bottom: 1px solid var(--border); margin-top: -1.25rem; margin-bottom: 0.25rem;"></div>', unsafe_allow_html=True)
 
 # Vehicle number gate
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
