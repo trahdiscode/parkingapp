@@ -337,11 +337,11 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
                         col1, col2, col3 = st.columns([3, 1, 1])
                         with col1: st.markdown(f"**{req['username']}**<br><span style='font-size:0.7rem;color:gray;'>Requested Access</span>", unsafe_allow_html=True)
                         with col2:
-                            if st.button("✅ Approve", key=f"app_{req['id']}", type="primary"):
+                            if st.button("Approve", key=f"app_{req['id']}", type="primary"):
                                 supabase.table("admins").update({"status": "active"}).eq("id", req["id"]).execute()
                                 st.rerun()
                         with col3:
-                            if st.button("❌ Deny", key=f"den_{req['id']}"):
+                            if st.button("Deny", key=f"den_{req['id']}"):
                                 supabase.table("admins").delete().eq("id", req["id"]).execute()
                                 st.rerun()
                 else:
