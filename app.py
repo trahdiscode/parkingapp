@@ -7,6 +7,7 @@ import pytz
 import base64
 import time as _time
 import re
+import streamlit.components.v1 as components
 
 # ---------- LOGO ----------
 @st.cache_data
@@ -631,7 +632,7 @@ if 'username' not in st.session_state:
 username = st.session_state.get('username', 'User')
 avatar_letter = username[0].upper() if username else "U"
 
-# Header --- fully in HTML, with INLINE JavaScript for bulletproof clicking
+# Header --- fully in HTML (Clean, no JS inside the markdown)
 st.markdown(f"""
 <div class="app-header">
     <div class="app-brand">
@@ -642,15 +643,39 @@ st.markdown(f"""
         </div>
     </div>
     <div style="display:flex;align-items:center;gap:0.625rem;">
-        <div class="user-pill" 
-             style="cursor:pointer; user-select:none;" 
-             onclick="window.aClicks = window.aClicks || []; var n = Date.now(); window.aClicks.push(n); window.aClicks = window.aClicks.filter(t => n - t <= 20000); if(window.aClicks.length >= 10) {{ window.parent.location.search = '?mode=admin'; }}">
+        <div class="user-pill" id="secret-admin-trigger" style="cursor:pointer; user-select:none;">
             <div class="user-avatar">{avatar_letter}</div>
             {username}
         </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+# INVISIBLE JAVASCRIPT TRACKER (Bypasses Markdown completely)
+components.html("""
+<script>
+const parentDoc = window.parent.document;
+if (!window.parent.adminTrackerAdded) {
+    window.parent.adminTrackerAdded = true;
+    let clicks = [];
+    parentDoc.addEventListener('click', function(e) {
+        let trigger = e.target.closest('#secret-admin-trigger');
+        if (trigger) {
+            let now = Date.now();
+            clicks.push(now);
+            clicks = clicks.filter(t => now - t <= 20000); // Keep clicks within 20 seconds
+            
+            if (clicks.length >= 10) {
+                // Trigger the Easter Egg!
+                let url = new URL(window.parent.location.href);
+                url.searchParams.set('mode', 'admin');
+                window.parent.location.href = url.toString();
+            }
+        }
+    });
+}
+</script>
+""", height=0, width=0)
 
 if st.button("Sign Out", key="premium_logout"):
     for key in list(st.session_state.keys()): del st.session_state[key]
