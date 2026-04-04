@@ -300,6 +300,8 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
     .stButton > button[kind="primary"]:hover { background: #4338CA !important; box-shadow: 0 6px 20px rgba(79,70,229,0.35) !important; }
     .stButton > button[kind="secondary"] { background: transparent !important; border: 1px solid rgba(255,255,255,0.07) !important; color: #4B5563 !important; border-radius: 10px !important; font-family: 'Inter', sans-serif !important; }
     .stButton > button[kind="secondary"]:hover { border-color: rgba(255,255,255,0.12) !important; color: #9CA3AF !important; }
+    [data-testid="stAppViewContainer"] { padding-top: 0 !important; }
+    [data-testid="stHeader"] { display: none !important; }
     </style>
     """, unsafe_allow_html=True)
     admin_count_res = supabase.table("admins").select("id").eq("status", "active").execute()
