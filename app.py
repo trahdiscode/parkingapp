@@ -1233,6 +1233,7 @@ username = st.session_state.get('username', 'User')
 avatar_letter = username[0].upper() if username else "U"
 
 # Header --- fully in HTML, sign out uses a query param trick via button hidden below
+# Header --- fully in HTML, sign out uses a query param trick via button hidden below
 st.markdown(f"""
 <div class="app-header">
     <div class="app-brand">
@@ -1253,42 +1254,22 @@ st.markdown(f"""
 <script>
 (function() {{
     var clicks = [];
-    var trigger = document.getElementById('secret-admin-trigger');
-    if (trigger) {{
-        trigger.addEventListener('click', function() {{
+    window.parent.document.addEventListener('click', function(e) {{
+        if (e.target.closest('#secret-admin-trigger')) {{
             var now = Date.now();
             clicks.push(now);
             // Remove clicks older than 20 seconds (20000 ms)
             clicks = clicks.filter(function(t) {{ return now - t <= 20000; }});
-            <script>
-(function() {
-    var clicks = [];
-    // Attach to the main document so it never misses a click, even if Streamlit loads slowly
-    window.parent.document.addEventListener('click', function(e) {
-        if (e.target.closest('#secret-admin-trigger')) {
-            var now = Date.now();
-            clicks.push(now);
-            // Remove clicks older than 20 seconds
-            clicks = clicks.filter(function(t) { return now - t <= 20000; });
             
-            // Blast off to Admin mode!
-            if (clicks.length >= 10) {
-                window.parent.location.search = '?mode=admin';
-            }
-        }
-    });
-})();
-</script>
             // If 10 clicks within 20 seconds, blast off to Admin mode!
             if (clicks.length >= 10) {{
                 window.parent.location.search = '?mode=admin';
             }}
-        }});
-    }}
+        }}
+    }});
 }})();
 </script>
 """, unsafe_allow_html=True)
-
 # Premium Sign out tucked neatly below header
 st.markdown("""
 <style>
