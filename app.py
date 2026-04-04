@@ -632,50 +632,106 @@ if 'username' not in st.session_state:
 username = st.session_state.get('username', 'User')
 avatar_letter = username[0].upper() if username else "U"
 
-# Header Layout using columns to isolate the interactive Javascript
-col_h1, col_h2 = st.columns([3, 1])
+# Initialize click tracker in session state
+if 'admin_clicks' not in st.session_state:
+    st.session_state.admin_clicks = []
 
-with col_h1:
-    st.markdown(f"""
-    <div style="display:flex; align-items:center; gap:0.75rem; padding: 1rem 0 0.5rem;">
+# Header --- Left side HTML only
+st.markdown(f"""
+<div class="app-header">
+    <div class="app-brand">
        <img src="data:image/png;base64,{logo_base64}" style="width:38px;height:38px;object-fit:contain;flex-shrink:0;">
         <div>
-            <div style="font-size: 1.4rem; font-weight: 800; color: var(--text-1); letter-spacing: -0.04em; line-height: 1;">ParkOS</div>
-            <div style="font-size: 0.58rem; font-weight: 600; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; line-height: 1; margin-top: 2px;">Smart Parking</div>
+            <div class="app-brand-name">ParkOS</div>
+            <div class="app-brand-sub">Smart Parking</div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
-with col_h2:
-    # The user pill is now its own secure HTML iframe. This avoids ALL Streamlit security blocks!
-    components.html(f"""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&display=swap');
-    body {{ margin: 0; padding: 0; overflow: hidden; font-family: 'Outfit', sans-serif; display: flex; justify-content: flex-end; align-items: center; height: 75px; }}
-    .user-pill {{ background: #161923; border: 1px solid rgba(255,255,255,0.06); border-radius: 99px; padding: 5px 12px 5px 6px; display: flex; align-items: center; gap: 7px; font-size: 0.78rem; font-weight: 500; color: #9397B0; cursor: pointer; user-select: none; transition: border-color 0.2s; }}
-    .user-pill:hover {{ border-color: rgba(99,102,241,0.4); }}
-    .user-avatar {{ width: 24px; height: 24px; background: linear-gradient(135deg, #6366F1 0%, #818CF8 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; color: white; }}
-    </style>
-    <div class="user-pill" id="secret-pill">
-        <div class="user-avatar">{avatar_letter}</div>
-        {username}
-    </div>
-    <script>
-    let clicks = [];
-    document.getElementById('secret-pill').addEventListener('click', function() {{
-        let now = Date.now();
-        clicks.push(now);
-        clicks = clicks.filter(t => now - t <= 20000); // Keep clicks within 20 seconds
-        if (clicks.length >= 10) {{
-            window.top.location.search = '?mode=admin';
-        }}
-    }});
-    </script>
-    """, height=75)
+# Profile Pill styled as a real Streamlit button (No JS needed!)
+st.markdown(f"""
+<style>
+/* Hide the marker */
+div[data-testid="stElementContainer"]:has(#profile-pill-tracker) {{
+    display: none;
+}}
+/* Position the Streamlit button in the top right */
+div[data-testid="stElementContainer"]:has(#profile-pill-tracker) + div[data-testid="stElementContainer"] {{
+    position: absolute;
+    top: 1.35rem;
+    right: 1.25rem;
+    z-index: 100;
+    width: auto;
+}}
+@media (min-width: 769px) {{
+    div[data-testid="stElementContainer"]:has(#profile-pill-tracker) + div[data-testid="stElementContainer"] {{
+        top: 2rem;
+        right: 2rem;
+    }}
+}}
+/* Style to look exactly like the old HTML pill */
+div[data-testid="stElementContainer"]:has(#profile-pill-tracker) + div[data-testid="stElementContainer"] button {{
+    background: var(--surface-2) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 99px !important;
+    padding: 4px 12px 4px 4px !important;
+    font-family: var(--font) !important;
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+    color: var(--text-2) !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    box-shadow: none !important;
+    transition: border-color 0.2s !important;
+}}
+div[data-testid="stElementContainer"]:has(#profile-pill-tracker) + div[data-testid="stElementContainer"] button:hover {{
+    border-color: var(--border-active) !important;
+    color: var(--text-1) !important;
+}}
+/* Flex layout for text and fake avatar */
+div[data-testid="stElementContainer"]:has(#profile-pill-tracker) + div[data-testid="stElementContainer"] button p {{
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin: 0 !important;
+}}
+/* Fake the purple gradient avatar */
+div[data-testid="stElementContainer"]:has(#profile-pill-tracker) + div[data-testid="stElementContainer"] button p::before {{
+    content: '{avatar_letter}';
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: white;
+}}
+</style>
+<div id="profile-pill-tracker"></div>
+""", unsafe_allow_html=True)
 
-# Restore the header bottom border
-st.markdown('<div style="border-bottom: 1px solid var(--border); margin-top: -1.25rem; margin-bottom: 0.25rem;"></div>', unsafe_allow_html=True)
+# The actual button click logic (Pure Python!)
+if st.button(username, key="secret_admin_btn"):
+    now = _time.time()
+    st.session_state.admin_clicks.append(now)
+    # Remove clicks older than 20 seconds
+    st.session_state.admin_clicks = [t for t in st.session_state.admin_clicks if now - t <= 20]
+    
+    if len(st.session_state.admin_clicks) >= 10:
+        st.query_params["mode"] = "admin"
+        st.session_state.admin_clicks = []  # Reset
+        st.rerun()
 
+# Original, clean Sign Out button tucked neatly below header
+col_so1, col_so2, col_so3 = st.columns([3, 1, 1])
+with col_so3:
+    if st.button("Sign Out", type="secondary", use_container_width=True):
+        for key in list(st.session_state.keys()): del st.session_state[key]
+        st.rerun()
 # Vehicle number gate
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
     st.markdown("""
