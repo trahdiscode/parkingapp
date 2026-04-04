@@ -877,6 +877,116 @@ if 'selected_slot' not in st.session_state:
 if 'show_booking_flow' not in st.session_state:
     st.session_state.show_booking_flow = False
 
+# ── SECRET ADMIN ROUTING & UI ──
+if "mode" in st.query_params and st.query_params["mode"] == "admin":
+    st.markdown("""
+    <style>
+    /* Premium Admin Styling */
+    .admin-card {
+        background: linear-gradient(145deg, #0F1117 0%, #1a1610 100%);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        border-radius: var(--radius);
+        padding: 2.5rem;
+        box-shadow: 0 10px 40px rgba(212, 175, 55, 0.15);
+        max-width: 500px;
+        margin: 2rem auto;
+        text-align: center;
+    }
+    .admin-title {
+        font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800;
+        background: linear-gradient(to right, #D4AF37, #FFDF73);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+    }
+    .admin-sub { color: #A0A0A0; font-size: 0.85rem; margin-bottom: 2rem; }
+    .req-card { background: var(--surface-2); border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Check if any active admins exist
+    admin_count_res = supabase.table("admins").select("id").eq("status", "active").execute()
+    admin_count = len(admin_count_res.data) if admin_count_res.data else 0
+
+    if 'admin_logged_in' not in st.session_state:
+        st.session_state.admin_logged_in = False
+
+    st.markdown('<div class="admin-card">', unsafe_allow_html=True)
+    st.markdown('<div class="admin-title">👑 Command Center</div>', unsafe_allow_html=True)
+
+    if st.session_state.admin_logged_in:
+        st.markdown('<div class="admin-sub">System Management & Access Control</div>', unsafe_allow_html=True)
+        st.markdown("#### Pending Admin Requests")
+        
+        pending = supabase.table("admins").select("*").eq("status", "pending").execute()
+        if pending.data:
+            for req in pending.data:
+                col1, col2, col3 = st.columns([3, 1, 1])
+                with col1: st.markdown(f"**{req['username']}**<br><span style='font-size:0.7rem;color:gray;'>Requested Access</span>", unsafe_allow_html=True)
+                with col2:
+                    if st.button("✅ Approve", key=f"app_{req['id']}", type="primary"):
+                        supabase.table("admins").update({"status": "active"}).eq("id", req["id"]).execute()
+                        st.rerun()
+                with col3:
+                    if st.button("❌ Deny", key=f"den_{req['id']}"):
+                        supabase.table("admins").delete().eq("id", req["id"]).execute()
+                        st.rerun()
+        else:
+            st.success("No pending requests at this time.")
+
+        st.markdown("<br><hr style='border-color: rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
+        if st.button("🔒 Exit Command Center", use_container_width=True):
+            st.session_state.admin_logged_in = False
+            st.query_params.clear()
+            st.rerun()
+
+    else:
+        if admin_count == 0:
+            # STATE 1: NO ADMINS EXIST YET
+            st.markdown('<div class="admin-sub">Initialize the Root Admin Account</div>', unsafe_allow_html=True)
+            u = st.text_input("Root Username", key="root_u")
+            p = st.text_input("Root Password", type="password", key="root_p")
+            if st.button("Initialize Root Admin", type="primary", use_container_width=True):
+                if u and p:
+                    supabase.table("admins").insert({"username": u, "password_hash": hash_password(p), "status": "active"}).execute()
+                    st.success("✅ Root Admin created! Please log in.")
+                    st.rerun()
+        else:
+            # STATE 2: ADMINS EXIST - LOGIN OR REQUEST
+            st.markdown('<div class="admin-sub">Restricted Area</div>', unsafe_allow_html=True)
+            t1, t2 = st.tabs(["Secure Login", "Request Access"])
+            
+            with t1:
+                u = st.text_input("Username", key="al_u")
+                p = st.text_input("Password", type="password", key="al_p")
+                if st.button("Authorize", type="primary", use_container_width=True):
+                    res = supabase.table("admins").select("id").eq("username", u).eq("password_hash", hash_password(p)).eq("status", "active").execute()
+                    if res.data:
+                        st.session_state.admin_logged_in = True
+                        st.rerun()
+                    else:
+                        st.error("Authentication failed or access pending.")
+            
+            with t2:
+                u_req = st.text_input("Desired Username", key="ar_u")
+                p_req = st.text_input("Password", type="password", key="ar_p")
+                if st.button("Submit Request", use_container_width=True):
+                    res = supabase.table("admins").select("id").eq("username", u_req).execute()
+                    if res.data:
+                        st.error("Username already registered.")
+                    else:
+                        supabase.table("admins").insert({"username": u_req, "password_hash": hash_password(p_req), "status": "pending"}).execute()
+                        st.success("Request sent to the Root Admin.")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Hide standard header & exit button if not logged in
+    if not st.session_state.admin_logged_in:
+        if st.button("← Return to Faculty Portal"):
+            st.query_params.clear()
+            st.rerun()
+    st.stop() # Prevents the rest of the standard app from loading!
+
+#heheheheeee
 
 # ── LIVE PARKING SENSOR FUNCTIONS ──
 def _get_sensor_state(seed_offset=0):
@@ -1113,115 +1223,6 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
 
 
 # ---------- MAIN APP (LOGGED IN) ----------
-
-# ── SECRET ADMIN ROUTING & UI ──
-if "mode" in st.query_params and st.query_params["mode"] == "admin":
-    st.markdown("""
-    <style>
-    /* Premium Admin Styling */
-    .admin-card {
-        background: linear-gradient(145deg, #0F1117 0%, #1a1610 100%);
-        border: 1px solid rgba(212, 175, 55, 0.3);
-        border-radius: var(--radius);
-        padding: 2.5rem;
-        box-shadow: 0 10px 40px rgba(212, 175, 55, 0.15);
-        max-width: 500px;
-        margin: 2rem auto;
-        text-align: center;
-    }
-    .admin-title {
-        font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800;
-        background: linear-gradient(to right, #D4AF37, #FFDF73);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        margin-bottom: 0.5rem;
-    }
-    .admin-sub { color: #A0A0A0; font-size: 0.85rem; margin-bottom: 2rem; }
-    .req-card { background: var(--surface-2); border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # Check if any active admins exist
-    admin_count_res = supabase.table("admins").select("id").eq("status", "active").execute()
-    admin_count = len(admin_count_res.data) if admin_count_res.data else 0
-
-    if 'admin_logged_in' not in st.session_state:
-        st.session_state.admin_logged_in = False
-
-    st.markdown('<div class="admin-card">', unsafe_allow_html=True)
-    st.markdown('<div class="admin-title">👑 Command Center</div>', unsafe_allow_html=True)
-
-    if st.session_state.admin_logged_in:
-        st.markdown('<div class="admin-sub">System Management & Access Control</div>', unsafe_allow_html=True)
-        st.markdown("#### Pending Admin Requests")
-        
-        pending = supabase.table("admins").select("*").eq("status", "pending").execute()
-        if pending.data:
-            for req in pending.data:
-                col1, col2, col3 = st.columns([3, 1, 1])
-                with col1: st.markdown(f"**{req['username']}**<br><span style='font-size:0.7rem;color:gray;'>Requested Access</span>", unsafe_allow_html=True)
-                with col2:
-                    if st.button("✅ Approve", key=f"app_{req['id']}", type="primary"):
-                        supabase.table("admins").update({"status": "active"}).eq("id", req["id"]).execute()
-                        st.rerun()
-                with col3:
-                    if st.button("❌ Deny", key=f"den_{req['id']}"):
-                        supabase.table("admins").delete().eq("id", req["id"]).execute()
-                        st.rerun()
-        else:
-            st.success("No pending requests at this time.")
-
-        st.markdown("<br><hr style='border-color: rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
-        if st.button("🔒 Exit Command Center", use_container_width=True):
-            st.session_state.admin_logged_in = False
-            st.query_params.clear()
-            st.rerun()
-
-    else:
-        if admin_count == 0:
-            # STATE 1: NO ADMINS EXIST YET
-            st.markdown('<div class="admin-sub">Initialize the Root Admin Account</div>', unsafe_allow_html=True)
-            u = st.text_input("Root Username", key="root_u")
-            p = st.text_input("Root Password", type="password", key="root_p")
-            if st.button("Initialize Root Admin", type="primary", use_container_width=True):
-                if u and p:
-                    supabase.table("admins").insert({"username": u, "password_hash": hash_password(p), "status": "active"}).execute()
-                    st.success("✅ Root Admin created! Please log in.")
-                    st.rerun()
-        else:
-            # STATE 2: ADMINS EXIST - LOGIN OR REQUEST
-            st.markdown('<div class="admin-sub">Restricted Area</div>', unsafe_allow_html=True)
-            t1, t2 = st.tabs(["Secure Login", "Request Access"])
-            
-            with t1:
-                u = st.text_input("Username", key="al_u")
-                p = st.text_input("Password", type="password", key="al_p")
-                if st.button("Authorize", type="primary", use_container_width=True):
-                    res = supabase.table("admins").select("id").eq("username", u).eq("password_hash", hash_password(p)).eq("status", "active").execute()
-                    if res.data:
-                        st.session_state.admin_logged_in = True
-                        st.rerun()
-                    else:
-                        st.error("Authentication failed or access pending.")
-            
-            with t2:
-                u_req = st.text_input("Desired Username", key="ar_u")
-                p_req = st.text_input("Password", type="password", key="ar_p")
-                if st.button("Submit Request", use_container_width=True):
-                    res = supabase.table("admins").select("id").eq("username", u_req).execute()
-                    if res.data:
-                        st.error("Username already registered.")
-                    else:
-                        supabase.table("admins").insert({"username": u_req, "password_hash": hash_password(p_req), "status": "pending"}).execute()
-                        st.success("Request sent to the Root Admin.")
-
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Hide standard header & exit button if not logged in
-    if not st.session_state.admin_logged_in:
-        if st.button("← Return to Faculty Portal"):
-            st.query_params.clear()
-            st.rerun()
-    st.stop() # Prevents the rest of the standard app from loading!
     #heheeeee
 # Fetch username if not set
 if 'username' not in st.session_state:
