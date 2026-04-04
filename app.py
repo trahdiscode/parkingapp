@@ -284,17 +284,17 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
     st.markdown("""
     <style>
     /* Ultra-Premium Admin Styling */
-    .admin-card {
+    .admin-header {
         background: #0A0A0C;
         background-image: 
             radial-gradient(ellipse at top, rgba(212, 175, 55, 0.12) 0%, transparent 50%),
             radial-gradient(ellipse at bottom, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
         border: 1px solid rgba(212, 175, 55, 0.2);
         border-radius: 16px;
-        padding: 3.5rem 2.5rem;
+        padding: 2.5rem 2rem 2rem;
         box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
-        max-width: 480px;
-        margin: 3rem auto;
+        max-width: 500px;
+        margin: 2rem auto 2.5rem;
         text-align: center;
     }
     .admin-badge {
@@ -310,7 +310,7 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
         font-weight: 700;
         letter-spacing: 0.15em;
         text-transform: uppercase;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
         box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
     }
     .admin-badge::before {
@@ -335,7 +335,6 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
     .admin-sub { 
         color: #8A8D98; 
         font-size: 0.88rem; 
-        margin-bottom: 2.5rem; 
         line-height: 1.5;
     }
     .req-card { background: var(--surface-2); border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
@@ -349,12 +348,16 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
     if 'admin_logged_in' not in st.session_state:
         st.session_state.admin_logged_in = False
 
-    st.markdown('<div class="admin-card">', unsafe_allow_html=True)
-    st.markdown('<div class="admin-badge">Secure Portal</div>', unsafe_allow_html=True)
-    st.markdown('<div class="admin-title">Command Center</div>', unsafe_allow_html=True)
+    # Render the unified header banner
+    st.markdown("""
+    <div class="admin-header">
+        <div class="admin-badge">Secure Portal</div>
+        <div class="admin-title">Command Center</div>
+        <div class="admin-sub">System Management & Access Control</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     if st.session_state.admin_logged_in:
-        st.markdown('<div class="admin-sub">System Management & Access Control</div>', unsafe_allow_html=True)
         st.markdown("#### Pending Admin Requests")
         
         pending = supabase.table("admins").select("*").eq("status", "pending").execute()
@@ -375,10 +378,9 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
 
         st.markdown("<br><hr style='border-color: rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
         
-        # --- NEW SYSTEM SETTINGS ---
+        # --- SYSTEM SETTINGS ---
         st.markdown("#### System Settings")
         
-        # Fetch current interval to display in the input box
         current_res = supabase.table("settings").select("setting_value").eq("setting_key", "sensor_interval_minutes").execute()
         current_interval = int(current_res.data[0]["setting_value"]) if current_res.data else 10
         
@@ -404,7 +406,7 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
     else:
         if admin_count == 0:
             # STATE 1: NO ADMINS EXIST YET
-            st.markdown('<div class="admin-sub">Initialize the Root Admin Account</div>', unsafe_allow_html=True)
+            st.markdown('<div style="text-align:center; color:#A0A0A0; margin-bottom:1rem;">Initialize the Root Admin Account</div>', unsafe_allow_html=True)
             u = st.text_input("Root Username", key="root_u")
             p = st.text_input("Root Password", type="password", key="root_p")
             if st.button("Initialize Root Admin", type="primary", use_container_width=True):
@@ -414,7 +416,6 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
                     st.rerun()
         else:
             # STATE 2: ADMINS EXIST - LOGIN OR REQUEST
-            st.markdown('<div class="admin-sub">Restricted Area</div>', unsafe_allow_html=True)
             t1, t2 = st.tabs(["Secure Login", "Request Access"])
             
             with t1:
@@ -439,10 +440,9 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
                         supabase.table("admins").insert({"username": u_req, "password_hash": hash_password(p_req), "status": "pending"}).execute()
                         st.success("Request sent to the Root Admin.")
 
-    st.markdown('</div>', unsafe_allow_html=True)
-    
     # Hide standard header & exit button if not logged in
     if not st.session_state.admin_logged_in:
+        st.markdown("<br><br>", unsafe_allow_html=True)
         if st.button("← Return to Faculty Portal"):
             st.query_params.clear()
             st.rerun()
