@@ -1316,10 +1316,6 @@ if st.button("Sign Out", key="premium_logout"):
     for key in list(st.session_state.keys()): del st.session_state[key]
     st.rerun()
 
-if st.button("Sign Out", key="premium_logout"):
-    for key in list(st.session_state.keys()): del st.session_state[key]
-    st.rerun()
-
 # Vehicle number gate
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
     st.markdown("""
