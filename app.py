@@ -78,6 +78,7 @@ html, body, .stApp { background: var(--bg)!important; font-family: var(--font); 
 .main.block-container {
     max-width: 700px !important;
     padding-top: 0rem !important;
+    margin-top: -6rem !important;
 }
 p, li { color: var(--text-1); font-size: 0.9rem; line-height: 1.6; }
 ::-webkit-scrollbar { width: 3px; height: 3px; }
