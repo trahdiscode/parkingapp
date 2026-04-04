@@ -283,24 +283,61 @@ if 'show_booking_flow' not in st.session_state:
 if "mode" in st.query_params and st.query_params["mode"] == "admin":
     st.markdown("""
     <style>
-    /* Premium Admin Styling */
+    /* Ultra-Premium Admin Styling */
     .admin-card {
-        background: linear-gradient(145deg, #0F1117 0%, #1a1610 100%);
-        border: 1px solid rgba(212, 175, 55, 0.3);
-        border-radius: var(--radius);
-        padding: 2.5rem;
-        box-shadow: 0 10px 40px rgba(212, 175, 55, 0.15);
-        max-width: 500px;
-        margin: 2rem auto;
+        background: #0A0A0C;
+        background-image: 
+            radial-gradient(ellipse at top, rgba(212, 175, 55, 0.12) 0%, transparent 50%),
+            radial-gradient(ellipse at bottom, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        border-radius: 16px;
+        padding: 3.5rem 2.5rem;
+        box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+        max-width: 480px;
+        margin: 3rem auto;
         text-align: center;
     }
-    .admin-title {
-        font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800;
-        background: linear-gradient(to right, #D4AF37, #FFDF73);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        margin-bottom: 0.5rem;
+    .admin-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 14px;
+        background: rgba(212, 175, 55, 0.05);
+        border: 1px solid rgba(212, 175, 55, 0.25);
+        border-radius: 99px;
+        color: #D4AF37;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
     }
-    .admin-sub { color: #A0A0A0; font-size: 0.85rem; margin-bottom: 2rem; }
+    .admin-badge::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        background: #D4AF37;
+        border-radius: 50%;
+        box-shadow: 0 0 8px #D4AF37;
+    }
+    .admin-title {
+        font-family: 'Outfit', sans-serif; 
+        font-size: 2.4rem; 
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        background: linear-gradient(180deg, #FFFFFF 0%, #D4AF37 100%);
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+        line-height: 1.1;
+    }
+    .admin-sub { 
+        color: #8A8D98; 
+        font-size: 0.88rem; 
+        margin-bottom: 2.5rem; 
+        line-height: 1.5;
+    }
     .req-card { background: var(--surface-2); border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
     </style>
     """, unsafe_allow_html=True)
@@ -313,7 +350,8 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
         st.session_state.admin_logged_in = False
 
     st.markdown('<div class="admin-card">', unsafe_allow_html=True)
-    st.markdown('<div class="admin-title">👑 Command Center</div>', unsafe_allow_html=True)
+    st.markdown('<div class="admin-badge">Secure Portal</div>', unsafe_allow_html=True)
+    st.markdown('<div class="admin-title">Command Center</div>', unsafe_allow_html=True)
 
     if st.session_state.admin_logged_in:
         st.markdown('<div class="admin-sub">System Management & Access Control</div>', unsafe_allow_html=True)
