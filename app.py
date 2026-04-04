@@ -570,9 +570,6 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
     else:
         # --- LOGIN / REGISTER CARD ---
         st.markdown('<div class="login-wrap">', unsafe_allow_html=True)
-        st.markdown("""
-        <div class="lp-card">
-        """, unsafe_allow_html=True)
 
         if st.session_state.auth_mode == 'signin':
             st.markdown("""
