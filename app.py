@@ -291,16 +291,16 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
         st.session_state.admin_logged_in = False
 
     # Render the unified header banner
-   st.markdown("""
-   <div style="max-width:480px; margin: 1rem auto 1.5rem; background: linear-gradient(145deg, #0D0F14 0%, #111318 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 24px; padding: 2.5rem 2.5rem 2rem; box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 32px 64px rgba(0,0,0,0.6); text-align: center; position: relative; overflow: hidden;">
-        <div style="display:inline-flex; align-items:center; gap:6px; padding:5px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:99px; color:#6B7280; font-family:'Inter',sans-serif; font-size:0.6rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; margin-bottom:1.25rem;">
-            <span style="width:5px; height:5px; background:#22C55E; border-radius:50%; display:inline-block; box-shadow:0 0 8px rgba(34,197,94,0.6);"></span>
-            Secure Portal
-        </div>
-        <div style="font-family:'Inter',sans-serif; font-size:2.4rem; font-weight:700; letter-spacing:-0.04em; color:#F9FAFB; margin-bottom:0.4rem; line-height:1.1;">Command Center</div>
+    st.markdown("""
+    <div style="max-width:480px; margin: 1rem auto 1.5rem; background: linear-gradient(145deg, #0D0F14 0%, #111318 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 24px; padding: 2.5rem 2.5rem 2rem; box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 32px 64px rgba(0,0,0,0.6); text-align: center; position: relative; overflow: hidden;">
+         <div style="display:inline-flex; align-items:center; gap:6px; padding:5px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:99px; color:#6B7280; font-family:'Inter',sans-serif; font-size:0.6rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; margin-bottom:1.25rem;">
+             <span style="width:5px; height:5px; background:#22C55E; border-radius:50%; display:inline-block; box-shadow:0 0 8px rgba(34,197,94,0.6);"></span>
+             Secure Portal
+         </div>
+         <div style="font-family:'Inter',sans-serif; font-size:2.4rem; font-weight:700; letter-spacing:-0.04em; color:#F9FAFB; margin-bottom:0.4rem; line-height:1.1;">Command Center</div>
         <div style="color:#4B5563; font-family:'Inter',sans-serif; font-size:0.82rem; line-height:1.5;">System Management & Access Control</div>
-    </div>
-    """, unsafe_allow_html=True)
+     </div>
+     """, unsafe_allow_html=True)
 
     if st.session_state.admin_logged_in:
         st.markdown("#### Pending Admin Requests")
