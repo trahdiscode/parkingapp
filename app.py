@@ -685,89 +685,98 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Profile Pill styled as a real Streamlit button (No JS needed!)
 st.markdown(f"""
 <style>
-/* Hide the marker */
-div[data-testid="stElementContainer"]:has(#profile-pill-tracker) {{
-    display: none;
-}}
-/* Position the Streamlit button in the top right */
+div[data-testid="stElementContainer"]:has(#profile-pill-tracker) {{ display: none; }}
 div[data-testid="stElementContainer"]:has(#profile-pill-tracker) + div[data-testid="stElementContainer"] {{
-    position: absolute;
-    top: 1.35rem;
-    right: 1.25rem;
-    z-index: 100;
+    position: fixed;
+    top: 1.25rem;
+    right: 1.5rem;
+    z-index: 999;
     width: auto;
 }}
-@media (min-width: 769px) {{
-    div[data-testid="stElementContainer"]:has(#profile-pill-tracker) + div[data-testid="stElementContainer"] {{
-        top: 2rem;
-        right: 2rem;
-    }}
-}}
-/* Style to look exactly like the old HTML pill */
 div[data-testid="stElementContainer"]:has(#profile-pill-tracker) + div[data-testid="stElementContainer"] button {{
-    background: var(--surface-2) !important;
-    border: 1px solid var(--border) !important;
+    background: rgba(15,17,23,0.85) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
     border-radius: 99px !important;
-    padding: 4px 12px 4px 4px !important;
+    padding: 4px 14px 4px 6px !important;
     font-family: var(--font) !important;
     font-size: 0.78rem !important;
     font-weight: 500 !important;
     color: var(--text-2) !important;
-    height: 34px !important;
-    min-height: 34px !important;
-    box-shadow: none !important;
-    transition: border-color 0.2s !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.04) inset !important;
+    backdrop-filter: blur(12px) !important;
 }}
 div[data-testid="stElementContainer"]:has(#profile-pill-tracker) + div[data-testid="stElementContainer"] button:hover {{
-    border-color: var(--border-active) !important;
+    border-color: rgba(99,102,241,0.4) !important;
     color: var(--text-1) !important;
 }}
-/* Flex layout for text and fake avatar */
 div[data-testid="stElementContainer"]:has(#profile-pill-tracker) + div[data-testid="stElementContainer"] button p {{
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
     margin: 0 !important;
 }}
-/* Fake the purple gradient avatar */
 div[data-testid="stElementContainer"]:has(#profile-pill-tracker) + div[data-testid="stElementContainer"] button p::before {{
     content: '{avatar_letter}';
     width: 24px;
     height: 24px;
     background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%);
     border-radius: 50%;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     font-size: 0.6rem;
     font-weight: 700;
     color: white;
+    flex-shrink: 0;
+}}
+div[data-testid="stElementContainer"]:has(#signout-tracker) {{ display: none; }}
+div[data-testid="stElementContainer"]:has(#signout-tracker) + div[data-testid="stElementContainer"] {{
+    position: fixed;
+    top: 1.25rem;
+    right: 10rem;
+    z-index: 999;
+    width: auto;
+}}
+div[data-testid="stElementContainer"]:has(#signout-tracker) + div[data-testid="stElementContainer"] button {{
+    background: rgba(15,17,23,0.85) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    border-radius: 99px !important;
+    color: #4B5068 !important;
+    font-family: var(--font) !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 16px !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+    backdrop-filter: blur(12px) !important;
+}}
+div[data-testid="stElementContainer"]:has(#signout-tracker) + div[data-testid="stElementContainer"] button:hover {{
+    border-color: rgba(239,68,68,0.3) !important;
+    color: #EF4444 !important;
+    background: rgba(239,68,68,0.06) !important;
 }}
 </style>
 <div id="profile-pill-tracker"></div>
 """, unsafe_allow_html=True)
 
-# The actual button click logic (Pure Python!)
 if st.button(username, key="secret_admin_btn"):
     now = _time.time()
     st.session_state.admin_clicks.append(now)
-    # Remove clicks older than 20 seconds
     st.session_state.admin_clicks = [t for t in st.session_state.admin_clicks if now - t <= 20]
-    
     if len(st.session_state.admin_clicks) >= 10:
         st.query_params["mode"] = "admin"
-        st.session_state.admin_clicks = []  # Reset
+        st.session_state.admin_clicks = []
         st.rerun()
 
-# Original, clean Sign Out button tucked neatly below header
-col_so1, col_so2, col_so3 = st.columns([3, 1, 1])
-with col_so3:
-    if st.button("Sign Out", type="secondary", use_container_width=True):
-        for key in list(st.session_state.keys()): del st.session_state[key]
-        st.rerun()
+st.markdown('<div id="signout-tracker"></div>', unsafe_allow_html=True)
+if st.button("Sign Out", key="signout_btn"):
+    for key in list(st.session_state.keys()): del st.session_state[key]
+    st.rerun()
 # Vehicle number gate
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
     st.markdown("""
