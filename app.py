@@ -292,10 +292,12 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
 
     # Render the unified header banner
     st.markdown("""
-    <div class="admin-header">
-        <div class="admin-badge">Secure Portal</div>
-        <div class="admin-title">Command Center</div>
-        <div class="admin-sub">System Management & Access Control</div>
+    <div style="max-width:480px; margin: 0 auto;">
+        <div class="admin-header">
+            <div class="admin-badge">Secure Portal</div>
+            <div class="admin-title">Command Center</div>
+            <div class="admin-sub">System Management & Access Control</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
