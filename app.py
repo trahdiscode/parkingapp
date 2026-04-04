@@ -336,6 +336,28 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
             st.success("No pending requests at this time.")
 
         st.markdown("<br><hr style='border-color: rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
+        
+        # --- NEW SYSTEM SETTINGS ---
+        st.markdown("#### System Settings")
+        
+        # Fetch current interval to display in the input box
+        current_res = supabase.table("settings").select("setting_value").eq("setting_key", "sensor_interval_minutes").execute()
+        current_interval = int(current_res.data[0]["setting_value"]) if current_res.data else 10
+        
+        col_set1, col_set2 = st.columns([3, 1])
+        with col_set1:
+            new_interval = st.number_input("Sensor Update Interval (Minutes)", min_value=1, max_value=120, value=current_interval)
+        with col_set2:
+            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+            if st.button("Save Settings", type="primary", use_container_width=True):
+                try:
+                    supabase.table("settings").upsert({"setting_key": "sensor_interval_minutes", "setting_value": str(new_interval)}).execute()
+                    if 'get_sensor_interval' in st.session_state: del st.session_state['get_sensor_interval']
+                    st.success("Saved!")
+                except Exception:
+                    st.error("Error saving.")
+
+        st.markdown("<br><hr style='border-color: rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
         if st.button("🔒 Exit Command Center", use_container_width=True):
             st.session_state.admin_logged_in = False
             st.query_params.clear()
@@ -390,6 +412,17 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
 
 
 # ── LIVE PARKING SENSOR FUNCTIONS ──
+@st.cache_data(ttl=30, show_spinner=False)
+def get_sensor_interval():
+    """Fetches the global sensor interval from Supabase, updates every 30s"""
+    try:
+        res = supabase.table("settings").select("setting_value").eq("setting_key", "sensor_interval_minutes").execute()
+        if res.data:
+            return int(res.data[0]["setting_value"])
+    except Exception:
+        pass
+    return 10  # Fallback to 10 minutes if DB fails
+
 def _get_sensor_state(seed_offset=0):
     """Generate pseudo-random occupancy AND merge with real active bookings."""
     
@@ -405,15 +438,16 @@ def _get_sensor_state(seed_offset=0):
     except Exception:
         real_active_slots = set()
 
-    # 2. Simulated pseudo-random generator
-    bucket = int(_time.time() // 600) + seed_offset  
+    # 2. Simulated pseudo-random generator based on DB Settings
+    interval_seconds = get_sensor_interval() * 60
+    bucket = int(_time.time() // interval_seconds) + seed_offset  
     
     def _is_occupied(hash_id, real_id):
         # Force RED if it is actively booked by a real user right now
         if real_id in real_active_slots:
             return True
             
-        # Otherwise, fall back to the random 10-minute sensor simulation
+        # Otherwise, fall back to the random sensor simulation
         h = int(hashlib.md5(f"{bucket}-{hash_id}".encode()).hexdigest(), 16)
         return (h % 100) < 45
 
