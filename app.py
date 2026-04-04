@@ -977,7 +977,7 @@ if not user_has_active_or_future:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="time-form">', unsafe_allow_html=True)
+    st.markdown('<div>', unsafe_allow_html=True)
     booking_date = st.date_input("Date", min_value=now_dt_fresh_ist.date(), key="booking_date_input")
 
     entry_options = build_time_options(booking_date, now_ist=now_dt_fresh_ist)
