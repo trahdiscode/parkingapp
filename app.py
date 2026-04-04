@@ -1273,51 +1273,48 @@ st.markdown(f"""
 # Premium Sign out tucked neatly below header
 st.markdown("""
 <style>
-/* Premium Right-Aligned Sign Out Button */
+/* Hide the anchor div */
 div[data-testid="stElementContainer"]:has(#premium-signout) {
     display: none;
 }
+/* Premium Right-Aligned Sign Out Button, placed naturally below header */
 div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] {
-    position: absolute;
-    top: 1.85rem; 
-    right: 120px; 
-    z-index: 100;
-    width: auto;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
 }
 div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] button {
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     color: var(--text-2) !important;
-    border-radius: 99px !important;
-    padding: 0 1rem !important;
+    border-radius: 99px !important; /* Sleek pill shape */
+    padding: 0 1.25rem !important;
     font-family: var(--font) !important;
-    font-size: 0.65rem !important;
+    font-size: 0.72rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.08em !important;
     text-transform: uppercase !important;
-    min-height: 28px !important;
-    height: 28px !important;
-    line-height: 1 !important;
+    min-height: 32px !important;
+    height: 32px !important;
     width: auto !important;
     transition: all 0.3s ease !important;
     box-shadow: none !important;
 }
 div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] button:hover {
-    background: rgba(239, 68, 68, 0.08) !important;
+    background: rgba(239, 68, 68, 0.08) !important; /* Soft glowing red */
     border-color: rgba(239, 68, 68, 0.4) !important;
     color: #EF4444 !important;
     box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15) !important;
     transform: translateY(-1px) !important;
 }
-@media (min-width: 769px) {
-    div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] {
-        top: 2.45rem;
-        right: 140px; 
-    }
-}
 </style>
 <div id="premium-signout"></div>
 """, unsafe_allow_html=True)
+
+if st.button("Sign Out", key="premium_logout"):
+    for key in list(st.session_state.keys()): del st.session_state[key]
+    st.rerun()
 
 if st.button("Sign Out", key="premium_logout"):
     for key in list(st.session_state.keys()): del st.session_state[key]
