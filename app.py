@@ -281,7 +281,7 @@ if 'show_booking_flow' not in st.session_state:
 
 # ── SECRET ADMIN ROUTING & UI ──
 if "mode" in st.query_params and st.query_params["mode"] == "admin":
-    /* Ultra-Premium Admin Styling */
+    #Ultra-Premium Admin Styling 
 
     # Check if any active admins exist
     admin_count_res = supabase.table("admins").select("id").eq("status", "active").execute()
