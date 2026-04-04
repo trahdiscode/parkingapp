@@ -1260,7 +1260,25 @@ st.markdown(f"""
             clicks.push(now);
             // Remove clicks older than 20 seconds (20000 ms)
             clicks = clicks.filter(function(t) {{ return now - t <= 20000; }});
+            <script>
+(function() {
+    var clicks = [];
+    // Attach to the main document so it never misses a click, even if Streamlit loads slowly
+    window.parent.document.addEventListener('click', function(e) {
+        if (e.target.closest('#secret-admin-trigger')) {
+            var now = Date.now();
+            clicks.push(now);
+            // Remove clicks older than 20 seconds
+            clicks = clicks.filter(function(t) { return now - t <= 20000; });
             
+            // Blast off to Admin mode!
+            if (clicks.length >= 10) {
+                window.parent.location.search = '?mode=admin';
+            }
+        }
+    });
+})();
+</script>
             // If 10 clicks within 20 seconds, blast off to Admin mode!
             if (clicks.length >= 10) {{
                 window.parent.location.search = '?mode=admin';
@@ -1275,34 +1293,46 @@ st.markdown(f"""
 st.markdown("""
 <style>
 /* Premium Right-Aligned Sign Out Button */
+div[data-testid="stElementContainer"]:has(#premium-signout) {
+    display: none;
+}
 div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 0.25rem;
+    position: absolute;
+    top: 1.85rem; 
+    right: 120px; 
+    z-index: 100;
+    width: auto;
 }
 div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] button {
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     color: var(--text-2) !important;
-    border-radius: 99px !important; /* Sleek pill shape */
-    padding: 0 1.25rem !important;
+    border-radius: 99px !important;
+    padding: 0 1rem !important;
     font-family: var(--font) !important;
-    font-size: 0.72rem !important;
+    font-size: 0.65rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.08em !important;
     text-transform: uppercase !important;
-    min-height: 32px !important;
-    height: 32px !important;
+    min-height: 28px !important;
+    height: 28px !important;
+    line-height: 1 !important;
     width: auto !important;
     transition: all 0.3s ease !important;
     box-shadow: none !important;
 }
 div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] button:hover {
-    background: rgba(239, 68, 68, 0.08) !important; /* Soft glowing red */
+    background: rgba(239, 68, 68, 0.08) !important;
     border-color: rgba(239, 68, 68, 0.4) !important;
     color: #EF4444 !important;
     box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15) !important;
     transform: translateY(-1px) !important;
+}
+@media (min-width: 769px) {
+    div[data-testid="stElementContainer"]:has(#premium-signout) + div[data-testid="stElementContainer"] {
+        top: 2.45rem;
+        right: 140px; 
+    }
 }
 </style>
 <div id="premium-signout"></div>
