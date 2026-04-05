@@ -91,8 +91,6 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 .app-brand { display: flex; align-items: center; gap: 0.75rem; }
 .app-brand-name { font-size: 1.4rem; font-weight: 800; color: var(--text-1); letter-spacing: -0.04em; line-height: 1; }
 .app-brand-sub { font-size: 0.58rem; font-weight: 600; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; line-height: 1; margin-top: 2px; }
-.user-pill { background: var(--surface-2); border: 1px solid var(--border); border-radius: 99px; padding: 5px 12px 5px 6px; display: flex; align-items: center; gap: 7px; font-size: 0.78rem; font-weight: 500; color: var(--text-2); }
-.user-avatar { width: 24px; height: 24px; background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; color: white; }
 
 .active-card { background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, var(--surface) 60%); border: 1px solid var(--green-border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; position: relative; overflow: hidden; }
 .active-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--green), transparent 60%); }
@@ -163,19 +161,11 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 .login-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 0; }
 .lp-card { background: #0F1117; border: 1px solid rgba(255,255,255,0.07); border-radius: 20px; padding: 2rem 2rem 1.5rem; margin-bottom: 1rem; position: relative; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.5); width: 100%; max-width: 420px; }
 .lp-card::before { content: ''; position: absolute; top: -60px; right: -60px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 65%); pointer-events: none; }
-.lp-top { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.75rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
-.lp-brand-name { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.04em; color: #F1F2F6; line-height: 1; }
-.lp-brand-sub { font-family: 'Outfit', sans-serif; font-size: 0.7rem; color: #4B5068; letter-spacing: 0.07em; text-transform: uppercase; margin-top: 3px; }
 .lp-title { font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 700; color: #F1F2F6; letter-spacing: -0.02em; margin-bottom: 0.2rem; }
 .lp-sub { font-family: 'Outfit', sans-serif; font-size: 0.78rem; color: #4B5068; margin-bottom: 1.5rem; line-height: 1.5; }
 .lp-divider { display: flex; align-items: center; gap: 0.75rem; margin: 1rem 0; }
 .lp-divider-line { flex:1; height:1px; background: rgba(255,255,255,0.06); }
 .lp-divider-text { font-size:0.65rem; color:#4B5068; font-family:'Outfit',sans-serif; letter-spacing:0.1em; text-transform:uppercase; }
-.lp-features { background: #080A0F; border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 1.1rem 1.25rem; margin-bottom: 1rem; width: 100%; max-width: 420px; }
-.lp-feature { display: flex; align-items: center; gap: 0.75rem; padding: 0.45rem 0; font-family: 'Outfit', sans-serif; font-size: 0.8rem; color: #6B7090; }
-.lp-feature + .lp-feature { border-top: 1px solid rgba(255,255,255,0.04); }
-.lp-feature-dot { width: 6px; height: 6px; border-radius: 50%; background: #6366F1; flex-shrink: 0; box-shadow: 0 0 6px rgba(99,102,241,0.6); }
-.lp-footer { text-align: center; font-size: 0.68rem; color: #2A2D3E; font-family: 'Outfit', sans-serif; padding-top: 0.5rem; width: 100%; max-width: 420px; }
 
 /* Streamlit overrides */
 .stTextInput > label, .stDateInput > label, .stTimeInput > label, .stSelectbox > label { font-family: var(--font)!important; font-size: 0.7rem!important; font-weight: 700!important; letter-spacing: 0.08em!important; text-transform: uppercase!important; color: var(--text-3)!important; margin-bottom: 4px!important; }
@@ -273,13 +263,17 @@ def parse_dt(s):
         return ist_timezone.localize(dt_obj)
     return dt_obj
 
-# ---------- SESSION STATE ----------
+# ---------- GLOBAL SESSION STATE INIT ----------
+# Always declare these AT THE TOP so Streamlit never throws an AttributeError
 if 'selected_slot' not in st.session_state:
     st.session_state.selected_slot = None
 
 if 'show_booking_flow' not in st.session_state:
     st.session_state.show_booking_flow = False
 
+if 'admin_logged_in' not in st.session_state:
+    st.session_state.admin_logged_in = False
+    st.session_state.admin_role = None
 
 # ── SECRET ADMIN ROUTING & UI ──
 if "mode" in st.query_params and st.query_params["mode"] == "admin":
@@ -306,10 +300,6 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
     # Check if ANY admins exist
     admin_count_res = supabase.table("admins").select("id").neq("status", "removed").execute()
     admin_count = len(admin_count_res.data) if admin_count_res.data else 0
-
-    if 'admin_logged_in' not in st.session_state:
-        st.session_state.admin_logged_in = False
-        st.session_state.admin_role = None
 
     st.markdown("""
     <div style="max-width:480px; margin: 1rem auto 1.5rem; background: linear-gradient(145deg, #0D0F14 0%, #111318 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 24px; padding: 2.5rem 2.5rem 2rem; box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 32px 64px rgba(0,0,0,0.6); text-align: center; position: relative; overflow: hidden;">
@@ -458,46 +448,36 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
                     else:
                         st.error("Authentication failed, access pending, or account removed.")
             
-# 1. Define the tabs FIRST so Python knows what 't1' and 't2' are
-t1, t2 = st.tabs(["Login", "Request Access"])
-
-# 2. Put your login logic inside t1
-with t1:
-    st.subheader("Login to your account")
-    # ---> YOUR EXISTING LOGIN CODE GOES HERE <---
-
-
-# 3. Put the registration logic you shared inside t2
-with t2:
-    u_req = st.text_input("Desired Username", key="ar_u")
-    p_req = st.text_input("Password", type="password", key="ar_p")
-    
-    if st.button("Submit Request", use_container_width=True):
-        if not u_req or not p_req:
-            st.error("Please fill in both fields.")
-        else:
-            # CHECK: Does this username already exist in ANY status (active, pending, or root)?
-            res = supabase.table("admins").select("id, status").eq("username", u_req).execute()
-            
-            if res.data:
-                status = res.data[0]["status"]
-                if status == "pending":
-                    st.warning("You already have a request pending approval.")
-                elif status == "active" or status == "root":
-                    st.error("This admin account already exists. Please log in.")
-                elif status == "removed":
-                    st.error("This account has been deactivated. Contact Root Admin.")
-            else:
-                # PROCEED: Only if no record was found
-                try:
-                    supabase.table("admins").insert({
-                        "username": u_req, 
-                        "password_hash": hash_password(p_req), 
-                        "status": "pending"
-                    }).execute()
-                    st.success("Request sent to the Root Admin.")
-                except Exception as e:
-                    st.error("An error occurred. Please try again.")
+            with t2:
+                u_req = st.text_input("Desired Username", key="ar_u")
+                p_req = st.text_input("Password", type="password", key="ar_p")
+                
+                if st.button("Submit Request", use_container_width=True):
+                    if not u_req or not p_req:
+                        st.error("Please fill in both fields.")
+                    else:
+                        # CHECK: Does this username already exist in ANY status (active, pending, or root)?
+                        res = supabase.table("admins").select("id, status").eq("username", u_req).execute()
+                        
+                        if res.data:
+                            status = res.data[0]["status"]
+                            if status == "pending":
+                                st.warning("You already have a request pending approval.")
+                            elif status == "active" or status == "root":
+                                st.error("This admin account already exists. Please log in.")
+                            elif status == "removed":
+                                st.error("This account has been deactivated. Contact Root Admin.")
+                        else:
+                            # PROCEED: Only if no record was found
+                            try:
+                                supabase.table("admins").insert({
+                                    "username": u_req, 
+                                    "password_hash": hash_password(p_req), 
+                                    "status": "pending"
+                                }).execute()
+                                st.success("Request sent to the Root Admin.")
+                            except Exception as e:
+                                st.error("An error occurred. Please try again.")
 
     # Hide standard header & exit button if not logged in
     if not st.session_state.admin_logged_in:
@@ -851,6 +831,7 @@ st.markdown('<div id="signout-tracker"></div>', unsafe_allow_html=True)
 if st.button("Sign Out", key="signout_btn"):
     for key in list(st.session_state.keys()): del st.session_state[key]
     st.rerun()
+
 # Vehicle number gate
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
     st.markdown("""
