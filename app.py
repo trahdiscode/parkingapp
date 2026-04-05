@@ -294,7 +294,7 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
     .stButton > button[kind="secondary"]:hover { border-color: rgba(255,255,255,0.12) !important; color: #9CA3AF !important; }
     [data-testid="stAppViewContainer"] { padding-top: 0 !important; }
     [data-testid="stHeader"] { display: none !important; }
-    .main.block-container { padding-top: 0.5rem !important; }
+    .main.block-container { padding-top: 0 rem !important; }
     </style>
     """, unsafe_allow_html=True)
     
@@ -303,7 +303,7 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
     admin_count = len(admin_count_res.data) if admin_count_res.data else 0
 
     st.markdown("""
-    <div style="max-width:480px; margin: 0 auto 1rem; background: linear-gradient(145deg, #0D0F14 0%, #111318 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 24px; padding: 2.5rem 2.5rem 2rem; box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 32px 64px rgba(0,0,0,0.6); text-align: center; position: relative; overflow: hidden;">
+    <div style="max-width:480px; margin: -2rem auto 1rem; background: linear-gradient(145deg, #0D0F14 0%, #111318 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 24px; padding: 2.5rem 2.5rem 2rem; box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 32px 64px rgba(0,0,0,0.6); text-align: center; position: relative; overflow: hidden;">
         <div style="display:inline-flex; align-items:center; gap:6px; padding:5px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:99px; color:#6B7280; font-family:'Inter',sans-serif; font-size:0.6rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; margin-bottom:1.25rem;">
             <span style="width:5px; height:5px; background:#22C55E; border-radius:50%; display:inline-block; box-shadow:0 0 8px rgba(34,197,94,0.6);"></span>
             Secure Portal
