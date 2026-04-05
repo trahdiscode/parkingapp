@@ -614,7 +614,7 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
 
     # --- PUBLIC DASHBOARD HEADER ---
     st.markdown(f"""
-    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 1rem 0 2rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 0.25rem 0 1rem; margin-bottom: 0.25rem; border-bottom: 1px solid var(--border);">
         <img src="data:image/png;base64,{logo_base64}" style="width: 56px; height: 56px; object-fit: contain; filter: drop-shadow(0 4px 16px rgba(99,102,241,0.4)); flex-shrink: 0;">
         <div>
             <div style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--text-1); line-height: 1; letter-spacing: -0.04em;">ParkOS</div>
