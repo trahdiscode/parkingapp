@@ -458,16 +458,36 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
                     else:
                         st.error("Authentication failed, access pending, or account removed.")
             
-            with t2:
-                u_req = st.text_input("Desired Username", key="ar_u")
-                p_req = st.text_input("Password", type="password", key="ar_p")
-                if st.button("Submit Request", use_container_width=True):
-                    res = supabase.table("admins").select("id").eq("username", u_req).execute()
-                    if res.data:
-                        st.error("Username already registered.")
-                    else:
-                        supabase.table("admins").insert({"username": u_req, "password_hash": hash_password(p_req), "status": "pending"}).execute()
-                        st.success("Request sent to the Root Admin.")
+with t2:
+    u_req = st.text_input("Desired Username", key="ar_u")
+    p_req = st.text_input("Password", type="password", key="ar_p")
+    
+    if st.button("Submit Request", use_container_width=True):
+        if not u_req or not p_req:
+            st.error("Please fill in both fields.")
+        else:
+            # CHECK: Does this username already exist in ANY status (active, pending, or root)?
+            res = supabase.table("admins").select("id, status").eq("username", u_req).execute()
+            
+            if res.data:
+                status = res.data[0]["status"]
+                if status == "pending":
+                    st.warning("You already have a request pending approval.")
+                elif status == "active" or status == "root":
+                    st.error("This admin account already exists. Please log in.")
+                elif status == "removed":
+                    st.error("This account has been deactivated. Contact Root Admin.")
+            else:
+                # PROCEED: Only if no record was found
+                try:
+                    supabase.table("admins").insert({
+                        "username": u_req, 
+                        "password_hash": hash_password(p_req), 
+                        "status": "pending"
+                    }).execute()
+                    st.success("✅ Request sent to the Root Admin.")
+                except Exception as e:
+                    st.error("An error occurred. Please try again.")
 
     # Hide standard header & exit button if not logged in
     if not st.session_state.admin_logged_in:
