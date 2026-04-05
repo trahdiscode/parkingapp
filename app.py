@@ -89,8 +89,8 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .app-header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 0 0.75rem; margin-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
 .app-brand { display: flex; align-items: center; gap: 0.75rem; }
-.app-brand-name { font-size: 3rem; font-weight: 800; color: var(--text-1); letter-spacing: -0.04em; line-height: 1; }
-.app-brand-sub { font-size: 1.5rem; font-weight: 600; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; line-height: 1; margin-top: 2px; }
+.app-brand-name { font-size: 2.75rem; font-weight: 800; color: var(--text-1); letter-spacing: -0.04em; line-height: 1; }
+.app-brand-sub { font-size: 1.3rem; font-weight: 600; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; line-height: 1; margin-top: 2px; }
 
 .active-card { background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, var(--surface) 60%); border: 1px solid var(--green-border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; position: relative; overflow: hidden; }
 .active-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--green), transparent 60%); }
