@@ -458,6 +458,16 @@ if "mode" in st.query_params and st.query_params["mode"] == "admin":
                     else:
                         st.error("Authentication failed, access pending, or account removed.")
             
+# 1. Define the tabs FIRST so Python knows what 't1' and 't2' are
+t1, t2 = st.tabs(["Login", "Request Access"])
+
+# 2. Put your login logic inside t1
+with t1:
+    st.subheader("Login to your account")
+    # ---> YOUR EXISTING LOGIN CODE GOES HERE <---
+
+
+# 3. Put the registration logic you shared inside t2
 with t2:
     u_req = st.text_input("Desired Username", key="ar_u")
     p_req = st.text_input("Password", type="password", key="ar_p")
@@ -485,7 +495,7 @@ with t2:
                         "password_hash": hash_password(p_req), 
                         "status": "pending"
                     }).execute()
-                    st.success("✅ Request sent to the Root Admin.")
+                    st.success("Request sent to the Root Admin.")
                 except Exception as e:
                     st.error("An error occurred. Please try again.")
 
