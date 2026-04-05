@@ -731,7 +731,7 @@ if 'admin_clicks' not in st.session_state:
 st.markdown(f"""
 <div class="app-header">
     <div class="app-brand">
-       <img src="data:image/png;base64,{logo_base64}" style="width:38px;height:38px;object-fit:contain;flex-shrink:0;">
+       <img src="data:image/png;base64,{logo_base64}" style="width:100px;height:100px;object-fit:contain;flex-shrink:0;">
         <div>
             <div class="app-brand-name">ParkOS</div>
             <div class="app-brand-sub">Smart Parking</div>
