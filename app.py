@@ -29,136 +29,149 @@ st_autorefresh(interval=30000, key="refresh")  # Refresh every 30s
 # ---------- OPENING ANIMATION ----------
 st.markdown(f"""
 <div id="parkos-splash" style="
-  position: fixed; inset: 0; z-index: 9999;
-  display: grid; place-items: center;
-  background:
-    radial-gradient(900px 500px at 50% 15%, rgba(124,58,237,.18), transparent 60%),
-    radial-gradient(700px 400px at 15% 85%, rgba(34,211,238,.14), transparent 60%),
-    linear-gradient(180deg, #070712, #0b1230);
-  isolation: isolate;
-  transition: opacity 0.9s ease;
+  position: fixed; inset: 0; z-index: 99999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: #05060A;
+  overflow: hidden;
+  transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 1.2s;
 ">
-  <div id="splash-grain" style="
-    position:absolute; inset:-20%;
-    background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%22120%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%22.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22120%22 height=%22120%22 filter=%22url(%23n)%22 opacity=%22.22%22/%3E%3C/svg%3E');
-    opacity:.2; mix-blend-mode:overlay; pointer-events:none;
-    animation:splash-grain 7s steps(10) infinite;
+  <div style="
+    position: absolute; inset: 0;
+    background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');
+    opacity: 0.04; pointer-events: none; mix-blend-mode: overlay;
   "></div>
 
-  <div id="splash-spotlight" style="
-    position:absolute; inset:-30%;
-    background: conic-gradient(from 180deg,
-      rgba(124,58,237,.0) 0deg, rgba(124,58,237,.35) 65deg,
-      rgba(34,211,238,.35) 140deg, rgba(251,113,133,.25) 210deg,
-      rgba(124,58,237,.0) 360deg);
-    filter: blur(38px) saturate(135%); opacity:.8; z-index:-1;
-    animation: splash-spin 6.8s ease-in-out infinite;
-    pointer-events:none;
+  <div style="
+    position: absolute; width: 60vw; height: 60vw; border-radius: 50%;
+    background: radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 60%);
+    top: -20%; left: -10%; filter: blur(90px);
+    animation: float-orb 10s ease-in-out infinite alternate; pointer-events: none;
+  "></div>
+  <div style="
+    position: absolute; width: 50vw; height: 50vw; border-radius: 50%;
+    background: radial-gradient(circle, rgba(34,211,238,0.06) 0%, transparent 60%);
+    bottom: -10%; right: -10%; filter: blur(90px);
+    animation: float-orb 12s ease-in-out infinite alternate-reverse; pointer-events: none;
   "></div>
 
-  <div id="splash-particles" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
-
-  <div style="position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;text-align:center;">
-    <div style="position:relative;width:120px;height:120px;display:grid;place-items:center;
-      opacity:0;transform:scale(0.6) translateY(20px);
-      animation:splash-logo-in 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.3s forwards;">
-      <div style="position:absolute;inset:-12px;border-radius:50%;border:1.5px solid transparent;
-        background:linear-gradient(#070712,#070712) padding-box,
-          conic-gradient(from 0deg,#7c3aed,#22d3ee,#fb7185,#7c3aed) border-box;
-        animation:splash-ring 4s linear infinite;"></div>
-      <div style="position:absolute;inset:-24px;border-radius:50%;
-        background:radial-gradient(circle,rgba(124,58,237,.35) 0%,transparent 70%);
-        animation:splash-glow 2.5s ease-in-out infinite;"></div>
+  <div style="position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center;">
+    
+    <div style="
+      position: relative;
+      opacity: 0; transform: translateY(30px) scale(0.9); filter: blur(10px);
+      animation: premium-reveal 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    ">
+      <div style="
+        position: absolute; inset: 0; background: rgba(124,58,237,0.4);
+        filter: blur(30px); border-radius: 50%; z-index: 0;
+      "></div>
       <img src="data:image/png;base64,{logo_base64}" style="
-        width:80px;height:80px;object-fit:contain;position:relative;z-index:2;
-        filter:drop-shadow(0 0 18px rgba(124,58,237,.6));
-        border-radius:20px;">
+        width: 88px; height: 88px; object-fit: contain; position: relative; z-index: 2;
+        filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4));
+      ">
     </div>
 
-    <div style="opacity:0;transform:translateY(12px);animation:splash-word-in 0.7s ease 0.85s forwards;margin-top:20px;">
-      <div style="font-family:'Outfit',sans-serif;font-size:clamp(2.4rem,7vw,3.8rem);font-weight:800;
-        letter-spacing:-0.04em;line-height:1;
-        background:linear-gradient(135deg,#eaf2ff 0%,#b4b8f5 50%,#22d3ee 100%);
-        -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">ParkOS</div>
-      <div style="font-family:'Outfit',sans-serif;font-size:0.7rem;font-weight:600;letter-spacing:0.18em;
-        text-transform:uppercase;color:rgba(180,184,245,.5);margin-top:6px;">Faculty Parking Portal</div>
+    <div style="
+      text-align: center; margin-top: 28px;
+      opacity: 0; transform: translateY(20px);
+      animation: premium-reveal 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+    ">
+      <div style="
+        font-family: 'Outfit', sans-serif; font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800;
+        letter-spacing: -0.04em; line-height: 1;
+        background: linear-gradient(180deg, #FFFFFF 0%, #9CA3AF 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      ">ParkOS</div>
+      <div style="
+        font-family: 'Outfit', sans-serif; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.25em;
+        text-transform: uppercase; color: #6B7280; margin-top: 12px;
+      ">Faculty Parking Portal</div>
     </div>
 
-    <div style="margin-top:36px;width:180px;opacity:0;animation:splash-bar-in 0.5s ease 1.3s forwards;">
-      <div style="height:2px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;">
-        <div id="splash-bar-fill" style="height:100%;width:0%;border-radius:99px;
-          background:linear-gradient(90deg,#7c3aed,#22d3ee);
-          animation:splash-bar-grow 1.5s cubic-bezier(0.4,0,0.2,1) 1.4s forwards;"></div>
+    <div style="
+      margin-top: 48px; width: 160px; display: flex; flex-direction: column; align-items: center;
+      opacity: 0; animation: fade-in 1s ease 1s forwards;
+    ">
+      <div style="width: 100%; height: 1px; background: rgba(255,255,255,0.08); position: relative; overflow: hidden; border-radius: 2px;">
+        <div style="
+          position: absolute; top: 0; left: 0; height: 100%; width: 0%;
+          background: linear-gradient(90deg, transparent, #fff, transparent);
+          box-shadow: 0 0 10px rgba(255,255,255,0.5);
+          animation: premium-load 2.2s cubic-bezier(0.65, 0, 0.35, 1) 1.2s forwards;
+        "></div>
       </div>
-      <div id="splash-bar-label" style="font-family:'Outfit',sans-serif;font-size:0.62rem;
-        letter-spacing:0.14em;text-transform:uppercase;color:rgba(180,184,245,.4);
-        text-align:center;margin-top:10px;">Initializing system…</div>
+      <div id="splash-status" style="
+        font-family: 'Outfit', sans-serif; font-size: 0.65rem; color: #6B7280;
+        letter-spacing: 0.05em; margin-top: 12px; transition: opacity 0.3s;
+      ">Authenticating...</div>
     </div>
+
   </div>
 
   <button onclick="dismissParkOSSplash()" style="
-    position:fixed;bottom:28px;right:28px;
-    font-family:'Outfit',sans-serif;font-size:0.72rem;letter-spacing:0.1em;
-    text-transform:uppercase;color:rgba(255,255,255,.25);
-    background:transparent;border:1px solid rgba(255,255,255,.1);
-    border-radius:99px;padding:6px 16px;cursor:pointer;
-    opacity:0;animation:splash-skip-in 0.4s ease 2s forwards;
-    transition:color 0.2s,border-color 0.2s;z-index:9999;
-  ">Skip ↗</button>
+    position: fixed; bottom: 32px; right: 32px;
+    font-family: 'Outfit', sans-serif; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.05em;
+    color: #9CA3AF; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-radius: 99px; padding: 8px 20px; cursor: pointer;
+    opacity: 0; transform: translateY(10px);
+    animation: premium-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) 2.2s forwards;
+    transition: all 0.3s ease; z-index: 9999;
+  " onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.color='#fff';" 
+     onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.color='#9CA3AF';">
+    Skip
+  </button>
 </div>
 
 <style>
-@keyframes splash-grain   {{ 0%{{transform:translate(-2%,-2%)}} 15%{{transform:translate(1%,-3%)}} 35%{{transform:translate(-1%,2%)}} 60%{{transform:translate(3%,1%)}} 80%{{transform:translate(-3%,0%)}} 100%{{transform:translate(-2%,-2%)}} }}
-@keyframes splash-spin    {{ 0%{{transform:translate(0,0) rotate(0deg)}} 25%{{transform:translate(2%,-1.5%) rotate(88deg)}} 50%{{transform:translate(-1.5%,2%) rotate(182deg)}} 75%{{transform:translate(1.5%,1%) rotate(272deg)}} 100%{{transform:translate(0,0) rotate(360deg)}} }}
-@keyframes splash-ring    {{ to{{transform:rotate(360deg)}} }}
-@keyframes splash-glow    {{ 0%,100%{{opacity:.6;transform:scale(1)}} 50%{{opacity:1;transform:scale(1.12)}} }}
-@keyframes splash-logo-in {{ to{{opacity:1;transform:scale(1) translateY(0)}} }}
-@keyframes splash-word-in {{ to{{opacity:1;transform:translateY(0)}} }}
-@keyframes splash-bar-in  {{ to{{opacity:1}} }}
-@keyframes splash-bar-grow{{ to{{width:100%}} }}
-@keyframes splash-skip-in {{ to{{opacity:1}} }}
+/* CSS Animations inside the F-String require double curly braces */
+@keyframes float-orb {{
+  0% {{ transform: translate(0, 0) scale(1); }}
+  100% {{ transform: translate(5%, 5%) scale(1.1); }}
+}}
+@keyframes premium-reveal {{
+  0% {{ opacity: 0; transform: translateY(30px) scale(0.95); filter: blur(10px); }}
+  100% {{ opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }}
+}}
+@keyframes fade-in {{
+  to {{ opacity: 1; }}
+}}
+@keyframes premium-load {{
+  0% {{ left: -100%; width: 50%; }}
+  100% {{ left: 100%; width: 100%; }}
+}}
 </style>
 
 <script>
 (function() {{
-  const labels = ["Initializing system…","Loading parking data…","Connecting sensors…","Ready."];
-  let li = 0;
-  const lbl = document.getElementById("splash-bar-label");
-  const lTimer = setInterval(function() {{
-    li++;
-    if (li < labels.length) {{
-      lbl.style.opacity = "0";
-      setTimeout(function() {{
-        lbl.textContent = labels[li];
-        lbl.style.transition = "opacity 0.4s";
-        lbl.style.opacity = "1";
-      }}, 200);
-    }} else {{ clearInterval(lTimer); }}
-  }}, 620);
-
-  const pContainer = document.getElementById("splash-particles");
-  const colors = ["rgba(124,58,237,.6)","rgba(34,211,238,.5)","rgba(251,113,133,.5)","rgba(180,184,245,.4)"];
-  for (let i = 0; i < 28; i++) {{
-    const p = document.createElement("div");
-    const size = Math.random() * 4 + 1.5;
-    p.style.cssText = "position:absolute;border-radius:50%;"
-      + "width:" + size + "px;height:" + size + "px;"
-      + "left:" + (Math.random()*100) + "%;bottom:" + (Math.random()*-10) + "%;"
-      + "background:" + colors[Math.floor(Math.random()*colors.length)] + ";"
-      + "animation:splash-float " + (Math.random()*8+6) + "s linear " + (Math.random()*3) + "s infinite;"
-      + "opacity:0;";
-    pContainer.appendChild(p);
-  }}
-
-  const style = document.createElement("style");
-  style.textContent = "@keyframes splash-float {{0%{{transform:translateY(0) scale(1);opacity:0}} 10%{{opacity:.7}} 90%{{opacity:.3}} 100%{{transform:translateY(-100vh) scale(0.4);opacity:0}}}}";
-  document.head.appendChild(style);
+  const statuses = ["Authenticating...", "Securing connection...", "Initializing interface...", "Ready"];
+  let step = 0;
+  const statusEl = document.getElementById("splash-status");
+  
+  const statusTimer = setInterval(() => {{
+    step++;
+    if (step < statuses.length) {{
+      statusEl.style.opacity = 0;
+      setTimeout(() => {{
+        statusEl.innerText = statuses[step];
+        statusEl.style.opacity = 1;
+      }}, 300); // Wait for fade out before changing text
+    }} else {{
+      clearInterval(statusTimer);
+    }}
+  }}, 700);
 
   window.dismissParkOSSplash = function() {{
-    const el = document.getElementById("parkos-splash");
-    if (el) {{ el.style.opacity = "0"; setTimeout(function(){{ el.style.display = "none"; }}, 900); }}
+    const splash = document.getElementById("parkos-splash");
+    if (splash) {{
+      splash.style.opacity = "0";
+      splash.style.visibility = "hidden";
+      setTimeout(() => splash.remove(), 1200);
+    }}
   }};
-  setTimeout(window.dismissParkOSSplash, 3400);
+  
+  // Auto-dismiss after 3.8s for an unhurried, polished feel
+  setTimeout(window.dismissParkOSSplash, 3800);
 }})();
 </script>
 """, unsafe_allow_html=True)
