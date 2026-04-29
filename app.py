@@ -30,77 +30,133 @@ st_autorefresh(interval=30000, key="refresh")  # Refresh every 30s
 # ---------- OPENING ANIMATION ----------
 st.markdown(f"""
 <style>
-/* Splash Screen Container */
+/* Base Splash Container with deep radial gradient */
 #splash-screen {{
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: var(--bg); /* Matches your root background */
+    background: radial-gradient(circle at center, #11131A 0%, var(--bg) 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     z-index: 99999;
-    animation: fadeOutSplash 0.8s cubic-bezier(0.8, 0, 0.2, 1) forwards;
-    animation-delay: 2.5s; /* Duration the splash stays visible */
-    pointer-events: none; /* Let clicks pass through after fade */
+    animation: splashExit 1s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+    animation-delay: 2.8s;
+    pointer-events: none;
+    overflow: hidden;
 }}
 
-/* Logo Reveal Animation */
+/* Cinematic Film Grain Overlay */
+#splash-screen::after {{
+    content: "";
+    position: absolute;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+    animation: grainShift 8s steps(10) infinite;
+}}
+
+/* Ambient Indigo Backlight */
+.splash-glow {{
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(40px);
+    z-index: 2;
+    animation: breathGlow 4s ease-in-out infinite alternate;
+}}
+
+/* Content Wrapper to sit above grain and glow */
+.splash-content {{
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}}
+
+/* Logo Focus & Float Reveal */
 #splash-logo {{
-    width: 140px;
-    height: 140px;
+    width: 120px;
+    height: 120px;
     object-fit: contain;
-    filter: drop-shadow(0 0 20px rgba(99,102,241,0.0));
     opacity: 0;
-    transform: scale(0.85);
+    filter: blur(12px) drop-shadow(0 0 0 rgba(99,102,241,0));
+    transform: scale(0.9) translateY(10px);
     animation: 
-        scaleUpFade 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards, 
-        pulseGlow 2s infinite alternate;
-    animation-delay: 0.2s, 1.4s; /* Start glow after reveal */
+        lensFocus 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+        premiumFloat 3s ease-in-out infinite alternate;
+    animation-delay: 0.1s, 1.3s;
 }}
 
-/* App Name Animation */
+/* Typography Tracking Reveal */
 #splash-text {{
     font-family: var(--font);
-    font-size: 3.5rem;
+    font-size: 3rem;
     font-weight: 800;
     color: var(--text-1);
-    letter-spacing: -0.04em;
+    letter-spacing: -0.1em; /* Starts compressed */
     margin-top: 1.5rem;
     opacity: 0;
-    transform: translateY(20px);
-    animation: slideUpFade 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    animation-delay: 0.6s;
+    filter: blur(8px);
+    transform: translateY(15px);
+    background: linear-gradient(180deg, #FFFFFF 0%, #9397B0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: textTrackingReveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: 0.5s;
 }}
 
 /* Keyframes */
-@keyframes scaleUpFade {{
-    0% {{ transform: scale(0.85); opacity: 0; }}
-    100% {{ transform: scale(1); opacity: 1; }}
+@keyframes lensFocus {{
+    0% {{ opacity: 0; filter: blur(12px) drop-shadow(0 0 0 rgba(99,102,241,0)); transform: scale(0.9) translateY(10px); }}
+    100% {{ opacity: 1; filter: blur(0px) drop-shadow(0 8px 24px rgba(99,102,241,0.3)); transform: scale(1) translateY(0); }}
 }}
 
-@keyframes slideUpFade {{
-    0% {{ transform: translateY(20px); opacity: 0; }}
-    100% {{ transform: translateY(0); opacity: 1; }}
+@keyframes premiumFloat {{
+    0% {{ transform: translateY(0); filter: blur(0px) drop-shadow(0 8px 24px rgba(99,102,241,0.3)); }}
+    100% {{ transform: translateY(-6px); filter: blur(0px) drop-shadow(0 12px 32px rgba(99,102,241,0.5)); }}
 }}
 
-@keyframes fadeOutSplash {{
-    0% {{ opacity: 1; visibility: visible; }}
-    100% {{ opacity: 0; visibility: hidden; z-index: -1; }}
+@keyframes textTrackingReveal {{
+    0% {{ opacity: 0; filter: blur(8px); transform: translateY(15px); letter-spacing: -0.1em; }}
+    100% {{ opacity: 1; filter: blur(0px); transform: translateY(0); letter-spacing: -0.04em; }}
 }}
 
-@keyframes pulseGlow {{
-    0% {{ filter: drop-shadow(0 0 15px rgba(99,102,241,0.2)); }}
-    100% {{ filter: drop-shadow(0 0 40px rgba(99,102,241,0.6)); }}
+@keyframes breathGlow {{
+    0% {{ transform: scale(0.8); opacity: 0.5; }}
+    100% {{ transform: scale(1.1); opacity: 1; }}
+}}
+
+@keyframes grainShift {{
+    0%, 100% {{ transform: translate(0, 0); }}
+    10% {{ transform: translate(-5%, -5%); }}
+    30% {{ transform: translate(5%, -10%); }}
+    50% {{ transform: translate(-10%, 5%); }}
+    70% {{ transform: translate(10%, 10%); }}
+    90% {{ transform: translate(-5%, 15%); }}
+}}
+
+/* App zoom-in effect on exit */
+@keyframes splashExit {{
+    0% {{ opacity: 1; transform: scale(1); visibility: visible; }}
+    100% {{ opacity: 0; transform: scale(1.05); visibility: hidden; z-index: -1; }}
 }}
 </style>
 
 <div id="splash-screen">
-    <img id="splash-logo" src="data:image/png;base64,{logo_base64}" alt="ParkOS">
-    <div id="splash-text">ParkOS</div>
+    <div class="splash-glow"></div>
+    <div class="splash-content">
+        <img id="splash-logo" src="data:image/png;base64,{logo_base64}" alt="ParkOS">
+        <div id="splash-text">ParkOS</div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 # ---------- STYLESHEET ----------
