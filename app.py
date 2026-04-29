@@ -27,7 +27,82 @@ st.set_page_config(page_title="ParkOS", layout="wide", page_icon="🅿️", init
 st_autorefresh(interval=30000, key="refresh")  # Refresh every 30s
 
 # ---------- OPENING ANIMATION ----------
+# ---------- OPENING ANIMATION ----------
+st.markdown(f"""
+<style>
+/* Splash Screen Container */
+#splash-screen {{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg); /* Matches your root background */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    animation: fadeOutSplash 0.8s cubic-bezier(0.8, 0, 0.2, 1) forwards;
+    animation-delay: 2.5s; /* Duration the splash stays visible */
+    pointer-events: none; /* Let clicks pass through after fade */
+}}
 
+/* Logo Reveal Animation */
+#splash-logo {{
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 20px rgba(99,102,241,0.0));
+    opacity: 0;
+    transform: scale(0.85);
+    animation: 
+        scaleUpFade 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards, 
+        pulseGlow 2s infinite alternate;
+    animation-delay: 0.2s, 1.4s; /* Start glow after reveal */
+}}
+
+/* App Name Animation */
+#splash-text {{
+    font-family: var(--font);
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: var(--text-1);
+    letter-spacing: -0.04em;
+    margin-top: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideUpFade 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: 0.6s;
+}}
+
+/* Keyframes */
+@keyframes scaleUpFade {{
+    0% {{ transform: scale(0.85); opacity: 0; }}
+    100% {{ transform: scale(1); opacity: 1; }}
+}}
+
+@keyframes slideUpFade {{
+    0% {{ transform: translateY(20px); opacity: 0; }}
+    100% {{ transform: translateY(0); opacity: 1; }}
+}}
+
+@keyframes fadeOutSplash {{
+    0% {{ opacity: 1; visibility: visible; }}
+    100% {{ opacity: 0; visibility: hidden; z-index: -1; }}
+}}
+
+@keyframes pulseGlow {{
+    0% {{ filter: drop-shadow(0 0 15px rgba(99,102,241,0.2)); }}
+    100% {{ filter: drop-shadow(0 0 40px rgba(99,102,241,0.6)); }}
+}}
+</style>
+
+<div id="splash-screen">
+    <img id="splash-logo" src="data:image/png;base64,{logo_base64}" alt="ParkOS">
+    <div id="splash-text">ParkOS</div>
+</div>
+""", unsafe_allow_html=True)
 # ---------- STYLESHEET ----------
 st.markdown("""
 <style>
